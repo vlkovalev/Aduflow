@@ -65,3 +65,37 @@ CREATE TABLE draw_milestones (
  evidence_status TEXT DEFAULT 'not_started',
  lender_status TEXT DEFAULT 'not_notified'
 );
+
+CREATE TABLE permit_packages (
+ id UUID PRIMARY KEY,
+ lead_id UUID,
+ jurisdiction_name TEXT,
+ package_status TEXT DEFAULT 'draft',
+ permit_path TEXT,
+ hoa_required BOOLEAN DEFAULT FALSE,
+ revision_round NUMERIC DEFAULT 0,
+ created_at TIMESTAMPTZ DEFAULT NOW(),
+ updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE permit_tasks (
+ id UUID PRIMARY KEY,
+ permit_package_id UUID,
+ category TEXT,
+ task_name TEXT,
+ owner_role TEXT,
+ status TEXT DEFAULT 'not_started',
+ due_stage TEXT,
+ notes TEXT,
+ sort_order NUMERIC
+);
+
+CREATE TABLE document_requirements (
+ id UUID PRIMARY KEY,
+ permit_package_id UUID,
+ document_name TEXT,
+ document_type TEXT,
+ required_for TEXT,
+ status TEXT DEFAULT 'missing',
+ owner_role TEXT
+);

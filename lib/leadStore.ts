@@ -160,6 +160,60 @@ export async function getLead(id: string) {
   return records.find((record) => record.id === id) ?? null;
 }
 
+export async function listLeads() {
+  const supabase = getSupabaseServiceClient();
+
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error || !data) {
+      return [];
+    }
+
+    return data.map((item) => mapLeadRow(item));
+  }
+
+  const records = await readLocalLeads();
+  return records.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+}
+
+function mapLeadRow(data: Record<string, unknown>) {
+  return {
+    id: String(data.id ?? ""),
+    createdAt: String(data.created_at ?? ""),
+    updatedAt: String(data.updated_at ?? ""),
+    proposalNumber: String(data.proposal_number ?? ""),
+    proposalStatus: String(data.proposal_status ?? ""),
+    shareToken: String(data.share_token ?? ""),
+    customerName: String(data.customer_name ?? ""),
+    email: String(data.email ?? ""),
+    phone: String(data.phone ?? ""),
+    propertyAddress: String(data.property_address ?? ""),
+    parcelScenario: String(data.parcel_scenario ?? ""),
+    feasibilityResult: String(data.feasibility_result ?? ""),
+    feasibilityConfidence: Number(data.feasibility_confidence ?? 0),
+    permitPath: String(data.permit_path ?? ""),
+    estimatedPrice: Number(data.estimated_price ?? 0),
+    estimateLow: Number(data.estimate_low ?? 0),
+    estimateHigh: Number(data.estimate_high ?? 0),
+    factoryCost: Number(data.factory_cost ?? 0),
+    siteCost: Number(data.site_cost ?? 0),
+    modelCode: String(data.model_code ?? ""),
+    modelName: String(data.model_name ?? ""),
+    squareFeet: Number(data.square_feet ?? 0),
+    timelineWeeks: Number(data.timeline_weeks ?? 0),
+    maxSquareFeet: Number(data.max_square_feet ?? 0),
+    maxStories: Number(data.max_stories ?? 0),
+    setbackTarget: String(data.setback_target ?? ""),
+    reviewRisk: String(data.review_risk ?? ""),
+    configuration: (data.configuration_json ?? {}) as Record<string, unknown>,
+    status: String(data.status ?? "new"),
+  } satisfies LeadRecord;
+}
+
 async function readLocalLeads() {
   try {
     const raw = await readFile(localStorePath, "utf8");

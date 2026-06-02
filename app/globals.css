@@ -342,7 +342,9 @@ input {
 }
 
 .proposalHero,
-.proposalDetailGrid {
+.proposalDetailGrid,
+.permitSummary,
+.permitGrid {
   width: min(1180px, calc(100% - 36px));
   margin-inline: auto;
 }
@@ -368,6 +370,24 @@ input {
 .proposalDetailGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 18px;
+}
+
+.permitSummary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.permitGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 18px;
+}
+
+.permitTasks {
+  display: grid;
   gap: 18px;
 }
 
@@ -458,6 +478,42 @@ input {
 .formNotice.error {
   border-left-color: #a5332a;
   color: #7d241d;
+}
+
+.taskList,
+.documentList,
+.permitQueue {
+  display: grid;
+  gap: 10px;
+}
+
+.taskList div,
+.documentList div,
+.permitQueue a {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  padding: 14px;
+}
+
+.taskList span,
+.documentList span,
+.permitQueue span {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.taskList p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.fullButton {
+  width: 100%;
+  margin-top: 24px;
 }
 
 .configPanel,
@@ -644,7 +700,9 @@ input {
   gap: 10px;
 }
 
-.leadList article {
+.leadList article,
+.leadRow,
+.emptyState {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -654,11 +712,23 @@ input {
   padding: 14px;
 }
 
-.leadList span {
+.leadList span,
+.leadRow span,
+.emptyState span {
   display: block;
   margin-top: 4px;
   color: var(--muted);
   font-size: 14px;
+}
+
+.leadRow {
+  background: white;
+}
+
+.emptyState {
+  align-items: flex-start;
+  flex-direction: column;
+  background: var(--paper);
 }
 
 @media (max-width: 900px) {
@@ -667,6 +737,7 @@ input {
   .dashboardGrid,
   .proposalSection,
   .proposalDetailGrid,
+  .permitGrid,
   .workflow,
   .roadmap {
     grid-template-columns: 1fr;
@@ -674,7 +745,8 @@ input {
 
   .choiceGrid,
   .proposalSummary,
-  .dashboardStats {
+  .dashboardStats,
+  .permitSummary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -689,6 +761,7 @@ input {
   .choiceGrid,
   .proposalSummary,
   .dashboardStats,
+  .permitSummary,
   .metricGrid {
     grid-template-columns: 1fr;
   }

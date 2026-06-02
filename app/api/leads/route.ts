@@ -1,7 +1,26 @@
 import { NextResponse } from "next/server";
-import { createLead, type CreateLeadInput } from "../../../lib/leadStore";
+import { createLead, listLeads, type CreateLeadInput } from "../../../lib/leadStore";
 
 export const runtime = "nodejs";
+
+export async function GET() {
+  const leads = await listLeads();
+
+  return NextResponse.json({
+    leads: leads.map((lead) => ({
+      id: lead.id,
+      proposalNumber: lead.proposalNumber,
+      customerName: lead.customerName,
+      propertyAddress: lead.propertyAddress,
+      modelName: lead.modelName,
+      estimatedPrice: lead.estimatedPrice,
+      proposalStatus: lead.proposalStatus,
+      reviewRisk: lead.reviewRisk,
+      feasibilityResult: lead.feasibilityResult,
+      proposalUrl: `/proposals/${lead.id}`,
+    })),
+  });
+}
 
 export async function POST(request: Request) {
   try {

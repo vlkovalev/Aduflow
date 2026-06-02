@@ -1,25 +1,6 @@
 import Link from "next/link";
-
-const leads = [
-  {
-    name: "Sarah M.",
-    project: "Garden Suite 624",
-    budget: "$214k",
-    status: "Proposal ready",
-  },
-  {
-    name: "Daniel R.",
-    project: "Garage Conversion 420",
-    budget: "$118k",
-    status: "Needs site review",
-  },
-  {
-    name: "Priya K.",
-    project: "Backyard Studio 312",
-    budget: "$86k",
-    status: "New lead",
-  },
-];
+import { listLeads, type LeadRecord } from "../../lib/leadStore";
+import { formatCurrency } from "../../lib/proposalBuilder";
 
 const modules = [
   "Model library",
@@ -50,7 +31,10 @@ const drawQueue = [
   },
 ];
 
-export default function BuilderDashboard() {
+export default async function BuilderDashboard() {
+  const leads = await listLeads();
+  const stats = getDashboardStats(leads);
+
   return (
     <main className="appShell">
       <nav className="nav compact" aria-label="Main navigation">
@@ -74,44 +58,64 @@ export default function BuilderDashboard() {
       </section>
 
       <section className="dashboardStats">
-        <Stat label="Feasible leads" value="14" />
-        <Stat label="Avg screen time" value="8 min" />
-        <Stat label="Draws pending" value="$418k" />
-        <Stat label="Permit risk" value="Low" />
+        <Stat label="Saved leads" value={String(leads.length)} />
+        <Stat label="Proposal value" value={formatCurrency(stats.totalValue)} />
+        <Stat label="Likely feasible" value={String(stats.feasibleCount)} />
+        <Stat label="High risk" value={String(stats.highRiskCount)} />
       </section>
 
       <section className="dashboardGrid">
         <div className="dataPanel">
           <div className="panelTitle">
             <h2>Lead pipeline</h2>
-            <span>This week</span>
+            <span>Saved proposals</span>
           </div>
           <div className="leadList">
-            {leads.map((lead) => (
-              <article key={lead.name}>
-                <div>
-                  <strong>{lead.name}</strong>
-                  <span>{lead.project}</span>
-                </div>
-                <div>
-                  <strong>{lead.budget}</strong>
-                  <span>{lead.status}</span>
-                </div>
-              </article>
-            ))}
+            {leads.length ? (
+              leads.slice(0, 6).map((lead) => (
+                <Link className="leadRow" href={`/proposals/${lead.id}`} key={lead.id}>
+                  <div>
+                    <strong>{lead.customerName}</strong>
+                    <span>
+                      {lead.modelName} - {lead.propertyAddress}
+                    </span>
+                  </div>
+                  <div>
+                    <strong>{formatCurrency(lead.estimatedPrice)}</strong>
+                    <span>{lead.feasibilityResult}</span>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <div className="emptyState">
+                <strong>No saved leads yet</strong>
+                <span>Create a quote from the configurator to populate this pipeline.</span>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="dataPanel">
           <div className="panelTitle">
-            <h2>Builder setup</h2>
-            <span>Core modules</span>
+            <h2>Permit queue</h2>
+            <span>Next action</span>
           </div>
-          <div className="moduleGrid">
-            {modules.map((module) => (
-              <span key={module}>{module}</span>
-            ))}
-          </div>
+          {leads.length ? (
+            <div className="permitQueue">
+              {leads.slice(0, 4).map((lead) => (
+                <Link href={`/permit/${lead.id}`} key={lead.id}>
+                  <strong>{lead.modelName}</strong>
+                  <span>{lead.permitPath}</span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="moduleGrid">
+              {modules.map((module) => (
+                <span key={module}>{module}</span>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -146,4 +150,12 @@ function Stat({ label, value }: { label: string; value: string }) {
       <strong>{value}</strong>
     </div>
   );
+}
+
+function getDashboardStats(leads: LeadRecord[]) {
+  return {
+    totalValue: leads.reduce((total, lead) => total + lead.estimatedPrice, 0),
+    feasibleCount: leads.filter((lead) => lead.feasibilityResult === "Likely feasible").length,
+    highRiskCount: leads.filter((lead) => lead.reviewRisk === "High").length,
+  };
 }

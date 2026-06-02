@@ -88,6 +88,9 @@ export default async function ProposalPage({
               <p>Proposal moves to owner review</p>
             </div>
           </div>
+          <Link className="button primary fullButton" href={`/permit/${lead.id}`}>
+            Generate permit checklist
+          </Link>
         </aside>
       </section>
     </main>
