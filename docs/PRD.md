@@ -5,16 +5,24 @@ Help modular builders sell more buildings while reducing estimating and proposal
 
 ## MVP Features
 
+### Zoning and Feasibility
+- Screen parcel scenarios
+- Estimate likely buildable envelope
+- Flag HOA, servicing, and enhanced review risks
+- Produce a first-pass permit path
+
 ### Builder Dashboard
 - Create models
 - Define options
 - Configure pricing rules
 - View leads
+- Track draw verification evidence
 
 ### Customer Configurator
+- Start with feasibility before model selection
 - Select model
 - Choose options
-- View live pricing
+- View factory cost versus site cost
 - Request proposal
 
 ### Outputs
@@ -22,6 +30,15 @@ Help modular builders sell more buildings while reducing estimating and proposal
 - Proposal PDF
 - Lead record
 - Basic BOM summary
+- Permit checklist
+- Draw milestone schedule
+
+## Future AI Assistants
+- Feasibility Agent
+- Proposal Agent
+- Permit Package Agent
+- Prefab Matching Agent
+- Draw Evidence Agent
 
 ## Success Metrics
 - 10 pilot builders

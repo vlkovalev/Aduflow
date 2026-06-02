@@ -1,4 +1,195 @@
-export function calculatePrice(basePrice:number, options:number[]){
- const optionTotal = options.reduce((a,b)=>a+b,0)
- return basePrice + optionTotal
+export type Model = {
+  code: string;
+  name: string;
+  squareFeet: number;
+  basePrice: number;
+};
+
+export type ProjectInput = {
+  parcelType: string;
+  modelCode: string;
+  finish: string;
+  foundation: string;
+  utilities: string;
+  site: string;
+};
+
+export type OptionChoice = {
+  value: string;
+  label: string;
+  detail: string;
+  price: number;
+};
+
+export type ParcelScenario = {
+  value: string;
+  label: string;
+  detail: string;
+  maxSquareFeet: number;
+  maxStories: number;
+  setback: string;
+  permitPath: string;
+  reviewRisk: "Low" | "Medium" | "High";
+};
+
+export const parcelScenarios: ParcelScenario[] = [
+  {
+    value: "urban-lane",
+    label: "Urban lot with lane",
+    detail: "Best fit for detached ADU or garden suite",
+    maxSquareFeet: 860,
+    maxStories: 2,
+    setback: "4 ft side and rear target",
+    permitPath: "Standard ADU review",
+    reviewRisk: "Low",
+  },
+  {
+    value: "suburban-deep",
+    label: "Deep suburban lot",
+    detail: "Usually supports larger detached backyard units",
+    maxSquareFeet: 1000,
+    maxStories: 2,
+    setback: "5 ft side and 6 ft rear target",
+    permitPath: "Standard zoning review",
+    reviewRisk: "Low",
+  },
+  {
+    value: "corner-hoa",
+    label: "Corner lot or HOA",
+    detail: "Needs design guideline and privacy review",
+    maxSquareFeet: 720,
+    maxStories: 1,
+    setback: "Confirm sightline and HOA rules",
+    permitPath: "Municipal plus design review",
+    reviewRisk: "Medium",
+  },
+  {
+    value: "tight-servicing",
+    label: "Tight services",
+    detail: "Constrained access or utility upgrade likely",
+    maxSquareFeet: 624,
+    maxStories: 1,
+    setback: "Survey required before design",
+    permitPath: "Enhanced site review",
+    reviewRisk: "High",
+  },
+];
+
+export const models: Model[] = [
+  {
+    code: "studio-312",
+    name: "Backyard Studio 312",
+    squareFeet: 312,
+    basePrice: 72000,
+  },
+  {
+    code: "suite-624",
+    name: "Garden Suite 624",
+    squareFeet: 624,
+    basePrice: 154000,
+  },
+  {
+    code: "adu-816",
+    name: "Two-Bed ADU 816",
+    squareFeet: 816,
+    basePrice: 196000,
+  },
+];
+
+export const optionGroups: Record<string, OptionChoice[]> = {
+  finish: [
+    { value: "essential", label: "Essential", detail: "Durable rental-ready finish", price: 0 },
+    { value: "comfort", label: "Comfort", detail: "Upgraded kitchen and bath package", price: 18500 },
+    { value: "premium", label: "Premium", detail: "Higher-end millwork and fixtures", price: 34500 },
+  ],
+  foundation: [
+    { value: "slab", label: "Slab", detail: "Simple prepared urban site", price: 22000 },
+    { value: "helical", label: "Helical piles", detail: "Lower disturbance backyard install", price: 28500 },
+    { value: "crawl", label: "Crawlspace", detail: "Best for servicing and cold climates", price: 42000 },
+  ],
+  utilities: [
+    { value: "basic", label: "Basic tie-in", detail: "Short utility run allowance", price: 14500 },
+    { value: "standard", label: "Standard tie-in", detail: "Typical water, sewer, power scope", price: 26500 },
+    { value: "complex", label: "Complex tie-in", detail: "Long run or panel upgrade allowance", price: 48500 },
+  ],
+  site: [
+    { value: "urban", label: "Urban lot", detail: "Lane or driveway access", price: 8500 },
+    { value: "tight", label: "Tight access", detail: "Crane planning or smaller modules", price: 18500 },
+    { value: "rural", label: "Rural lot", detail: "Delivery distance and site prep allowance", price: 24500 },
+  ],
+};
+
+export function calculatePrice(basePrice: number, options: number[]) {
+  const optionTotal = options.reduce((total, option) => total + option, 0);
+  return basePrice + optionTotal;
+}
+
+export function calculateProjectPrice(input: ProjectInput) {
+  const model = models.find((item) => item.code === input.modelCode) ?? models[0];
+  const feasibility = calculateFeasibility(input.parcelType, model);
+  const selectedOptions = [
+    findOption("finish", input.finish),
+    findOption("foundation", input.foundation),
+    findOption("utilities", input.utilities),
+    findOption("site", input.site),
+  ];
+  const total = calculatePrice(
+    model.basePrice,
+    selectedOptions.map((option) => option.price),
+  );
+  const siteComplexity = input.site === "tight" || input.utilities === "complex";
+
+  return {
+    total,
+    low: Math.round(total * 0.92),
+    high: Math.round(total * 1.14),
+    factoryCost: Math.round(model.basePrice + findOption("finish", input.finish).price),
+    siteCost: Math.round(total - model.basePrice - findOption("finish", input.finish).price),
+    model,
+    timelineWeeks: siteComplexity ? 30 : 24,
+    feasibility,
+    permitPath: siteComplexity ? "Enhanced review" : feasibility.permitPath,
+    bom: [
+      "Structure and envelope",
+      "Foundation",
+      "MEP rough-in",
+      "Interior finish",
+      "Site work",
+      "Delivery and install",
+    ],
+    checklist: [
+      "Zoning and setback screen",
+      "Preliminary budget and allowances",
+      "Contractor scope draft",
+      "Permit drawing package requirements",
+      "Construction milestone payment schedule",
+    ],
+    drawMilestones: [
+      { stage: "Deposit and permit package", percent: 10 },
+      { stage: "Foundation ready", percent: 20 },
+      { stage: "Factory completion", percent: 35 },
+      { stage: "Set and weather-tight", percent: 20 },
+      { stage: "Final inspection", percent: 15 },
+    ],
+  };
+}
+
+function findOption(group: keyof typeof optionGroups, value: string) {
+  return optionGroups[group].find((option) => option.value === value) ?? optionGroups[group][0];
+}
+
+export function calculateFeasibility(parcelType: string, model: Model) {
+  const scenario = parcelScenarios.find((item) => item.value === parcelType) ?? parcelScenarios[0];
+  const fitsSize = model.squareFeet <= scenario.maxSquareFeet;
+  const confidence = fitsSize && scenario.reviewRisk === "Low" ? 86 : fitsSize ? 68 : 42;
+
+  return {
+    ...scenario,
+    fitsSize,
+    confidence,
+    result: fitsSize ? "Likely feasible" : "Needs redesign",
+    note: fitsSize
+      ? `${model.name} fits the first-pass ${scenario.label.toLowerCase()} envelope.`
+      : `${model.name} exceeds the first-pass envelope for this parcel scenario.`,
+  };
 }
