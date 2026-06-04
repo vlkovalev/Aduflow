@@ -1,35 +1,27 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { buildProposalSections, formatCurrency } from "../../../lib/proposalBuilder";
-import { getLead } from "../../../lib/leadStore";
-import { PrintButton } from "../share/[token]/PrintButton";
-import { CopyLinkButton } from "./CopyLinkButton";
+import { buildProposalSections, formatCurrency } from "../../../../lib/proposalBuilder";
+import { getLeadByToken } from "../../../../lib/leadStore";
+import { PrintButton } from "./PrintButton";
 
-export default async function ProposalPage({
+export default async function SharedProposalPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ token: string }>;
 }) {
-  const { id } = await params;
-  const lead = await getLead(id);
+  const { token } = await params;
+  const lead = await getLeadByToken(token);
 
   if (!lead) {
     notFound();
   }
 
   const sections = buildProposalSections(lead);
-  const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/proposals/share/${lead.shareToken}`;
 
   return (
     <main className="appShell">
       <nav className="nav compact printHide" aria-label="Main navigation">
-        <Link className="brand" href="/">
-          ADUflow
-        </Link>
-        <div className="navLinks">
-          <Link href="/configurator">Configurator</Link>
-          <Link href="/builder">Builder OS</Link>
-        </div>
+        <span className="brand">ADUflow</span>
+        <span style={{ color: "var(--muted)", fontSize: 13 }}>Shared proposal</span>
       </nav>
 
       <section className="proposalHero">
@@ -82,13 +74,7 @@ export default async function ProposalPage({
             <div><span /><p>Permit and HOA checklist generated</p></div>
             <div><span /><p>Proposal moves to owner review</p></div>
           </div>
-          <div className="proposalActions printHide">
-            <CopyLinkButton shareUrl={shareUrl} />
-            <PrintButton />
-            <Link className="button primary fullButton" href={`/permit/${lead.id}`}>
-              Generate permit checklist
-            </Link>
-          </div>
+          <PrintButton />
         </aside>
       </section>
     </main>

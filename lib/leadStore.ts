@@ -160,6 +160,27 @@ export async function getLead(id: string) {
   return records.find((record) => record.id === id) ?? null;
 }
 
+export async function getLeadByToken(token: string) {
+  const supabase = getSupabaseServiceClient();
+
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .eq("share_token", token)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return mapLeadRow(data);
+  }
+
+  const records = await readLocalLeads();
+  return records.find((record) => record.shareToken === token) ?? null;
+}
+
 export async function listLeads() {
   const supabase = getSupabaseServiceClient();
 

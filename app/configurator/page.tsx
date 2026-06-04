@@ -1,17 +1,19 @@
 'use client';
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   calculateProjectPrice,
-  models,
-  optionGroups,
+  defaultCatalog,
   parcelScenarios,
+  type PricingCatalog,
 } from "../../lib/pricingEngine";
 
 export default function Configurator() {
+  const [catalog, setCatalog] = useState<PricingCatalog>(defaultCatalog);
+  const [catalogStatus, setCatalogStatus] = useState("Default catalog");
   const [parcelType, setParcelType] = useState(parcelScenarios[0].value);
-  const [modelCode, setModelCode] = useState(models[1].code);
+  const [modelCode, setModelCode] = useState(defaultCatalog.models[1].code);
   const [finish, setFinish] = useState("comfort");
   const [foundation, setFoundation] = useState("helical");
   const [utilities, setUtilities] = useState("standard");
@@ -20,6 +22,38 @@ export default function Configurator() {
   const [proposalUrl, setProposalUrl] = useState("");
   const [submitError, setSubmitError] = useState("");
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadCatalog() {
+      try {
+        const response = await fetch("/api/catalog");
+        const result = await response.json();
+        const nextCatalog = result.catalog as PricingCatalog;
+
+        if (!active || !nextCatalog?.models?.length) {
+          return;
+        }
+
+        setCatalog(nextCatalog);
+        setCatalogStatus("Builder catalog");
+        setModelCode((current) => safeCurrent(current, nextCatalog.models.map((model) => model.code)));
+        setFinish((current) => safeCurrent(current, nextCatalog.optionGroups.finish.map((option) => option.value)));
+        setFoundation((current) => safeCurrent(current, nextCatalog.optionGroups.foundation.map((option) => option.value)));
+        setUtilities((current) => safeCurrent(current, nextCatalog.optionGroups.utilities.map((option) => option.value)));
+        setSite((current) => safeCurrent(current, nextCatalog.optionGroups.site.map((option) => option.value)));
+      } catch {
+        setCatalogStatus("Default catalog");
+      }
+    }
+
+    loadCatalog();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const estimate = calculateProjectPrice({
     parcelType,
     modelCode,
@@ -27,7 +61,7 @@ export default function Configurator() {
     foundation,
     utilities,
     site,
-  });
+  }, catalog);
 
   return (
     <main className="appShell">
@@ -40,6 +74,7 @@ export default function Configurator() {
           constraints, service runs, design review, and lender documentation.
           This MVP turns those constraints into a builder-ready package.
         </p>
+        <span className="sourceBadge">{catalogStatus}</span>
       </section>
 
       <section className="configGrid">
@@ -57,7 +92,7 @@ export default function Configurator() {
           <ChoiceGroup
             title="Building model"
             value={modelCode}
-            options={models.map((model) => ({
+            options={catalog.models.map((model) => ({
               value: model.code,
               label: model.name,
               detail: `${model.squareFeet} sq ft - ${formatCurrency(model.basePrice)}`,
@@ -67,25 +102,25 @@ export default function Configurator() {
           <ChoiceGroup
             title="Finish level"
             value={finish}
-            options={optionGroups.finish}
+            options={catalog.optionGroups.finish}
             onChange={setFinish}
           />
           <ChoiceGroup
             title="Foundation"
             value={foundation}
-            options={optionGroups.foundation}
+            options={catalog.optionGroups.foundation}
             onChange={setFoundation}
           />
           <ChoiceGroup
             title="Utilities"
             value={utilities}
-            options={optionGroups.utilities}
+            options={catalog.optionGroups.utilities}
             onChange={setUtilities}
           />
           <ChoiceGroup
             title="Site condition"
             value={site}
-            options={optionGroups.site}
+            options={catalog.optionGroups.site}
             onChange={setSite}
           />
         </div>
@@ -351,4 +386,8 @@ function formatCurrency(value: number) {
     currency: "CAD",
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+function safeCurrent(current: string, values: string[]) {
+  return values.includes(current) ? current : values[0] ?? current;
 }

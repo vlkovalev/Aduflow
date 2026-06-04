@@ -1,8 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { generateDocumentRequirements, generatePermitTasks, isHoaLikely, type DocumentRequirement, type PermitTask } from "./permitChecklist";
-import { getLead, type LeadRecord } from "./leadStore";
+import {
+  generateDocumentRequirements,
+  generatePermitTasks,
+  isHoaLikely,
+  type DocumentRequirement,
+  type PermitTask,
+} from "./permitChecklist";
+import { getLead } from "./leadStore";
 import { getSupabaseServiceClient } from "./supabase";
 
 export type PermitPackage = {
@@ -77,7 +83,39 @@ export async function getPermitPackageByLeadId(leadId: string) {
       return null;
     }
 
-    return mapSupabasePackage(data as Record<string, unknown>, [], []);
+    const packageId = String(data.id);
+
+    const [{ data: taskRows }, { data: docRows }] = await Promise.all([
+      supabase
+        .from("permit_tasks")
+        .select("*")
+        .eq("permit_package_id", packageId)
+        .order("sort_order"),
+      supabase
+        .from("document_requirements")
+        .select("*")
+        .eq("permit_package_id", packageId),
+    ]);
+
+    const tasks: PermitTask[] = (taskRows ?? []).map((row) => ({
+      category: String(row.category ?? ""),
+      taskName: String(row.task_name ?? ""),
+      ownerRole: String(row.owner_role ?? "builder") as PermitTask["ownerRole"],
+      status: String(row.status ?? "not_started") as PermitTask["status"],
+      dueStage: String(row.due_stage ?? ""),
+      notes: String(row.notes ?? ""),
+      sortOrder: Number(row.sort_order ?? 0),
+    }));
+
+    const documents: DocumentRequirement[] = (docRows ?? []).map((row) => ({
+      documentName: String(row.document_name ?? ""),
+      documentType: String(row.document_type ?? ""),
+      requiredFor: String(row.required_for ?? "city") as DocumentRequirement["requiredFor"],
+      status: String(row.status ?? "missing") as DocumentRequirement["status"],
+      ownerRole: String(row.owner_role ?? "builder") as DocumentRequirement["ownerRole"],
+    }));
+
+    return mapSupabasePackage(data as Record<string, unknown>, tasks, documents);
   }
 
   const packages = await readLocalPackages();
@@ -91,7 +129,7 @@ async function insertSupabasePackage(permitPackage: PermitPackage) {
     return;
   }
 
-  const { error } = await supabase.from("permit_packages").insert({
+  const { error: packageError } = await supabase.from("permit_packages").insert({
     id: permitPackage.id,
     lead_id: permitPackage.leadId,
     jurisdiction_name: permitPackage.jurisdictionName,
@@ -103,8 +141,46 @@ async function insertSupabasePackage(permitPackage: PermitPackage) {
     updated_at: permitPackage.updatedAt,
   });
 
-  if (error) {
-    throw new Error(error.message);
+  if (packageError) {
+    throw new Error(packageError.message);
+  }
+
+  if (permitPackage.tasks.length > 0) {
+    const { error: tasksError } = await supabase.from("permit_tasks").insert(
+      permitPackage.tasks.map((task) => ({
+        id: randomUUID(),
+        permit_package_id: permitPackage.id,
+        category: task.category,
+        task_name: task.taskName,
+        owner_role: task.ownerRole,
+        status: task.status,
+        due_stage: task.dueStage,
+        notes: task.notes,
+        sort_order: task.sortOrder,
+      })),
+    );
+
+    if (tasksError) {
+      throw new Error(tasksError.message);
+    }
+  }
+
+  if (permitPackage.documents.length > 0) {
+    const { error: docsError } = await supabase.from("document_requirements").insert(
+      permitPackage.documents.map((doc) => ({
+        id: randomUUID(),
+        permit_package_id: permitPackage.id,
+        document_name: doc.documentName,
+        document_type: doc.documentType,
+        required_for: doc.requiredFor,
+        status: doc.status,
+        owner_role: doc.ownerRole,
+      })),
+    );
+
+    if (docsError) {
+      throw new Error(docsError.message);
+    }
   }
 }
 

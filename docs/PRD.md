@@ -20,8 +20,8 @@ Help modular builders sell more buildings while reducing estimating and proposal
 
 ### Customer Configurator
 - Start with feasibility before model selection
-- Select model
-- Choose options
+- Select model from the builder catalog
+- Choose builder-managed options
 - View factory cost versus site cost
 - Request proposal
 

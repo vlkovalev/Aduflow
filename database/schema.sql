@@ -11,15 +11,22 @@ CREATE TABLE models (
  model_name TEXT,
  model_code TEXT,
  square_feet NUMERIC,
- base_price NUMERIC
+ base_price NUMERIC,
+ region TEXT,
+ is_active BOOLEAN DEFAULT TRUE,
+ sort_order NUMERIC
 );
 
 CREATE TABLE options (
  id UUID PRIMARY KEY,
  model_id UUID,
  option_name TEXT,
+ option_value TEXT,
+ option_detail TEXT,
  option_category TEXT,
- option_price NUMERIC
+ option_price NUMERIC,
+ is_active BOOLEAN DEFAULT TRUE,
+ sort_order NUMERIC
 );
 
 CREATE TABLE leads (

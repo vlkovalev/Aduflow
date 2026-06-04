@@ -327,6 +327,17 @@ input {
   padding: 36px 0 28px;
 }
 
+.sourceBadge {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: white;
+  color: var(--forest);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .configGrid,
 .dashboardGrid {
   display: grid;
@@ -514,6 +525,33 @@ input {
 .fullButton {
   width: 100%;
   margin-top: 24px;
+}
+
+.proposalActions {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+@media print {
+  .printHide {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+  }
+
+  .appShell,
+  .proposalHero,
+  .proposalDetailGrid {
+    width: 100%;
+  }
+
+  .dataPanel,
+  .estimatePanel {
+    box-shadow: none;
+  }
 }
 
 .configPanel,
@@ -729,6 +767,64 @@ input {
   align-items: flex-start;
   flex-direction: column;
   background: var(--paper);
+}
+
+.proposalActions {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.proposalActions .button {
+  margin-top: 0;
+  width: 100%;
+}
+
+/* ─── Print / PDF ─────────────────────────────────── */
+
+@media print {
+  .printHide {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+    color: black;
+  }
+
+  .appShell {
+    padding-bottom: 0;
+    width: 100%;
+  }
+
+  .proposalDetailGrid,
+  .proposalHero,
+  .permitGrid,
+  .permitSummary {
+    width: 100%;
+    margin-inline: 0;
+  }
+
+  .proposalDetailGrid,
+  .permitGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .estimatePanel {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+
+  .dataPanel,
+  .proposalMain article {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
 }
 
 @media (max-width: 900px) {

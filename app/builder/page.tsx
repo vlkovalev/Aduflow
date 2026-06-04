@@ -13,27 +13,10 @@ const modules = [
   "Draw verification",
 ];
 
-const drawQueue = [
-  {
-    stage: "Foundation ready",
-    evidence: "12 geotagged photos",
-    lender: "Pending release",
-  },
-  {
-    stage: "Factory completion",
-    evidence: "QA report uploaded",
-    lender: "Ready to notify",
-  },
-  {
-    stage: "Final inspection",
-    evidence: "City signoff needed",
-    lender: "Blocked",
-  },
-];
-
 export default async function BuilderDashboard() {
   const leads = await listLeads();
   const stats = getDashboardStats(leads);
+  const drawQueue = getDrawQueue(leads);
 
   return (
     <main className="appShell">
@@ -125,18 +108,25 @@ export default async function BuilderDashboard() {
           <span>Lender evidence queue</span>
         </div>
         <div className="leadList">
-          {drawQueue.map((draw) => (
-            <article key={draw.stage}>
+          {drawQueue.length ? (
+            drawQueue.map((draw) => (
+            <article key={`${draw.leadId}-${draw.stage}`}>
               <div>
                 <strong>{draw.stage}</strong>
-                <span>{draw.evidence}</span>
+                <span>{draw.project}</span>
               </div>
               <div>
-                <strong>{draw.lender}</strong>
-                <span>Milestone package</span>
+                <strong>{draw.percent}%</strong>
+                <span>{draw.status}</span>
               </div>
             </article>
-          ))}
+            ))
+          ) : (
+            <div className="emptyState">
+              <strong>No draw milestones yet</strong>
+              <span>Saved proposals will populate this lender evidence queue.</span>
+            </div>
+          )}
         </div>
       </section>
     </main>
@@ -158,4 +148,20 @@ function getDashboardStats(leads: LeadRecord[]) {
     feasibleCount: leads.filter((lead) => lead.feasibilityResult === "Likely feasible").length,
     highRiskCount: leads.filter((lead) => lead.reviewRisk === "High").length,
   };
+}
+
+function getDrawQueue(leads: LeadRecord[]) {
+  return leads.flatMap((lead) => {
+    const milestones = Array.isArray(lead.configuration.drawMilestones)
+      ? (lead.configuration.drawMilestones as Array<{ stage?: string; percent?: number }>)
+      : [];
+
+    return milestones.slice(0, 2).map((milestone) => ({
+      leadId: lead.id,
+      stage: milestone.stage ?? "Milestone",
+      percent: Number(milestone.percent ?? 0),
+      project: `${lead.modelName} - ${lead.customerName}`,
+      status: lead.proposalStatus === "draft" ? "Evidence not started" : "Review pending",
+    }));
+  }).slice(0, 6);
 }

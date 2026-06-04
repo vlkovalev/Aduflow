@@ -21,6 +21,11 @@ export type OptionChoice = {
   price: number;
 };
 
+export type PricingCatalog = {
+  models: Model[];
+  optionGroups: Record<string, OptionChoice[]>;
+};
+
 export type ParcelScenario = {
   value: string;
   label: string;
@@ -119,19 +124,24 @@ export const optionGroups: Record<string, OptionChoice[]> = {
   ],
 };
 
+export const defaultCatalog: PricingCatalog = {
+  models,
+  optionGroups,
+};
+
 export function calculatePrice(basePrice: number, options: number[]) {
   const optionTotal = options.reduce((total, option) => total + option, 0);
   return basePrice + optionTotal;
 }
 
-export function calculateProjectPrice(input: ProjectInput) {
-  const model = models.find((item) => item.code === input.modelCode) ?? models[0];
-  const feasibility = calculateFeasibility(input.parcelType, model);
+export function calculateProjectPrice(input: ProjectInput, catalog: PricingCatalog = defaultCatalog) {
+  const model = catalog.models.find((item) => item.code === input.modelCode) ?? catalog.models[0] ?? models[0];
+  const feasibility = calculateFeasibility(input.parcelType, model, input);
   const selectedOptions = [
-    findOption("finish", input.finish),
-    findOption("foundation", input.foundation),
-    findOption("utilities", input.utilities),
-    findOption("site", input.site),
+    findOption(catalog.optionGroups, "finish", input.finish),
+    findOption(catalog.optionGroups, "foundation", input.foundation),
+    findOption(catalog.optionGroups, "utilities", input.utilities),
+    findOption(catalog.optionGroups, "site", input.site),
   ];
   const total = calculatePrice(
     model.basePrice,
@@ -143,8 +153,8 @@ export function calculateProjectPrice(input: ProjectInput) {
     total,
     low: Math.round(total * 0.92),
     high: Math.round(total * 1.14),
-    factoryCost: Math.round(model.basePrice + findOption("finish", input.finish).price),
-    siteCost: Math.round(total - model.basePrice - findOption("finish", input.finish).price),
+    factoryCost: Math.round(model.basePrice + findOption(catalog.optionGroups, "finish", input.finish).price),
+    siteCost: Math.round(total - model.basePrice - findOption(catalog.optionGroups, "finish", input.finish).price),
     model,
     timelineWeeks: siteComplexity ? 30 : 24,
     feasibility,
@@ -174,22 +184,34 @@ export function calculateProjectPrice(input: ProjectInput) {
   };
 }
 
-function findOption(group: keyof typeof optionGroups, value: string) {
-  return optionGroups[group].find((option) => option.value === value) ?? optionGroups[group][0];
+function findOption(groups: PricingCatalog["optionGroups"], group: string, value: string) {
+  const options = groups[group] ?? optionGroups[group] ?? [];
+  return options.find((option) => option.value === value) ?? options[0] ?? { value, label: value, detail: "", price: 0 };
 }
 
-export function calculateFeasibility(parcelType: string, model: Model) {
+export function calculateFeasibility(parcelType: string, model: Model, input?: Partial<ProjectInput>) {
   const scenario = parcelScenarios.find((item) => item.value === parcelType) ?? parcelScenarios[0];
   const fitsSize = model.squareFeet <= scenario.maxSquareFeet;
-  const confidence = fitsSize && scenario.reviewRisk === "Low" ? 86 : fitsSize ? 68 : 42;
+  const sizeRatio = model.squareFeet / scenario.maxSquareFeet;
+  const sizePenalty = fitsSize ? Math.max(0, Math.round((sizeRatio - 0.72) * 35)) : 28;
+  const storyPenalty = scenario.maxStories === 1 && model.squareFeet > 700 ? 8 : 0;
+  const riskPenalty = scenario.reviewRisk === "High" ? 22 : scenario.reviewRisk === "Medium" ? 12 : 0;
+  const hoaPenalty = scenario.value.includes("hoa") ? 8 : 0;
+  const utilityPenalty = input?.utilities === "complex" ? 12 : input?.utilities === "standard" ? 4 : 0;
+  const sitePenalty = input?.site === "tight" ? 12 : input?.site === "rural" ? 6 : 0;
+  const foundationCredit = input?.foundation === "helical" && input?.site === "tight" ? 4 : 0;
+  const confidence = Math.max(
+    18,
+    Math.min(92, 92 - sizePenalty - storyPenalty - riskPenalty - hoaPenalty - utilityPenalty - sitePenalty + foundationCredit),
+  );
 
   return {
     ...scenario,
     fitsSize,
     confidence,
-    result: fitsSize ? "Likely feasible" : "Needs redesign",
+    result: fitsSize && confidence >= 60 ? "Likely feasible" : fitsSize ? "Needs review" : "Needs redesign",
     note: fitsSize
-      ? `${model.name} fits the first-pass ${scenario.label.toLowerCase()} envelope.`
+      ? `${model.name} fits the first-pass ${scenario.label.toLowerCase()} envelope with ${scenario.reviewRisk.toLowerCase()} review risk.`
       : `${model.name} exceeds the first-pass envelope for this parcel scenario.`,
   };
 }
