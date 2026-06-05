@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { buildProposalSections, formatCurrency } from "../../../../lib/proposalBuilder";
+import { buildNextSteps, buildProposalSections, formatCurrency } from "../../../../lib/proposalBuilder";
 import { getLeadByToken } from "../../../../lib/leadStore";
 import { PrintButton } from "./PrintButton";
 
@@ -16,6 +16,7 @@ export default async function SharedProposalPage({
   }
 
   const sections = buildProposalSections(lead);
+  const nextSteps = buildNextSteps(lead);
 
   return (
     <main className="appShell">
@@ -70,9 +71,9 @@ export default async function SharedProposalPage({
           </div>
           <div className="checklist">
             <h2>Next steps</h2>
-            <div><span /><p>Builder confirms parcel and scope assumptions</p></div>
-            <div><span /><p>Permit and HOA checklist generated</p></div>
-            <div><span /><p>Proposal moves to owner review</p></div>
+            {nextSteps.map((step) => (
+              <div key={step}><span /><p>{step}</p></div>
+            ))}
           </div>
           <PrintButton />
         </aside>

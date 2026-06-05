@@ -12,6 +12,7 @@ export type ProjectInput = {
   foundation: string;
   utilities: string;
   site: string;
+  zoningResult?: ZoningSnapshot | null;
 };
 
 export type OptionChoice = {
@@ -35,6 +36,20 @@ export type ParcelScenario = {
   setback: string;
   permitPath: string;
   reviewRisk: "Low" | "Medium" | "High";
+};
+
+export type ZoningSnapshot = {
+  zone: string;
+  zoneDescription: string;
+  maxSquareFeet: number | null;
+  maxStories: number | null;
+  setbackFront: string | null;
+  setbackSide: string | null;
+  setbackRear: string | null;
+  aduPermitted: boolean | null;
+  reviewRisk: "Low" | "Medium" | "High";
+  permitPath: string;
+  source?: string;
 };
 
 export const parcelScenarios: ParcelScenario[] = [
@@ -136,7 +151,9 @@ export function calculatePrice(basePrice: number, options: number[]) {
 
 export function calculateProjectPrice(input: ProjectInput, catalog: PricingCatalog = defaultCatalog) {
   const model = catalog.models.find((item) => item.code === input.modelCode) ?? catalog.models[0] ?? models[0];
-  const feasibility = calculateFeasibility(input.parcelType, model, input);
+  const feasibility = input.zoningResult
+    ? calculateFeasibilityFromZoning(input.zoningResult, model, input)
+    : calculateFeasibility(input.parcelType, model, input);
   const selectedOptions = [
     findOption(catalog.optionGroups, "finish", input.finish),
     findOption(catalog.optionGroups, "foundation", input.foundation),
@@ -213,5 +230,46 @@ export function calculateFeasibility(parcelType: string, model: Model, input?: P
     note: fitsSize
       ? `${model.name} fits the first-pass ${scenario.label.toLowerCase()} envelope with ${scenario.reviewRisk.toLowerCase()} review risk.`
       : `${model.name} exceeds the first-pass envelope for this parcel scenario.`,
+  };
+}
+
+export function calculateFeasibilityFromZoning(
+  zoning: ZoningSnapshot,
+  model: Model,
+  input?: Partial<ProjectInput>,
+) {
+  const maxSquareFeet = zoning.maxSquareFeet ?? 800;
+  const maxStories = zoning.maxStories ?? 1;
+  const fitsSize = zoning.aduPermitted !== false && model.squareFeet <= maxSquareFeet;
+  const reviewPenalty = zoning.reviewRisk === "High" ? 24 : zoning.reviewRisk === "Medium" ? 12 : 0;
+  const permissionPenalty = zoning.aduPermitted === false ? 45 : zoning.aduPermitted === null ? 8 : 0;
+  const sizePenalty = fitsSize ? Math.max(0, Math.round((model.squareFeet / maxSquareFeet - 0.75) * 30)) : 32;
+  const utilityPenalty = input?.utilities === "complex" ? 10 : input?.utilities === "standard" ? 4 : 0;
+  const sitePenalty = input?.site === "tight" ? 10 : input?.site === "rural" ? 5 : 0;
+  const confidence = Math.max(
+    12,
+    Math.min(94, 94 - reviewPenalty - permissionPenalty - sizePenalty - utilityPenalty - sitePenalty),
+  );
+  const setbackParts = [
+    zoning.setbackFront ? `front ${zoning.setbackFront}` : null,
+    zoning.setbackSide ? `side ${zoning.setbackSide}` : null,
+    zoning.setbackRear ? `rear ${zoning.setbackRear}` : null,
+  ].filter(Boolean);
+
+  return {
+    value: "address-zoning",
+    label: zoning.zone || "Address zoning",
+    detail: zoning.zoneDescription || "Address-based zoning result",
+    maxSquareFeet,
+    maxStories,
+    setback: setbackParts.length ? setbackParts.join(" / ") : "Confirm with municipality",
+    permitPath: zoning.permitPath,
+    reviewRisk: zoning.reviewRisk,
+    fitsSize,
+    confidence,
+    result: fitsSize && confidence >= 65 ? "Likely feasible" : fitsSize ? "Needs review" : "Needs redesign",
+    note: fitsSize
+      ? `${model.name} fits the address-based ${zoning.zone || "zoning"} envelope from ${zoning.source ?? "zoning lookup"}.`
+      : `${model.name} does not fit the current address-based zoning envelope.`,
   };
 }

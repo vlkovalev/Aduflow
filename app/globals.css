@@ -780,6 +780,536 @@ input {
   width: 100%;
 }
 
+/* ─── Builder Setup ───────────────────────────────── */
+
+.setupTabs {
+  display: flex;
+  gap: 4px;
+  width: min(1180px, calc(100% - 36px));
+  margin: 0 auto 18px;
+  border-bottom: 2px solid var(--line);
+  padding-bottom: 0;
+}
+
+.setupTab {
+  border: none;
+  background: none;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+}
+
+.setupTab.active {
+  color: var(--forest);
+  border-bottom-color: var(--forest);
+}
+
+.setupSection {
+  width: min(1180px, calc(100% - 36px));
+  margin-inline: auto;
+  display: grid;
+  gap: 18px;
+}
+
+.setupTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.setupTable th {
+  text-align: left;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  padding: 0 10px 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.setupTable td {
+  padding: 12px 10px 12px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.setupTable tr:last-child td {
+  border-bottom: none;
+}
+
+.setupActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.setupActions .button {
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.button.danger {
+  border-color: #a5332a;
+  color: #a5332a;
+  background: white;
+}
+
+.setupForm {
+  display: grid;
+  grid-template-columns: 1fr 1fr 160px auto;
+  gap: 10px;
+  align-items: end;
+  margin-top: 18px;
+}
+
+.setupForm:not(.inline) {
+  grid-template-columns: 1fr 160px 160px;
+}
+
+.setupForm label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--muted);
+}
+
+.setupInput {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--ink);
+}
+
+.setupInput.narrow {
+  max-width: 140px;
+}
+
+.setupNotice {
+  width: min(1180px, calc(100% - 36px));
+  margin: 0 auto 18px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.setupNotice.error {
+  color: #a5332a;
+}
+
+.setupEmpty {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0 0 14px;
+}
+
+@media (max-width: 900px) {
+  .setupForm,
+  .setupForm:not(.inline) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .setupForm,
+  .setupForm:not(.inline) {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Address / zoning lookup ─────────────────────── */
+
+.addressLookup {
+  width: min(1180px, calc(100% - 36px));
+  margin: 0 auto 24px;
+}
+
+.addressLookupInner {
+  background: var(--forest);
+  border-radius: 10px;
+  padding: 22px 24px;
+}
+
+.addressLabel {
+  display: block;
+  color: white;
+  font-size: 15px;
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+
+.addressHint {
+  display: block;
+  color: rgba(255,255,255,0.6);
+  font-size: 13px;
+  font-weight: 400;
+  margin-top: 3px;
+}
+
+.addressRow {
+  display: flex;
+  gap: 10px;
+}
+
+.addressInput {
+  flex: 1;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 14px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: white;
+}
+
+.addressRow .button {
+  flex-shrink: 0;
+  background: var(--clay);
+  border-color: var(--clay);
+  color: white;
+}
+
+.zoningResult {
+  margin-top: 16px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.zoningBadge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.zoningBadge span {
+  background: var(--gold);
+  color: var(--forest);
+  font-size: 12px;
+  font-weight: 900;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.zoningBadge strong {
+  color: white;
+  font-size: 15px;
+}
+
+.zoningDetails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.zoningDetails span {
+  background: rgba(255,255,255,0.12);
+  border-radius: 4px;
+  padding: 4px 10px;
+  color: rgba(255,255,255,0.85);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.zoningRisk.risk-low { background: rgba(58,138,90,0.3); color: #a8f0c6; }
+.zoningRisk.risk-medium { background: rgba(213,169,78,0.3); color: var(--gold); }
+.zoningRisk.risk-high { background: rgba(165,51,42,0.3); color: #f0a8a0; }
+
+.zoningNote {
+  margin-top: 10px;
+  color: rgba(255,255,255,0.6);
+  font-size: 12px;
+}
+
+.zoningNote.muted {
+  color: var(--muted);
+  background: none;
+  margin-top: 8px;
+}
+
+@media (max-width: 620px) {
+  .addressRow { flex-direction: column; }
+}
+
+/* ─── Status select ───────────────────────────────── */
+
+.statusSelect {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  background: white;
+  color: var(--ink);
+}
+
+.statusSelect.status-new { border-color: var(--line); color: var(--muted); }
+.statusSelect.status-contacted { border-color: var(--gold); color: #8a6a1a; background: #fffbef; }
+.statusSelect.status-qualified { border-color: #6aadce; color: #1a5c7a; background: var(--sky); }
+.statusSelect.status-won { border-color: #3a8a5a; color: #1d4d30; background: #edf7f1; }
+.statusSelect.status-lost { border-color: #ccc; color: #888; background: #f5f5f5; }
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: var(--line);
+}
+
+.statusDot.status-new { background: var(--line); }
+.statusDot.status-contacted { background: var(--gold); }
+.statusDot.status-qualified { background: #6aadce; }
+.statusDot.status-won { background: #3a8a5a; }
+.statusDot.status-lost { background: #ccc; }
+
+/* ─── Analytics ───────────────────────────────────── */
+
+.analyticsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  width: min(1180px, calc(100% - 36px));
+  margin: 0 auto 18px;
+}
+
+.analyticsList {
+  display: grid;
+  gap: 10px;
+}
+
+.analyticsRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.analyticsBar {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--sage);
+  overflow: hidden;
+}
+
+.analyticsBar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--forest);
+  transition: width 0.3s ease;
+}
+
+.lenderBanner {
+  width: min(1180px, calc(100% - 36px));
+  margin: 0 auto 18px;
+  background: var(--sky);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--forest);
+}
+
+/* ─── Lender document ─────────────────────────────── */
+
+.lenderPage {
+  width: min(860px, calc(100% - 36px));
+  margin: 0 auto;
+  padding-bottom: 60px;
+}
+
+.lenderHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 36px 0 28px;
+  border-bottom: 3px solid var(--forest);
+  margin-bottom: 32px;
+}
+
+.lenderBrand {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--forest);
+}
+
+.lenderSubtitle {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.lenderMeta {
+  text-align: right;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lenderSection {
+  margin-bottom: 36px;
+}
+
+.lenderSection h2 {
+  font-size: 16px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--forest);
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+.lenderTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.lenderTable td, .lenderTable th {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  text-align: left;
+}
+
+.lenderTable td:first-child {
+  color: var(--muted);
+  font-weight: 700;
+  width: 40%;
+}
+
+.lenderTable th {
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.lenderDrawTable td:first-child { width: auto; color: var(--ink); font-weight: 400; }
+.lenderDrawTable td:nth-child(1) { width: 32px; color: var(--muted); font-weight: 700; }
+
+.lenderEvidence { color: var(--muted); font-size: 13px; }
+
+.lenderTotal td { font-size: 16px; border-top: 2px solid var(--forest); border-bottom: 2px solid var(--forest); }
+
+.lenderNote {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+  border-left: 3px solid var(--line);
+  padding-left: 10px;
+}
+
+.lenderDisclaimer p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+/* ─── Project tracker ─────────────────────────────── */
+
+.milestoneProgress {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.milestoneProgressBar {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--sage);
+  overflow: hidden;
+}
+
+.milestoneProgressBar span {
+  display: block;
+  height: 100%;
+  background: var(--forest);
+  border-radius: inherit;
+  transition: width 0.4s ease;
+}
+
+.milestoneProgress span:last-child {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.milestoneList {
+  display: grid;
+  gap: 12px;
+}
+
+.milestoneRow {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 14px;
+  align-items: start;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+}
+
+.milestoneRow.status-complete { background: #f0f9f4; border-color: #b8dfc8; }
+.milestoneRow.status-in_progress { background: #fffef0; border-color: #e8d08a; }
+
+.milestoneNum {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.milestoneTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.milestoneFields {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .analyticsGrid { grid-template-columns: 1fr; }
+  .milestoneFields { grid-template-columns: 1fr; }
+}
+
+@media print {
+  .lenderHide { display: none !important; }
+  .lenderPage { width: 100%; padding: 0; }
+  .lenderHeader { padding: 20px 0; }
+  .lenderSection { break-inside: avoid; }
+  .lenderTable { font-size: 11px; }
+}
+
 /* ─── Print / PDF ─────────────────────────────────── */
 
 @media print {

@@ -1,29 +1,27 @@
 import Link from "next/link";
 import { listLeads, type LeadRecord } from "../../lib/leadStore";
 import { formatCurrency } from "../../lib/proposalBuilder";
+import { LeadStatusSelect } from "./LeadStatusSelect";
 
-const modules = [
-  "Model library",
-  "Pricing rules",
-  "Option catalog",
-  "Permit checklist",
-  "BOM templates",
-  "Lead pipeline",
-  "HOA package",
-  "Draw verification",
-];
+const STATUS_LABELS: Record<string, string> = {
+  new: "New",
+  contacted: "Contacted",
+  qualified: "Qualified",
+  won: "Won",
+  lost: "Lost",
+};
 
 export default async function BuilderDashboard() {
   const leads = await listLeads();
   const stats = getDashboardStats(leads);
+  const analytics = getAnalytics(leads);
   const drawQueue = getDrawQueue(leads);
+  const wonLeads = leads.filter((l) => l.status === "won");
 
   return (
     <main className="appShell">
       <nav className="nav compact" aria-label="Main navigation">
-        <Link className="brand" href="/">
-          ADUflow
-        </Link>
+        <Link className="brand" href="/">ADUflow</Link>
         <div className="navLinks">
           <Link href="/configurator">Configurator</Link>
           <Link href="/builder">Builder OS</Link>
@@ -35,39 +33,82 @@ export default async function BuilderDashboard() {
           <p className="eyebrow">Builder and lender command center</p>
           <h1>Manage feasibility, prefab quotes, permits, and draw evidence.</h1>
         </div>
-        <Link className="button primary" href="/configurator">
-          Create quote
-        </Link>
+        <div style={{ display: "flex", gap: 10 }}>
+          <Link className="button secondary" href="/builder/setup">Manage catalog</Link>
+          <Link className="button primary" href="/configurator">Create quote</Link>
+        </div>
       </section>
 
+      {/* ── KPI stats ── */}
       <section className="dashboardStats">
-        <Stat label="Saved leads" value={String(leads.length)} />
-        <Stat label="Proposal value" value={formatCurrency(stats.totalValue)} />
-        <Stat label="Likely feasible" value={String(stats.feasibleCount)} />
-        <Stat label="High risk" value={String(stats.highRiskCount)} />
+        <Stat label="Total leads" value={String(leads.length)} />
+        <Stat label="Pipeline value" value={formatCurrency(stats.totalValue)} />
+        <Stat label="Won" value={String(stats.wonCount)} />
+        <Stat label="Conversion" value={`${analytics.conversionRate}%`} />
       </section>
 
+      {/* ── Analytics ── */}
+      {leads.length > 0 && (
+        <section className="analyticsGrid">
+          <div className="dataPanel">
+            <div className="panelTitle"><h2>Pipeline by status</h2><span>All leads</span></div>
+            <div className="analyticsList">
+              {Object.entries(analytics.byStatus).map(([status, count]) => (
+                <div key={status} className="analyticsRow">
+                  <span className={`statusDot status-${status}`} />
+                  <span>{STATUS_LABELS[status] ?? status}</span>
+                  <strong>{count}</strong>
+                  <div className="analyticsBar">
+                    <span style={{ width: `${Math.round((count / leads.length) * 100)}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="dataPanel">
+            <div className="panelTitle"><h2>Top models</h2><span>By lead count</span></div>
+            <div className="analyticsList">
+              {analytics.topModels.map(({ name, count, value }) => (
+                <div key={name} className="analyticsRow">
+                  <span style={{ flex: 1 }}>{name}</span>
+                  <span style={{ color: "var(--muted)", fontSize: 13 }}>{count} leads</span>
+                  <strong>{formatCurrency(value)}</strong>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="dataPanel">
+            <div className="panelTitle"><h2>Avg deal size</h2><span>By status</span></div>
+            <dl className="summaryList">
+              <div><dt>All leads</dt><dd>{formatCurrency(analytics.avgDealSize)}</dd></div>
+              <div><dt>Qualified only</dt><dd>{formatCurrency(analytics.avgQualifiedSize)}</dd></div>
+              <div><dt>Won</dt><dd>{formatCurrency(analytics.avgWonSize)}</dd></div>
+              <div><dt>Feasibility rate</dt><dd>{analytics.feasibilityRate}%</dd></div>
+            </dl>
+          </div>
+        </section>
+      )}
+
+      {/* ── Lead pipeline ── */}
       <section className="dashboardGrid">
         <div className="dataPanel">
-          <div className="panelTitle">
-            <h2>Lead pipeline</h2>
-            <span>Saved proposals</span>
-          </div>
+          <div className="panelTitle"><h2>Lead pipeline</h2><span>Saved proposals</span></div>
           <div className="leadList">
             {leads.length ? (
-              leads.slice(0, 6).map((lead) => (
-                <Link className="leadRow" href={`/proposals/${lead.id}`} key={lead.id}>
-                  <div>
+              leads.slice(0, 8).map((lead) => (
+                <div className="leadRow" key={lead.id}>
+                  <Link href={`/proposals/${lead.id}`} style={{ flex: 1, minWidth: 0 }}>
                     <strong>{lead.customerName}</strong>
-                    <span>
-                      {lead.modelName} - {lead.propertyAddress}
-                    </span>
+                    <span>{lead.modelName} — {lead.propertyAddress}</span>
+                  </Link>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+                    <div style={{ textAlign: "right" }}>
+                      <strong style={{ display: "block" }}>{formatCurrency(lead.estimatedPrice)}</strong>
+                      <span style={{ fontSize: 13, color: "var(--muted)" }}>{lead.feasibilityResult}</span>
+                    </div>
+                    <LeadStatusSelect leadId={lead.id} initialStatus={lead.status} />
                   </div>
-                  <div>
-                    <strong>{formatCurrency(lead.estimatedPrice)}</strong>
-                    <span>{lead.feasibilityResult}</span>
-                  </div>
-                </Link>
+                </div>
               ))
             ) : (
               <div className="emptyState">
@@ -79,13 +120,10 @@ export default async function BuilderDashboard() {
         </div>
 
         <div className="dataPanel">
-          <div className="panelTitle">
-            <h2>Permit queue</h2>
-            <span>Next action</span>
-          </div>
+          <div className="panelTitle"><h2>Permit queue</h2><span>Next action</span></div>
           {leads.length ? (
             <div className="permitQueue">
-              {leads.slice(0, 4).map((lead) => (
+              {leads.filter(l => l.status !== "lost").slice(0, 5).map((lead) => (
                 <Link href={`/permit/${lead.id}`} key={lead.id}>
                   <strong>{lead.modelName}</strong>
                   <span>{lead.permitPath}</span>
@@ -93,38 +131,57 @@ export default async function BuilderDashboard() {
               ))}
             </div>
           ) : (
-            <div className="moduleGrid">
-              {modules.map((module) => (
-                <span key={module}>{module}</span>
-              ))}
-            </div>
+            <p style={{ color: "var(--muted)", fontSize: 14 }}>No active leads yet.</p>
           )}
         </div>
       </section>
 
+      {/* ── Active projects ── */}
+      {wonLeads.length > 0 && (
+        <section className="dataPanel fullWidthPanel">
+          <div className="panelTitle"><h2>Active projects</h2><span>Won leads in progress</span></div>
+          <div className="leadList">
+            {wonLeads.map((lead) => (
+              <div className="leadRow" key={lead.id}>
+                <div style={{ flex: 1 }}>
+                  <strong>{lead.customerName}</strong>
+                  <span>{lead.modelName} — {lead.propertyAddress}</span>
+                </div>
+                <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
+                  <Link className="button secondary" style={{ minHeight: 34, padding: "0 12px", fontSize: 13 }} href={`/projects/${lead.id}`}>
+                    Track project
+                  </Link>
+                  <Link className="button secondary" style={{ minHeight: 34, padding: "0 12px", fontSize: 13 }} href={`/proposals/${lead.id}/lender`}>
+                    Lender package
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Draw verification ── */}
       <section className="dataPanel fullWidthPanel">
-        <div className="panelTitle">
-          <h2>Digital draw verification</h2>
-          <span>Lender evidence queue</span>
-        </div>
+        <div className="panelTitle"><h2>Draw verification queue</h2><span>Lender evidence</span></div>
         <div className="leadList">
           {drawQueue.length ? (
             drawQueue.map((draw) => (
-            <article key={`${draw.leadId}-${draw.stage}`}>
-              <div>
-                <strong>{draw.stage}</strong>
-                <span>{draw.project}</span>
-              </div>
-              <div>
-                <strong>{draw.percent}%</strong>
-                <span>{draw.status}</span>
-              </div>
-            </article>
+              <article key={`${draw.leadId}-${draw.stage}`}>
+                <div>
+                  <strong>{draw.stage}</strong>
+                  <span>{draw.project}</span>
+                </div>
+                <div>
+                  <strong>{draw.percent}%</strong>
+                  <span>{draw.status}</span>
+                </div>
+              </article>
             ))
           ) : (
             <div className="emptyState">
               <strong>No draw milestones yet</strong>
-              <span>Saved proposals will populate this lender evidence queue.</span>
+              <span>Won projects will populate this lender evidence queue.</span>
             </div>
           )}
         </div>
@@ -144,24 +201,65 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function getDashboardStats(leads: LeadRecord[]) {
   return {
-    totalValue: leads.reduce((total, lead) => total + lead.estimatedPrice, 0),
-    feasibleCount: leads.filter((lead) => lead.feasibilityResult === "Likely feasible").length,
-    highRiskCount: leads.filter((lead) => lead.reviewRisk === "High").length,
+    totalValue: leads.reduce((t, l) => t + l.estimatedPrice, 0),
+    wonCount: leads.filter((l) => l.status === "won").length,
+    feasibleCount: leads.filter((l) => l.feasibilityResult === "Likely feasible").length,
+    highRiskCount: leads.filter((l) => l.reviewRisk === "High").length,
+  };
+}
+
+function getAnalytics(leads: LeadRecord[]) {
+  const byStatus = leads.reduce<Record<string, number>>((acc, l) => {
+    const s = l.status ?? "new";
+    acc[s] = (acc[s] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const modelMap = leads.reduce<Record<string, { count: number; value: number }>>((acc, l) => {
+    acc[l.modelName] = acc[l.modelName] ?? { count: 0, value: 0 };
+    acc[l.modelName].count++;
+    acc[l.modelName].value += l.estimatedPrice;
+    return acc;
+  }, {});
+
+  const topModels = Object.entries(modelMap)
+    .sort((a, b) => b[1].count - a[1].count)
+    .slice(0, 4)
+    .map(([name, { count, value }]) => ({ name, count, value }));
+
+  const avg = (arr: LeadRecord[]) =>
+    arr.length ? Math.round(arr.reduce((t, l) => t + l.estimatedPrice, 0) / arr.length) : 0;
+
+  const wonLeads = leads.filter((l) => l.status === "won");
+  const qualifiedLeads = leads.filter((l) => l.status === "qualified" || l.status === "won");
+
+  return {
+    byStatus,
+    topModels,
+    conversionRate: leads.length ? Math.round((wonLeads.length / leads.length) * 100) : 0,
+    avgDealSize: avg(leads),
+    avgQualifiedSize: avg(qualifiedLeads),
+    avgWonSize: avg(wonLeads),
+    feasibilityRate: leads.length
+      ? Math.round((leads.filter((l) => l.feasibilityResult === "Likely feasible").length / leads.length) * 100)
+      : 0,
   };
 }
 
 function getDrawQueue(leads: LeadRecord[]) {
-  return leads.flatMap((lead) => {
-    const milestones = Array.isArray(lead.configuration.drawMilestones)
-      ? (lead.configuration.drawMilestones as Array<{ stage?: string; percent?: number }>)
-      : [];
-
-    return milestones.slice(0, 2).map((milestone) => ({
-      leadId: lead.id,
-      stage: milestone.stage ?? "Milestone",
-      percent: Number(milestone.percent ?? 0),
-      project: `${lead.modelName} - ${lead.customerName}`,
-      status: lead.proposalStatus === "draft" ? "Evidence not started" : "Review pending",
-    }));
-  }).slice(0, 6);
+  return leads
+    .filter((l) => l.status === "won")
+    .flatMap((lead) => {
+      const milestones = Array.isArray(lead.configuration.drawMilestones)
+        ? (lead.configuration.drawMilestones as Array<{ stage?: string; percent?: number }>)
+        : [];
+      return milestones.slice(0, 2).map((m) => ({
+        leadId: lead.id,
+        stage: m.stage ?? "Milestone",
+        percent: Number(m.percent ?? 0),
+        project: `${lead.modelName} — ${lead.customerName}`,
+        status: "Evidence not started",
+      }));
+    })
+    .slice(0, 6);
 }

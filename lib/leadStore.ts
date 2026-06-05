@@ -15,6 +15,16 @@ export type LeadRecord = {
   phone: string;
   propertyAddress: string;
   parcelScenario: string;
+  zoningSource: string;
+  zoningZone: string;
+  zoningDescription: string;
+  zoningRaw: Record<string, unknown> | null;
+  zoningLookupStatus: string;
+  zoningCheckedAt: string;
+  aduPermitted: boolean | null;
+  setbackFront: string;
+  setbackSide: string;
+  setbackRear: string;
   feasibilityResult: string;
   feasibilityConfidence: number;
   permitPath: string;
@@ -74,6 +84,16 @@ export async function createLead(input: CreateLeadInput) {
         phone: record.phone,
         property_address: record.propertyAddress,
         parcel_scenario: record.parcelScenario,
+        zoning_source: record.zoningSource,
+        zoning_zone: record.zoningZone,
+        zoning_description: record.zoningDescription,
+        zoning_raw: record.zoningRaw,
+        zoning_lookup_status: record.zoningLookupStatus,
+        zoning_checked_at: record.zoningCheckedAt || null,
+        adu_permitted: record.aduPermitted,
+        setback_front: record.setbackFront,
+        setback_side: record.setbackSide,
+        setback_rear: record.setbackRear,
         feasibility_result: record.feasibilityResult,
         feasibility_confidence: record.feasibilityConfidence,
         permit_path: record.permitPath,
@@ -135,6 +155,16 @@ export async function getLead(id: string) {
       phone: data.phone ?? "",
       propertyAddress: data.property_address ?? "",
       parcelScenario: data.parcel_scenario ?? "",
+      zoningSource: data.zoning_source ?? "",
+      zoningZone: data.zoning_zone ?? "",
+      zoningDescription: data.zoning_description ?? "",
+      zoningRaw: data.zoning_raw ?? null,
+      zoningLookupStatus: data.zoning_lookup_status ?? "",
+      zoningCheckedAt: data.zoning_checked_at ?? "",
+      aduPermitted: data.adu_permitted ?? null,
+      setbackFront: data.setback_front ?? "",
+      setbackSide: data.setback_side ?? "",
+      setbackRear: data.setback_rear ?? "",
       feasibilityResult: data.feasibility_result ?? "",
       feasibilityConfidence: Number(data.feasibility_confidence ?? 0),
       permitPath: data.permit_path ?? "",
@@ -214,6 +244,16 @@ function mapLeadRow(data: Record<string, unknown>) {
     phone: String(data.phone ?? ""),
     propertyAddress: String(data.property_address ?? ""),
     parcelScenario: String(data.parcel_scenario ?? ""),
+    zoningSource: String(data.zoning_source ?? ""),
+    zoningZone: String(data.zoning_zone ?? ""),
+    zoningDescription: String(data.zoning_description ?? ""),
+    zoningRaw: (data.zoning_raw ?? null) as Record<string, unknown> | null,
+    zoningLookupStatus: String(data.zoning_lookup_status ?? ""),
+    zoningCheckedAt: String(data.zoning_checked_at ?? ""),
+    aduPermitted: typeof data.adu_permitted === "boolean" ? data.adu_permitted : null,
+    setbackFront: String(data.setback_front ?? ""),
+    setbackSide: String(data.setback_side ?? ""),
+    setbackRear: String(data.setback_rear ?? ""),
     feasibilityResult: String(data.feasibility_result ?? ""),
     feasibilityConfidence: Number(data.feasibility_confidence ?? 0),
     permitPath: String(data.permit_path ?? ""),

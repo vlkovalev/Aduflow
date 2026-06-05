@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { buildProposalSections, formatCurrency } from "../../../lib/proposalBuilder";
+import { buildNextSteps, buildProposalSections, formatCurrency } from "../../../lib/proposalBuilder";
 import { getLead } from "../../../lib/leadStore";
 import { PrintButton } from "../share/[token]/PrintButton";
 import { CopyLinkButton } from "./CopyLinkButton";
@@ -18,6 +18,7 @@ export default async function ProposalPage({
   }
 
   const sections = buildProposalSections(lead);
+  const nextSteps = buildNextSteps(lead);
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/proposals/share/${lead.shareToken}`;
 
   return (
@@ -78,9 +79,9 @@ export default async function ProposalPage({
           </div>
           <div className="checklist">
             <h2>Next steps</h2>
-            <div><span /><p>Builder confirms parcel and scope assumptions</p></div>
-            <div><span /><p>Permit and HOA checklist generated</p></div>
-            <div><span /><p>Proposal moves to owner review</p></div>
+            {nextSteps.map((step) => (
+              <div key={step}><span /><p>{step}</p></div>
+            ))}
           </div>
           <div className="proposalActions printHide">
             <CopyLinkButton shareUrl={shareUrl} />

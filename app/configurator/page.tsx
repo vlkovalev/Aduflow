@@ -9,6 +9,22 @@ import {
   type PricingCatalog,
 } from "../../lib/pricingEngine";
 
+type ZoningResult = {
+  address?: string;
+  zone: string;
+  zoneDescription: string;
+  maxSquareFeet: number | null;
+  maxStories: number | null;
+  setbackFront: string | null;
+  setbackSide: string | null;
+  setbackRear: string | null;
+  aduPermitted: boolean | null;
+  reviewRisk: "Low" | "Medium" | "High";
+  permitPath: string;
+  source?: string;
+  rawData?: Record<string, unknown>;
+};
+
 export default function Configurator() {
   const [catalog, setCatalog] = useState<PricingCatalog>(defaultCatalog);
   const [catalogStatus, setCatalogStatus] = useState("Default catalog");
@@ -21,6 +37,32 @@ export default function Configurator() {
   const [leadSubmitted, setLeadSubmitted] = useState(false);
   const [proposalUrl, setProposalUrl] = useState("");
   const [submitError, setSubmitError] = useState("");
+  const [addressInput, setAddressInput] = useState("");
+  const [zoningResult, setZoningResult] = useState<ZoningResult | null>(null);
+  const [zoningStatus, setZoningStatus] = useState<"idle" | "loading" | "found" | "not_found">("idle");
+
+  async function lookupAddress() {
+    if (!addressInput.trim()) return;
+    setZoningStatus("loading");
+    setZoningResult(null);
+    try {
+      const res = await fetch(`/api/zoning?address=${encodeURIComponent(addressInput.trim())}`);
+      const data = await res.json();
+      if (data.result) {
+        setZoningResult(data.result as ZoningResult);
+        setZoningStatus("found");
+        // Auto-select best matching parcel scenario
+        const risk = (data.result as ZoningResult).reviewRisk;
+        if (risk === "High") setParcelType("tight-servicing");
+        else if (risk === "Medium") setParcelType("corner-hoa");
+        else setParcelType("urban-lane");
+      } else {
+        setZoningStatus("not_found");
+      }
+    } catch {
+      setZoningStatus("not_found");
+    }
+  }
 
   useEffect(() => {
     let active = true;
@@ -61,6 +103,7 @@ export default function Configurator() {
     foundation,
     utilities,
     site,
+    zoningResult,
   }, catalog);
 
   return (
@@ -75,6 +118,55 @@ export default function Configurator() {
           This MVP turns those constraints into a builder-ready package.
         </p>
         <span className="sourceBadge">{catalogStatus}</span>
+      </section>
+
+      {/* ── Address lookup ── */}
+      <section className="addressLookup">
+        <div className="addressLookupInner">
+          <label className="addressLabel">
+            Property address
+            <span className="addressHint">Enter the address to auto-populate zoning data</span>
+          </label>
+          <div className="addressRow">
+            <input
+              className="addressInput"
+              value={addressInput}
+              onChange={(e) => setAddressInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && lookupAddress()}
+              placeholder="42 Maple Street, Vancouver, BC or 1234 Oak Ave, Portland OR"
+            />
+            <button
+              className="button primary"
+              type="button"
+              onClick={lookupAddress}
+              disabled={zoningStatus === "loading" || !addressInput.trim()}
+            >
+              {zoningStatus === "loading" ? "Looking up..." : "Check zoning"}
+            </button>
+          </div>
+          {zoningStatus === "found" && zoningResult && (
+            <div className="zoningResult">
+              <div className="zoningBadge">
+                <span>{zoningResult.zone}</span>
+                <strong>{zoningResult.zoneDescription}</strong>
+              </div>
+              <div className="zoningDetails">
+                {zoningResult.maxSquareFeet && <span>Max ADU: {zoningResult.maxSquareFeet} sq ft</span>}
+                {zoningResult.maxStories && <span>{zoningResult.maxStories} storey max</span>}
+                {zoningResult.setbackRear && <span>Rear setback: {zoningResult.setbackRear}</span>}
+                {zoningResult.setbackSide && <span>Side setback: {zoningResult.setbackSide}</span>}
+                <span className={`zoningRisk risk-${zoningResult.reviewRisk.toLowerCase()}`}>
+                  {zoningResult.reviewRisk} review risk
+                </span>
+                <span>{zoningResult.permitPath}</span>
+              </div>
+              <p className="zoningNote">Parcel scenario auto-selected below. Adjust if needed.</p>
+            </div>
+          )}
+          {zoningStatus === "not_found" && (
+            <p className="zoningNote muted">No zoning data found for this address. Select a parcel scenario manually below.</p>
+          )}
+        </div>
       </section>
 
       <section className="configGrid">
@@ -235,8 +327,18 @@ export default function Configurator() {
                 customerName: formData.get("name"),
                 email: formData.get("email"),
                 phone: formData.get("phone"),
-                propertyAddress: formData.get("address"),
+                propertyAddress: formData.get("address") || addressInput,
                 parcelScenario: parcelType,
+                zoningSource: zoningResult?.source ?? "manual",
+                zoningZone: zoningResult?.zone ?? "",
+                zoningDescription: zoningResult?.zoneDescription ?? "",
+                zoningRaw: zoningResult?.rawData ?? zoningResult ?? null,
+                zoningLookupStatus: zoningResult ? "found" : "manual",
+                zoningCheckedAt: zoningResult ? new Date().toISOString() : "",
+                aduPermitted: zoningResult?.aduPermitted ?? null,
+                setbackFront: zoningResult?.setbackFront ?? "",
+                setbackSide: zoningResult?.setbackSide ?? "",
+                setbackRear: zoningResult?.setbackRear ?? "",
                 feasibilityResult: estimate.feasibility.result,
                 feasibilityConfidence: estimate.feasibility.confidence,
                 permitPath: estimate.permitPath,
@@ -290,7 +392,13 @@ export default function Configurator() {
           </label>
           <label>
             Property address
-            <input name="address" placeholder="Street, city, province/state" required />
+            <input
+              name="address"
+              placeholder="Street, city, province/state"
+              required
+              value={addressInput}
+              onChange={(event) => setAddressInput(event.target.value)}
+            />
           </label>
 
           <div className="proposalSummary">
