@@ -1,244 +1,283 @@
 # ADUflow Pilot Builder Outreach
 
-10 personalized emails — one per builder. Tone: founder-to-founder, short, specific, no fluff.
-Send from a real name, not a company alias. Subject lines are tested-style plain text.
+10 personalized outreach emails for modular ADU / garden-suite builders.
 
-**Before sending:** replace `[your-url]` with your live Vercel URL everywhere below.
+Tone: founder-to-founder, short, specific, no hype.
 
-**Removed after competitive check:** Abodu (abodu.com/configurator), Perpetual Homes (build.perpetualhomesadu.com), and USModular (build.usmodularinc.com) all have existing online configurators — don't pitch them.
-Replaced with: California Modulars (#6) and Hammer & Hand (#8).
+Before sending:
+- Replace `[your-url]` with the live Vercel URL.
+- Replace `[Your name]`.
+- If possible, test the builder's city in `/configurator` first so the email can mention the zoning lookup.
+
+Core pitch:
+
+ADUflow is no longer just a configurator. It is an address-first pre-construction workflow:
+
+- homeowner enters a property address
+- ADUflow returns a first-pass zoning screen
+- homeowner selects one of the builder's models
+- system generates factory/site cost split
+- system creates a proposal, lender package, permit checklist, and project tracker
+
+Important wording:
+Use "first-pass zoning screen" or "municipal fallback estimate" unless a live zoning API result is available. Do not imply permit approval.
 
 ---
 
-## 1. Lane One Homes — Surrey, BC
+## General Template
 
-**To:** (via laneonehomes.ca/contact)
-**Subject:** Free tool for ADU builders — cut quote time down
+**Subject:** Address-first ADU quoting for your model lineup
 
 Hi [Name],
 
-I came across Lane One Homes while researching prefab ADU builders in BC. Steel-frame construction that walks customers through the permit process — that's a tight model.
+I'm building ADUflow, a pre-construction sales tool for ADU and modular builders.
 
-I'm building ADUflow, a quoting and feasibility tool for modular builders. A homeowner puts in their parcel type, picks a model, and gets an instant budget range, factory vs. site cost split, permit path, and draw milestone schedule — in under 60 seconds.
+The key difference is that it starts with the property address, not the floor plan. A homeowner enters an address, gets a first-pass zoning screen, selects from your model lineup, and receives a proposal with budget range, factory vs. site cost split, permit checklist, lender draw schedule, and project tracker.
 
-You can try the demo yourself at [your-url]/configurator — no signup, takes about a minute.
+You can try the demo here:
 
-Right now I'm looking for 3–5 BC builders to pilot it free. You'd keep every lead it generates, I'd get feedback on what to build next.
+[your-url]/configurator
+
+I'm looking for 3-5 builders to pilot it free. You keep every lead. I get feedback on what makes the workflow useful enough to pay for.
 
 Worth a 20-minute call?
 
-[Your name]
+[Your name]  
 ADUflow | [your-url]
 
 ---
 
-## 2. ORCA LGS — Vancouver Island, BC
+## 1. Lane One Homes - Surrey, BC
 
-**To:** (via orcalgs.ca contact)
-**Subject:** Faster quoting for your modular pods — pilot offer
+**To:** via laneonehomes.ca/contact  
+**Subject:** Address-first ADU quoting for BC builders
 
 Hi [Name],
 
-Found ORCA LGS through a search for prefab ADU builders on Vancouver Island — the pod lineup is well-positioned for backyard infill.
+I came across Lane One Homes while researching prefab and steel-frame ADU builders in BC. Your permit-aware process is exactly the kind of workflow ADUflow is built around.
 
-I'm building ADUflow, a sales tool that turns a builder's standard models into an instant customer-facing quote: parcel feasibility, budget range, factory vs. site cost, and a lender-ready draw schedule. No back-and-forth, no spreadsheet.
+ADUflow starts with the homeowner's address, returns a first-pass zoning screen, then turns your model lineup into an instant proposal: budget range, factory vs. site cost split, permit checklist, lender draw schedule, and project tracker.
 
-You can try a live demo at [your-url]/configurator — takes about 60 seconds, no signup.
+Try the demo here: [your-url]/configurator
 
-Looking for a small group of builders to pilot it at no cost. You load your models, we handle the configurator. Leads are yours.
+I'm looking for a small group of BC builders to pilot it free. You keep the leads; I get feedback from a real builder workflow.
 
-Open to a quick call if the timing is right?
+Worth a quick call?
 
-[Your name]
+[Your name]  
 ADUflow | [your-url]
 
 ---
 
-## 3. EpicMod — Ontario (province-wide)
+## 2. ORCA LGS - Vancouver Island, BC
 
-**To:** (via epicmod.ca)
-**Subject:** ADU quoting tool built for factory-direct builders
+**To:** via orcalgs.ca/contact  
+**Subject:** Faster pre-qualification for modular pods
 
 Hi [Name],
 
-EpicMod came up immediately when I started mapping Ontario's serious prefab ADU builders — 8–10 weeks post-permit, free site analysis, CMHC Prefab Plus eligible. That's a tight operation.
+ORCA's pod lineup looks well-positioned for backyard infill, but the hard part is usually the lot: zoning, access, utilities, permit path, and whether the homeowner is financially realistic.
 
-I'm building ADUflow, a pre-construction quoting platform for modular builders. A homeowner enters their parcel details, selects from your model lineup, and gets an instant feasibility check, budget range (factory + site split), permit path, and draw milestone schedule — without anyone on your team touching it.
+ADUflow helps with that front-end filter. A homeowner enters an address, selects from your models, and gets a first-pass feasibility screen plus proposal package: factory/site cost split, permit checklist, lender package, and draw milestones.
 
-You can try the live demo at [your-url]/configurator before we talk — takes under a minute, no signup.
+Live demo: [your-url]/configurator
 
-We're piloting with a handful of builders across Canada this summer. No cost to you. You load your models and pricing, we handle everything customer-facing.
+We're piloting with a few builders at no cost. You keep every lead.
 
-Would you have 20 minutes to see a demo?
+Open to a 20-minute walkthrough?
 
-[Your name]
+[Your name]  
 ADUflow | [your-url]
 
 ---
 
-## 4. Toronto Garden Suite — Toronto, ON
+## 3. EpicMod - Ontario
 
-**To:** (via torontogardensuite.ca)
-**Subject:** Permit-to-build quoting tool — pilot spots open
+**To:** via epicmod.ca  
+**Subject:** ADU quoting tool built around feasibility first
 
 Hi [Name],
 
-Toronto Garden Suite has a clear focus — garden suites, laneway suites, ADUs in the GTA, permit to build. That's exactly the customer journey ADUflow is built around.
+EpicMod stood out while I was mapping Ontario prefab ADU builders: factory-direct, fast post-permit timeline, and a model that depends on serious homeowners getting qualified early.
 
-The tool starts with feasibility: parcel type, setback constraints, HOA/review risk, permit path. Then it generates an instant budget range and packages that into a proposal the homeowner and builder can both act on. The goal is to get from first conversation to signed proposal in under an hour.
+ADUflow is built for that pre-construction step. It starts with a property address, gives the homeowner a first-pass zoning screen, then creates a proposal with budget range, factory vs. site cost, lender draw schedule, and permit checklist.
 
-You can try it yourself at [your-url]/configurator — no signup, takes about 60 seconds.
+Try it here: [your-url]/configurator
 
-Running a free pilot with 3–5 Toronto-area builders this summer. Interested in being one of them?
+I'm looking for 3-5 builders to pilot the workflow free this summer. You load your models and pricing; ADUflow handles the customer-facing intake.
 
-[Your name]
+Worth a short call?
+
+[Your name]  
 ADUflow | [your-url]
 
 ---
 
-## 5. prefabADU — California
+## 4. Toronto Garden Suite - Toronto, ON
 
-**To:** (via prefabadu.com)
-**Subject:** Instant feasibility + quoting for your ADU models
+**To:** via torontogardensuite.ca  
+**Subject:** Garden-suite feasibility and lender package pilot
 
 Hi [Name],
 
-Twenty years in factory-built ADUs is a long track record in a market that's still figuring itself out. Came across prefabADU while mapping California's serious modular builders.
+Toronto garden suites are a perfect example of why quoting has to start with feasibility. The floor plan matters, but the property, permit path, and financing blockers come first.
 
-I'm building ADUflow — a pre-construction quoting tool that turns a builder's standard models into an instant homeowner-facing package: parcel feasibility, budget range, factory vs. site cost split, draw milestones. The homeowner self-qualifies before they ever call you.
+ADUflow turns that into a workflow: address lookup, first-pass zoning screen, model selection, budget range, permit checklist, lender package, and active project tracker after the proposal is accepted.
 
-You can try the configurator at [your-url]/configurator right now — takes 60 seconds, no account needed.
+Demo: [your-url]/configurator
 
-Piloting with a small group of California builders at no cost. You'd load your models and pricing, we'd handle the configurator and lead capture. You keep every lead.
+I'm piloting with a small group of Ontario builders. No cost during the pilot. You keep every lead generated.
 
-Would a 20-minute demo make sense?
+Interested in seeing it?
 
-[Your name]
+[Your name]  
 ADUflow | [your-url]
 
 ---
 
-## 6. California Modulars — statewide CA
+## 5. prefabADU - California
 
-**To:** (via californiamodulars.com)
-**Subject:** Free quoting tool for HCD-certified builders — pilot offer
+**To:** via prefabadu.com  
+**Subject:** Address-first quoting for prefab ADU buyers
 
 Hi [Name],
 
-California Modulars came up immediately when I mapped HCD-certified modular ADU builders — state approval, under 6 months delivery, consultation-first process. That profile means you're spending real time on early conversations that don't always close.
+Prefab ADU buyers usually need three things before they are worth a builder's time: does the lot work, what will it cost, and can they finance it?
 
-I'm building ADUflow, a pre-construction quoting platform for modular builders. A homeowner enters their parcel type, picks from your model lineup, and gets an instant feasibility check, budget range, factory vs. site cost split, and draw milestone schedule — before they call you. You load your models once, we handle everything customer-facing.
+ADUflow packages those answers. A homeowner enters an address, gets a first-pass zoning screen, selects a model, and receives a proposal with factory/site cost split, lender draw schedule, permit checklist, and project tracker.
 
-Try the demo yourself at [your-url]/configurator — no signup, under a minute.
+Try the demo: [your-url]/configurator
 
-Piloting free with a handful of California builders this summer. You keep every lead.
+I'm offering a free pilot to a few ADU builders. You keep the leads; I use the feedback to shape the builder workflow.
 
 Worth 20 minutes?
 
-[Your name]
+[Your name]  
 ADUflow | [your-url]
 
 ---
 
-## 7. Ballard Backyard Cottages — Seattle, WA
+## 6. California Modulars - statewide CA
 
-**To:** (via ballardbackyardcottages.com)
-**Subject:** DADU quoting tool — free pilot for Seattle builders
+**To:** via californiamodulars.com  
+**Subject:** Pilot tool for HCD-certified modular ADU builders
 
 Hi [Name],
 
-Ballard Backyard Cottages came up as the go-to DADU builder in Seattle. My guess is you're quoting most of these projects yourself, which means a lot of time spent on lots that don't go anywhere.
+California Modulars looks like exactly the kind of builder ADUflow is designed for: model-driven, factory-aware, and dependent on qualifying homeowners before the consultation gets expensive.
 
-ADUflow is a quoting tool built specifically for backyard dwelling builders. A homeowner enters their lot type, picks a building size, and gets an instant budget range, site vs. factory cost split, and a permit path summary — before they call you. The serious ones self-select in. The tire-kickers self-select out.
+ADUflow starts with address-based feasibility, then generates a proposal with model selection, factory vs. site cost split, lender draw schedule, permit checklist, and project tracker.
 
-You can try it at [your-url]/configurator — takes about 60 seconds, no signup.
+Try it here: [your-url]/configurator
 
-I'm piloting it free with a small group of PNW builders. No strings — you keep the leads, I get feedback.
+I'm piloting it free with a few builders. You keep every lead and can load your real models into the builder catalog.
 
-Quick call to see if it fits your workflow?
+Open to a quick walkthrough?
 
-[Your name]
+[Your name]  
 ADUflow | [your-url]
 
 ---
 
-## 8. Hammer & Hand — Portland, OR + Seattle, WA
+## 7. Ballard Backyard Cottages - Seattle, WA
 
-**To:** (via hammerandhand.com)
-**Subject:** ADU quoting tool for design-build shops — free pilot
+**To:** via ballardbackyardcottages.com  
+**Subject:** DADU pre-qualification before the first call
 
 Hi [Name],
 
-Hammer & Hand came up as one of the few ADU builders operating seriously across both Portland and Seattle. Design-build with a real portfolio — that means you're doing custom scoping on every project, which is expensive time if the lot doesn't pencil out.
+Seattle DADU leads can eat a lot of time before anyone knows whether the lot, budget, or financing actually works.
 
-ADUflow handles the pre-construction filter: a homeowner enters their parcel type, picks a building size, and gets an instant feasibility check, budget range, permit path, and draw milestone schedule — before they reach your team. The serious leads come in pre-qualified. The rest don't come in at all.
+ADUflow is built to filter that earlier. The homeowner enters an address, gets a first-pass zoning screen, configures a model, and receives a proposal package with permit path, budget range, lender draw schedule, and project tracker.
 
-You can see it for yourself at [your-url]/configurator — no signup, takes about a minute.
+Demo: [your-url]/configurator
 
-Running a free pilot with a handful of PNW builders this summer. No cost, no commitment — you keep every lead.
+I'm running a free pilot with a small group of PNW builders. No commission, no catch. You keep the leads.
 
-Quick call to see if it fits?
+Worth a call?
 
-[Your name]
+[Your name]  
 ADUflow | [your-url]
 
 ---
 
-## 9. Urban Outbuildings — Leduc, AB
+## 8. Hammer & Hand - Portland, OR + Seattle, WA
 
-**To:** Sales@SeaBoxDepot.com
-**Subject:** Free quoting tool for ADU builders — Alberta pilot
+**To:** via hammerandhand.com  
+**Subject:** ADU pre-construction workflow for design-build teams
 
 Hi [Name],
 
-Found Urban Outbuildings while mapping Alberta's serious modular ADU builders. CSA A277 certified, 10+ years, ADU and tiny home focus, real sales operation — that's exactly the profile I'm looking for.
+Hammer & Hand came up as one of the few serious ADU design-build teams operating across both Portland and Seattle. That means early qualification matters: property constraints, budget, permit path, and financing.
 
-I'm building ADUflow, a pre-construction quoting platform for modular builders. A homeowner enters their parcel type, selects from your model lineup, and gets an instant feasibility check, budget range (factory vs. site split), permit path, and draw milestone schedule. Leads are captured and sent directly to your team.
+ADUflow turns that front-end work into a repeatable flow: address lookup, zoning screen, model or scope selection, proposal, lender package, permit checklist, and project tracker.
 
-You can try the configurator at [your-url]/configurator before we talk — no signup, takes under a minute.
+Try the demo here: [your-url]/configurator
 
-Piloting with a small group of Alberta builders at no cost this summer — and given your CSA certification, you're one of the few builders who could eventually use this across multiple provinces.
+I'm looking for a few builders to pilot it free and pressure-test the workflow.
 
-Would you have 20 minutes for a demo?
+Interested in a short walkthrough?
 
-[Your name]
+[Your name]  
 ADUflow | [your-url]
 
 ---
 
-## 10. Modworks — Edmonton + Calgary, AB
+## 9. Urban Outbuildings - Leduc, AB
 
-**To:** (via modworks.ca)
-**Subject:** Garden suite quoting tool — free pilot for Alberta builders
+**To:** Sales@SeaBoxDepot.com  
+**Subject:** Alberta ADU quoting and lender package pilot
 
 Hi [Name],
 
-Modworks is doing exactly what the Alberta market needs right now — custom garden and laneway suites across Edmonton and Calgary, with free site evaluations built into the sales process.
+Urban Outbuildings stood out in my Alberta research because of the CSA certification, ADU/tiny-home focus, and existing sales operation.
 
-That site evaluation step is something ADUflow is designed to systematize. A homeowner enters their parcel type, picks a building model, and gets an instant feasibility check, setback guidance, budget range, and permit path — before anyone on your team spends time on the lot. The Calgary backyard suite incentive program ($35K, applications opened March 2026) is driving a wave of inbound that's hard to handle manually.
+ADUflow starts with a property address, screens the likely zoning path, lets the homeowner choose from your models, and produces a proposal with factory/site cost split, lender package, permit checklist, and project tracker.
 
-Try it yourself at [your-url]/configurator — 60 seconds, no account needed.
+Try it here: [your-url]/configurator
 
-Running a free pilot with a handful of Alberta builders. You'd load your models, we handle the configurator and lead intake.
+I'm piloting with a few Canadian builders at no cost. You keep the leads; I get real-world feedback.
 
-Worth a 20-minute call?
+Would you have 20 minutes?
 
-[Your name]
+[Your name]  
 ADUflow | [your-url]
 
 ---
 
-## Quick reference
+## 10. Modworks - Edmonton + Calgary, AB
 
-| # | Builder | Region | Contact method | Hook |
-|---|---|---|---|---|
-| 1 | Lane One Homes | BC | Contact form | Steel-frame + permit walk-through |
-| 2 | ORCA LGS | BC | Contact form | Pod lineup, backyard infill fit |
-| 3 | EpicMod | Ontario | Contact form | Factory-direct, CMHC eligible |
-| 4 | Toronto Garden Suite | Ontario | Contact form | Permit-to-build focus |
-| 5 | prefabADU | California | Contact form | 20 years, high volume |
-| 6 | California Modulars | California | Contact form | HCD certified, consultation-only, no tool |
-| 7 | Ballard Backyard Cottages | Seattle WA | Contact form | Founder quotes everything |
-| 8 | Hammer & Hand | Portland + Seattle | Contact form | Design-build, both cities, no tool |
-| 9 | Urban Outbuildings | Alberta | Sales@SeaBoxDepot.com | CSA cert, pan-Canadian potential |
-| 10 | Modworks | Alberta | Contact form | Calgary $35K incentive surge |
+**To:** via modworks.ca  
+**Subject:** Garden-suite feasibility tool for Alberta builders
+
+Hi [Name],
+
+Modworks is doing the exact workflow ADUflow is focused on: garden and laneway suites across Edmonton and Calgary, where site evaluation, permit path, and financing confidence matter before design starts.
+
+ADUflow lets a homeowner enter an address, get a first-pass zoning screen, pick a model, and receive a proposal with budget range, factory/site cost split, permit checklist, lender package, and project tracker.
+
+Try it here: [your-url]/configurator
+
+I'm running a free Alberta pilot and looking for a few builders who can tell me what would make this worth paying for.
+
+Worth a quick call?
+
+[Your name]  
+ADUflow | [your-url]
+
+---
+
+## Quick Reference
+
+| # | Builder | Region | Hook |
+|---|---|---|---|
+| 1 | Lane One Homes | BC | Steel-frame, permit-aware process |
+| 2 | ORCA LGS | BC | Pods, backyard infill |
+| 3 | EpicMod | Ontario | Factory-direct, fast post-permit |
+| 4 | Toronto Garden Suite | Ontario | Garden-suite permitting focus |
+| 5 | prefabADU | California | Long track record in prefab ADUs |
+| 6 | California Modulars | California | HCD-certified modular |
+| 7 | Ballard Backyard Cottages | Seattle | DADU qualification problem |
+| 8 | Hammer & Hand | Portland/Seattle | Design-build, custom scoping |
+| 9 | Urban Outbuildings | Alberta | CSA certification |
+| 10 | Modworks | Alberta | Calgary/Edmonton garden suites |
