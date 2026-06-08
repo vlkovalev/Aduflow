@@ -28,7 +28,7 @@ export default async function BuilderDashboard() {
           <p className="eyebrow">Builder and lender command center</p>
           <h1>Manage feasibility, prefab quotes, permits, and draw evidence.</h1>
         </div>
-        <div style={{ display: "flex", gap: 10 }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
           <Link className="button secondary" href="/builder/setup">⚙️ Setup Builder OS</Link>
           <Link className="button primary" href="/configurator">Create quote</Link>
         </div>

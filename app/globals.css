@@ -144,6 +144,8 @@ input {
   border-radius: 6px;
   padding: 0 18px;
   font-weight: 800;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .button.primary {
