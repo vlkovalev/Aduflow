@@ -3,6 +3,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { defaultCatalog, type Model, type OptionChoice, type PricingCatalog } from "./pricingEngine";
 import { getSupabaseServiceClient } from "./supabase";
+import { getLocalStorePath } from "./localStoreHelper";
 
 type ModelRow = {
   id?: string;
@@ -25,8 +26,8 @@ type OptionRow = {
   sort_order?: number;
 };
 
-const localModelsPath = path.join(process.cwd(), ".data", "models.json");
-const localOptionsPath = path.join(process.cwd(), ".data", "options.json");
+const localModelsPath = getLocalStorePath("models.json");
+const localOptionsPath = getLocalStorePath("options.json");
 
 // -- Local File Helpers --
 

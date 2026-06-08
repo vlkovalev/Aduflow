@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { getSupabaseServiceClient } from "./supabase";
+import { getLocalStorePath } from "./localStoreHelper";
 
 export type BuilderCredentials = {
   companyName: string;
@@ -30,7 +31,7 @@ const DEFAULT_CREDENTIALS: BuilderCredentials = {
   serviceRegion: "Metro Vancouver, Fraser Valley, and Southern Vancouver Island",
 };
 
-const localStorePath = path.join(process.cwd(), ".data", "builder.json");
+const localStorePath = getLocalStorePath("builder.json");
 
 export async function getBuilderCredentials(): Promise<BuilderCredentials> {
   const supabase = getSupabaseServiceClient();

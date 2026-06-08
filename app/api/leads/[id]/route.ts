@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { getSupabaseServiceClient, markSupabaseUnhealthy } from "../../../../lib/supabase";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
+import { getLocalStorePath } from "../../../../lib/localStoreHelper";
 
 export const runtime = "nodejs";
 
 const VALID_STATUSES = ["new", "contacted", "qualified", "won", "lost"] as const;
 type LeadStatus = (typeof VALID_STATUSES)[number];
 
-const localStorePath = path.join(process.cwd(), ".data", "leads.json");
+const localStorePath = getLocalStorePath("leads.json");
 
 export async function PATCH(
   request: Request,

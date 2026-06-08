@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { getSupabaseServiceClient, markSupabaseUnhealthy } from "./supabase";
+import { getLocalStorePath } from "./localStoreHelper";
 
 export type LeadRecord = {
   id: string;
@@ -50,7 +51,7 @@ export type CreateLeadInput = Omit<
   "id" | "createdAt" | "updatedAt" | "proposalNumber" | "proposalStatus" | "shareToken" | "status"
 >;
 
-const localStorePath = path.join(process.cwd(), ".data", "leads.json");
+const localStorePath = getLocalStorePath("leads.json");
 
 export async function createLead(input: CreateLeadInput) {
   const createdAt = new Date().toISOString();

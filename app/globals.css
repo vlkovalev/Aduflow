@@ -1414,3 +1414,19 @@ input {
     min-height: auto;
   }
 }
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(36, 69, 55, 0.1);
+  border-radius: 50%;
+  border-top-color: var(--forest);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -10,6 +10,7 @@ import {
 } from "./permitChecklist";
 import { getLead } from "./leadStore";
 import { getSupabaseServiceClient, markSupabaseUnhealthy } from "./supabase";
+import { getLocalStorePath } from "./localStoreHelper";
 
 export type PermitPackage = {
   id: string;
@@ -25,7 +26,7 @@ export type PermitPackage = {
   documents: DocumentRequirement[];
 };
 
-const localStorePath = path.join(process.cwd(), ".data", "permit-packages.json");
+const localStorePath = getLocalStorePath("permit-packages.json");
 
 export async function createPermitPackage(leadId: string, jurisdictionName = "Local municipality") {
   const existing = await getPermitPackageByLeadId(leadId);
