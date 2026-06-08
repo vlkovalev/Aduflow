@@ -99,7 +99,7 @@ export function ManufacturerMatch({
   });
 
   return (
-    <div className="costSplit" style={{ marginTop: 24, borderTop: "1px solid var(--line)", paddingTop: 20 }}>
+    <div className="manufacturerMatchContainer" style={{ marginTop: 24, borderTop: "1px solid var(--line)", paddingTop: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
         <div>
           <h2 style={{ fontSize: 16, fontWeight: 900, margin: 0 }}>Matched Factory Partners</h2>
