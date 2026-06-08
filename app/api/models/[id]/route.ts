@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSupabaseServiceClient } from "../../../../lib/supabase";
+import { updateModel, deleteModel } from "../../../../lib/catalogStore";
 
 export const runtime = "nodejs";
 
@@ -7,40 +7,29 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const supabase = getSupabaseServiceClient();
-
-  if (!supabase) {
-    return NextResponse.json({ error: "Database not configured" }, { status: 503 });
-  }
-
   try {
     const { id } = await params;
     const body = await request.json();
 
-    const updates: Record<string, unknown> = {};
-    if (body.modelName !== undefined) {
-      updates.model_name = String(body.modelName).trim();
-      updates.model_code = body.modelName.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-");
-    }
-    if (body.squareFeet !== undefined) updates.square_feet = Number(body.squareFeet);
-    if (body.basePrice !== undefined) updates.base_price = Number(body.basePrice);
-    if (body.isActive !== undefined) updates.is_active = Boolean(body.isActive);
-    if (body.sortOrder !== undefined) updates.sort_order = Number(body.sortOrder);
+    const updates: any = {};
+    if (body.modelName !== undefined) updates.modelName = String(body.modelName);
+    if (body.squareFeet !== undefined) updates.squareFeet = Number(body.squareFeet);
+    if (body.basePrice !== undefined) updates.basePrice = Number(body.basePrice);
+    if (body.isActive !== undefined) updates.isActive = Boolean(body.isActive);
+    if (body.sortOrder !== undefined) updates.sortOrder = Number(body.sortOrder);
 
-    const { data, error } = await supabase
-      .from("models")
-      .update(updates)
-      .eq("id", id)
-      .select()
-      .single();
+    const model = await updateModel(id, updates);
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+    if (!model) {
+      return NextResponse.json({ error: "Model not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ model: data });
-  } catch {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    return NextResponse.json({ model });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to update model" },
+      { status: 400 }
+    );
   }
 }
 
@@ -48,19 +37,11 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const supabase = getSupabaseServiceClient();
-
-  if (!supabase) {
-    return NextResponse.json({ error: "Database not configured" }, { status: 503 });
+  try {
+    const { id } = await params;
+    await deleteModel(id);
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
-
-  const { id } = await params;
-
-  const { error } = await supabase.from("models").delete().eq("id", id);
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
-  }
-
-  return NextResponse.json({ success: true });
 }

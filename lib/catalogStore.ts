@@ -1,3 +1,6 @@
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { randomUUID } from "node:crypto";
 import { defaultCatalog, type Model, type OptionChoice, type PricingCatalog } from "./pricingEngine";
 import { getSupabaseServiceClient } from "./supabase";
 
@@ -8,44 +11,124 @@ type ModelRow = {
   square_feet?: number;
   base_price?: number;
   is_active?: boolean;
+  sort_order?: number;
 };
 
 type OptionRow = {
+  id?: string;
   option_name?: string;
   option_value?: string;
   option_detail?: string;
   option_category?: string;
   option_price?: number;
   is_active?: boolean;
+  sort_order?: number;
 };
+
+const localModelsPath = path.join(process.cwd(), ".data", "models.json");
+const localOptionsPath = path.join(process.cwd(), ".data", "options.json");
+
+// -- Local File Helpers --
+
+async function readLocalModels(): Promise<ModelRow[]> {
+  try {
+    const raw = await readFile(localModelsPath, "utf8");
+    return JSON.parse(raw) as ModelRow[];
+  } catch {
+    const seeded = defaultCatalog.models.map((m, index) => ({
+      id: m.code,
+      model_name: m.name,
+      model_code: m.code,
+      square_feet: m.squareFeet,
+      base_price: m.basePrice,
+      is_active: true,
+      sort_order: index + 1,
+    }));
+    await writeLocalModels(seeded);
+    return seeded;
+  }
+}
+
+async function writeLocalModels(data: ModelRow[]) {
+  await mkdir(path.dirname(localModelsPath), { recursive: true });
+  await writeFile(localModelsPath, JSON.stringify(data, null, 2));
+}
+
+async function readLocalOptions(): Promise<OptionRow[]> {
+  try {
+    const raw = await readFile(localOptionsPath, "utf8");
+    return JSON.parse(raw) as OptionRow[];
+  } catch {
+    const seeded: OptionRow[] = [];
+    let sortOrder = 1;
+    for (const [category, choices] of Object.entries(defaultCatalog.optionGroups)) {
+      for (const choice of choices) {
+        seeded.push({
+          id: `${category}-${choice.value}`,
+          option_name: choice.label,
+          option_value: choice.value,
+          option_detail: choice.detail,
+          option_category: category,
+          option_price: choice.price,
+          is_active: true,
+          sort_order: sortOrder++,
+        });
+      }
+    }
+    await writeLocalOptions(seeded);
+    return seeded;
+  }
+}
+
+async function writeLocalOptions(data: OptionRow[]) {
+  await mkdir(path.dirname(localOptionsPath), { recursive: true });
+  await writeFile(localOptionsPath, JSON.stringify(data, null, 2));
+}
+
+// -- Main Exports --
 
 export async function getPricingCatalog(): Promise<PricingCatalog> {
   const supabase = getSupabaseServiceClient();
 
-  if (!supabase) {
-    return defaultCatalog;
+  if (supabase) {
+    try {
+      const [modelsResult, optionsResult] = await Promise.all([
+        supabase
+          .from("models")
+          .select("id, model_name, model_code, square_feet, base_price, is_active, sort_order")
+          .eq("is_active", true)
+          .order("sort_order"),
+        supabase
+          .from("options")
+          .select("option_name, option_value, option_detail, option_category, option_price, is_active, sort_order")
+          .eq("is_active", true)
+          .order("sort_order"),
+      ]);
+
+      if (!modelsResult.error && !optionsResult.error && modelsResult.data?.length) {
+        const catalogModels = (modelsResult.data as ModelRow[]).map(mapModelRow).filter(Boolean) as Model[];
+        const catalogOptions = mapOptionRows((optionsResult.data as OptionRow[]) ?? []);
+
+        return {
+          models: catalogModels.length ? catalogModels : defaultCatalog.models,
+          optionGroups: hasRequiredGroups(catalogOptions) ? catalogOptions : defaultCatalog.optionGroups,
+        };
+      }
+    } catch (e) {
+      console.warn("Supabase getPricingCatalog error, fallback to local:", e);
+    }
   }
 
+  // Local file fallback
   try {
-    const [modelsResult, optionsResult] = await Promise.all([
-      supabase
-        .from("models")
-        .select("id, model_name, model_code, square_feet, base_price, is_active, sort_order")
-        .eq("is_active", true)
-        .order("sort_order"),
-      supabase
-        .from("options")
-        .select("option_name, option_value, option_detail, option_category, option_price, is_active, sort_order")
-        .eq("is_active", true)
-        .order("sort_order"),
-    ]);
+    const localModels = await readLocalModels();
+    const localOptions = await readLocalOptions();
 
-    if (modelsResult.error || optionsResult.error || !modelsResult.data?.length) {
-      return defaultCatalog;
-    }
+    const activeModels = localModels.filter((m) => m.is_active !== false);
+    const activeOptions = localOptions.filter((o) => o.is_active !== false);
 
-    const catalogModels = (modelsResult.data as ModelRow[]).map(mapModelRow).filter(Boolean) as Model[];
-    const catalogOptions = mapOptionRows((optionsResult.data as OptionRow[]) ?? []);
+    const catalogModels = activeModels.map(mapModelRow).filter(Boolean) as Model[];
+    const catalogOptions = mapOptionRows(activeOptions);
 
     return {
       models: catalogModels.length ? catalogModels : defaultCatalog.models,
@@ -55,6 +138,236 @@ export async function getPricingCatalog(): Promise<PricingCatalog> {
     return defaultCatalog;
   }
 }
+
+// -- Models CRUD --
+
+export async function listModels(): Promise<ModelRow[]> {
+  const supabase = getSupabaseServiceClient();
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("models")
+        .select("id, model_name, model_code, square_feet, base_price, is_active, sort_order")
+        .order("sort_order");
+      if (!error && data) return data as ModelRow[];
+    } catch (e) {
+      console.warn("Supabase listModels error, fallback to local:", e);
+    }
+  }
+
+  return readLocalModels();
+}
+
+export async function createModel(input: { modelName: string; squareFeet: number; basePrice: number }): Promise<ModelRow> {
+  const modelCode = input.modelName.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const record: ModelRow = {
+    id: randomUUID(),
+    model_name: input.modelName,
+    model_code: modelCode,
+    square_feet: input.squareFeet,
+    base_price: input.basePrice,
+    is_active: true,
+    sort_order: 99,
+  };
+
+  const supabase = getSupabaseServiceClient();
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("models")
+        .insert(record)
+        .select()
+        .single();
+      if (!error && data) return data as ModelRow;
+    } catch (e) {
+      console.warn("Supabase createModel error, fallback to local:", e);
+    }
+  }
+
+  const local = await readLocalModels();
+  local.push(record);
+  await writeLocalModels(local);
+  return record;
+}
+
+export async function updateModel(
+  id: string,
+  updates: { modelName?: string; squareFeet?: number; basePrice?: number; isActive?: boolean; sortOrder?: number }
+): Promise<ModelRow | null> {
+  const mappedUpdates: Partial<ModelRow> = {};
+  if (updates.modelName !== undefined) {
+    mappedUpdates.model_name = updates.modelName;
+    mappedUpdates.model_code = updates.modelName.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  }
+  if (updates.squareFeet !== undefined) mappedUpdates.square_feet = updates.squareFeet;
+  if (updates.basePrice !== undefined) mappedUpdates.base_price = updates.basePrice;
+  if (updates.isActive !== undefined) mappedUpdates.is_active = updates.isActive;
+  if (updates.sortOrder !== undefined) mappedUpdates.sort_order = updates.sortOrder;
+
+  const supabase = getSupabaseServiceClient();
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("models")
+        .update(mappedUpdates)
+        .eq("id", id)
+        .select()
+        .single();
+      if (!error && data) return data as ModelRow;
+    } catch (e) {
+      console.warn("Supabase updateModel error, fallback to local:", e);
+    }
+  }
+
+  const local = await readLocalModels();
+  const index = local.findIndex((m) => m.id === id);
+  if (index !== -1) {
+    local[index] = { ...local[index], ...mappedUpdates };
+    await writeLocalModels(local);
+    return local[index];
+  }
+  return null;
+}
+
+export async function deleteModel(id: string): Promise<boolean> {
+  const supabase = getSupabaseServiceClient();
+
+  if (supabase) {
+    try {
+      const { error } = await supabase.from("models").delete().eq("id", id);
+      if (!error) return true;
+    } catch (e) {
+      console.warn("Supabase deleteModel error, fallback to local:", e);
+    }
+  }
+
+  const local = await readLocalModels();
+  const filtered = local.filter((m) => m.id !== id);
+  await writeLocalModels(filtered);
+  return true;
+}
+
+// -- Options CRUD --
+
+export async function listOptions(): Promise<OptionRow[]> {
+  const supabase = getSupabaseServiceClient();
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("options")
+        .select("id, option_name, option_value, option_detail, option_category, option_price, is_active, sort_order")
+        .order("sort_order");
+      if (!error && data) return data as OptionRow[];
+    } catch (e) {
+      console.warn("Supabase listOptions error, fallback to local:", e);
+    }
+  }
+
+  return readLocalOptions();
+}
+
+export async function createOption(input: {
+  optionName: string;
+  detail: string;
+  price: number;
+  category: string;
+}): Promise<OptionRow> {
+  const optionValue = input.optionName.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const record: OptionRow = {
+    id: randomUUID(),
+    option_name: input.optionName,
+    option_value: optionValue,
+    option_detail: input.detail,
+    option_category: input.category,
+    option_price: input.price,
+    is_active: true,
+    sort_order: 99,
+  };
+
+  const supabase = getSupabaseServiceClient();
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("options")
+        .insert(record)
+        .select()
+        .single();
+      if (!error && data) return data as OptionRow;
+    } catch (e) {
+      console.warn("Supabase createOption error, fallback to local:", e);
+    }
+  }
+
+  const local = await readLocalOptions();
+  local.push(record);
+  await writeLocalOptions(local);
+  return record;
+}
+
+export async function updateOption(
+  id: string,
+  updates: { optionName?: string; detail?: string; price?: number; isActive?: boolean; sortOrder?: number }
+): Promise<OptionRow | null> {
+  const mappedUpdates: Partial<OptionRow> = {};
+  if (updates.optionName !== undefined) {
+    mappedUpdates.option_name = updates.optionName;
+    mappedUpdates.option_value = updates.optionName.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  }
+  if (updates.detail !== undefined) mappedUpdates.option_detail = updates.detail;
+  if (updates.price !== undefined) mappedUpdates.option_price = updates.price;
+  if (updates.isActive !== undefined) mappedUpdates.is_active = updates.isActive;
+  if (updates.sortOrder !== undefined) mappedUpdates.sort_order = updates.sortOrder;
+
+  const supabase = getSupabaseServiceClient();
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("options")
+        .update(mappedUpdates)
+        .eq("id", id)
+        .select()
+        .single();
+      if (!error && data) return data as OptionRow;
+    } catch (e) {
+      console.warn("Supabase updateOption error, fallback to local:", e);
+    }
+  }
+
+  const local = await readLocalOptions();
+  const index = local.findIndex((o) => o.id === id);
+  if (index !== -1) {
+    local[index] = { ...local[index], ...mappedUpdates };
+    await writeLocalOptions(local);
+    return local[index];
+  }
+  return null;
+}
+
+export async function deleteOption(id: string): Promise<boolean> {
+  const supabase = getSupabaseServiceClient();
+
+  if (supabase) {
+    try {
+      const { error } = await supabase.from("options").delete().eq("id", id);
+      if (!error) return true;
+    } catch (e) {
+      console.warn("Supabase deleteOption error, fallback to local:", e);
+    }
+  }
+
+  const local = await readLocalOptions();
+  const filtered = local.filter((o) => o.id !== id);
+  await writeLocalOptions(filtered);
+  return true;
+}
+
+// -- Mapping Helpers --
 
 function mapModelRow(row: ModelRow) {
   if (!row.model_code || !row.model_name) {
