@@ -2,6 +2,7 @@ import Link from "next/link";
 import { listLeads, type LeadRecord } from "../../lib/leadStore";
 import { formatCurrency } from "../../lib/proposalBuilder";
 import { LeadStatusSelect } from "./LeadStatusSelect";
+import { TopNav } from "../components/TopNav";
 
 const STATUS_LABELS: Record<string, string> = {
   new: "New",
@@ -20,13 +21,7 @@ export default async function BuilderDashboard() {
 
   return (
     <main className="appShell">
-      <nav className="nav compact" aria-label="Main navigation">
-        <Link className="brand" href="/">ADUflow</Link>
-        <div className="navLinks">
-          <Link href="/configurator">Configurator</Link>
-          <Link href="/builder">Builder OS</Link>
-        </div>
-      </nav>
+      <TopNav />
 
       <section className="dashboardHeader">
         <div>
@@ -34,7 +29,7 @@ export default async function BuilderDashboard() {
           <h1>Manage feasibility, prefab quotes, permits, and draw evidence.</h1>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
-          <Link className="button secondary" href="/builder/setup">Manage catalog</Link>
+          <Link className="button secondary" href="/builder/setup">⚙️ Setup Builder OS</Link>
           <Link className="button primary" href="/configurator">Create quote</Link>
         </div>
       </section>

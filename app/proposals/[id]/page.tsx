@@ -5,6 +5,7 @@ import { getLead } from "../../../lib/leadStore";
 import { PrintButton } from "../share/[token]/PrintButton";
 import { CopyLinkButton } from "./CopyLinkButton";
 import { ManufacturerMatch } from "../../configurator/ManufacturerMatch";
+import { TopNav } from "../../components/TopNav";
 
 export default async function ProposalPage({
   params,
@@ -24,15 +25,7 @@ export default async function ProposalPage({
 
   return (
     <main className="appShell">
-      <nav className="nav compact printHide" aria-label="Main navigation">
-        <Link className="brand" href="/">
-          ADUflow
-        </Link>
-        <div className="navLinks">
-          <Link href="/configurator">Configurator</Link>
-          <Link href="/builder">Builder OS</Link>
-        </div>
-      </nav>
+      <TopNav />
 
       <section className="proposalHero">
         <p className="eyebrow">Proposal package</p>

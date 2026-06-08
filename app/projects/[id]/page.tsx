@@ -18,12 +18,12 @@ export default async function ProjectPage({
 
   return (
     <main className="appShell">
-      <nav className="nav compact" aria-label="Main navigation">
+      <nav className="nav compact printHide" aria-label="Main navigation">
         <Link className="brand" href="/">ADUflow</Link>
         <div className="navLinks">
-          <Link href="/builder">Builder OS</Link>
-          <Link href={`/proposals/${lead.id}`}>Proposal</Link>
-          <Link href={`/proposals/${lead.id}/lender`}>Lender package</Link>
+          <Link href="/builder" className="navLink active">Builder OS</Link>
+          <Link href={`/proposals/${lead.id}`} className="navLink">Proposal</Link>
+          <Link href={`/proposals/${lead.id}/lender`} className="navLink">Lender package</Link>
         </div>
       </nav>
 

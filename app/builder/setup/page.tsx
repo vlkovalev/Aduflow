@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { TopNav } from "../../components/TopNav";
 
 type Model = {
   id: string;
@@ -72,13 +73,7 @@ export default function BuilderSetup() {
 
   return (
     <main className="appShell">
-      <nav className="nav compact" aria-label="Main navigation">
-        <Link className="brand" href="/">ADUflow</Link>
-        <div className="navLinks">
-          <Link href="/configurator">Configurator</Link>
-          <Link href="/builder">Builder OS</Link>
-        </div>
-      </nav>
+      <TopNav />
 
       <section className="dashboardHeader">
         <div>

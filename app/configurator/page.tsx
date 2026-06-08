@@ -10,6 +10,7 @@ import {
 } from "../../lib/pricingEngine";
 import { type ZoningResult } from "../../lib/zoningLookup";
 import { ManufacturerMatch } from "./ManufacturerMatch";
+import { TopNav } from "../components/TopNav";
 
 export default function Configurator() {
   const [catalog, setCatalog] = useState<PricingCatalog>(defaultCatalog);
@@ -558,19 +559,7 @@ type Choice = {
   detail: string;
 };
 
-function TopNav() {
-  return (
-    <nav className="nav compact" aria-label="Main navigation">
-      <Link className="brand" href="/">
-        ADUflow
-      </Link>
-      <div className="navLinks">
-        <Link href="/configurator">Configurator</Link>
-        <Link href="/builder">Builder OS</Link>
-      </div>
-    </nav>
-  );
-}
+
 
 function ChoiceGroup({
   title,

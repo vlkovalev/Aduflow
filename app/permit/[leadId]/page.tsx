@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getLead } from "../../../lib/leadStore";
 import { createPermitPackage } from "../../../lib/permitStore";
+import { TopNav } from "../../components/TopNav";
 
 export default async function PermitPage({
   params,
@@ -20,15 +21,7 @@ export default async function PermitPage({
 
   return (
     <main className="appShell">
-      <nav className="nav compact" aria-label="Main navigation">
-        <Link className="brand" href="/">
-          ADUflow
-        </Link>
-        <div className="navLinks">
-          <Link href="/configurator">Configurator</Link>
-          <Link href="/builder">Builder OS</Link>
-        </div>
-      </nav>
+      <TopNav />
 
       <section className="proposalHero">
         <p className="eyebrow">Permit and HOA assistant</p>
