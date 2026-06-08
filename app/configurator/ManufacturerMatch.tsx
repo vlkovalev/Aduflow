@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { formatCurrency } from "../../lib/proposalBuilder";
 
 export type Partner = {
@@ -8,6 +9,7 @@ export type Partner = {
   logo: string;
   badge: string;
   tagline: string;
+  type: "modular" | "panelized" | "foldable";
 };
 
 const PARTNERS: Partner[] = [
@@ -19,6 +21,7 @@ const PARTNERS: Partner[] = [
     logo: "🌿",
     badge: "Detached ADU Specialist",
     tagline: "Turnkey backyard homes with high-end architectural finishes.",
+    type: "modular",
   },
   {
     name: "Cover",
@@ -28,6 +31,7 @@ const PARTNERS: Partner[] = [
     logo: "📐",
     badge: "Premium Panelized",
     tagline: "Computer-designed custom layouts optimized for tight urban sites.",
+    type: "panelized",
   },
   {
     name: "Villa Homes",
@@ -37,6 +41,7 @@ const PARTNERS: Partner[] = [
     logo: "🏡",
     badge: "Turnkey Modular Network",
     tagline: "Wide catalog of single-story and double-story modular ADUs.",
+    type: "modular",
   },
   {
     name: "Boxabl",
@@ -46,6 +51,7 @@ const PARTNERS: Partner[] = [
     logo: "📦",
     badge: "Foldable Pods",
     tagline: "Ultra-affordable folding modular studio homes delivered flat.",
+    type: "foldable",
   },
   {
     name: "ORCA LGS",
@@ -55,6 +61,7 @@ const PARTNERS: Partner[] = [
     logo: "🛡️",
     badge: "Light Gauge Steel Panels",
     tagline: "Strong, fire-resistant Canadian prefabricated panel systems.",
+    type: "panelized",
   },
   {
     name: "Lane One Homes",
@@ -64,6 +71,7 @@ const PARTNERS: Partner[] = [
     logo: "🧱",
     badge: "Laneway Home Builder",
     tagline: "Modern steel-framed garden suites compliant with new BC Bill 44 laws.",
+    type: "modular",
   },
 ];
 
@@ -78,20 +86,50 @@ export function ManufacturerMatch({
   modelSqFt: number;
   budget: number;
 }) {
+  const [filterType, setFilterType] = useState<string>("all");
   const normAddress = address.toLowerCase();
 
-  // 1. Filter by region
+  // 1. Filter by region and selected prefab type
   const matchedRegion = PARTNERS.filter((p) => {
-    if (!normAddress) return true; // Show all if no address is entered yet
-    return p.regions.some((reg) => normAddress.includes(reg));
+    const matchesRegion = !normAddress || p.regions.some((reg) => normAddress.includes(reg));
+    if (!matchesRegion) return false;
+
+    if (filterType !== "all" && p.type !== filterType) return false;
+    return true;
   });
 
   return (
     <div className="costSplit" style={{ marginTop: 24, borderTop: "1px solid var(--line)", paddingTop: 20 }}>
-      <h2 style={{ fontSize: 16, fontWeight: 900, marginBottom: 12 }}>Matched Factory Partners</h2>
-      <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 14 }}>
-        Based on property location, local zoning envelope, and estimated project budget.
-      </p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
+        <div>
+          <h2 style={{ fontSize: 16, fontWeight: 900, margin: 0 }}>Matched Factory Partners</h2>
+          <p style={{ fontSize: 11, color: "var(--muted)", margin: "4px 0 0 0" }}>
+            Based on location, zoning envelope, and budget.
+          </p>
+        </div>
+        <div style={{ flexShrink: 0 }}>
+          <select
+            style={{
+              padding: "6px 10px",
+              border: "1px solid var(--line)",
+              borderRadius: 4,
+              background: "white",
+              fontSize: 11,
+              fontWeight: 800,
+              color: "var(--ink)",
+              cursor: "pointer",
+            }}
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            aria-label="Filter by prefab style"
+          >
+            <option value="all">All Prefab Styles</option>
+            <option value="modular">Modular / Turnkey</option>
+            <option value="panelized">Panelized Kits</option>
+            <option value="foldable">Foldable Pods</option>
+          </select>
+        </div>
+      </div>
 
       {matchedRegion.length === 0 ? (
         <p style={{ fontSize: 13, color: "var(--muted)", fontStyle: "italic" }}>
