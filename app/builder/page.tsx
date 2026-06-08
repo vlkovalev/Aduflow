@@ -30,7 +30,7 @@ export default async function BuilderDashboard() {
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
           <Link className="button secondary" href="/builder/setup">⚙️ Setup Builder OS</Link>
-          <Link className="button primary" href="/configurator">Create quote</Link>
+          <Link className="button primary" href="/configurator">New lead quote</Link>
         </div>
       </section>
 
