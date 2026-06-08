@@ -49,10 +49,10 @@ export default function Configurator() {
         setZoningStatus("found");
 
         // Initialize override states
-        setZoningMaxSqFt(result.maxSquareFeet);
+        setZoningMaxSqFt(result.maxAduSqFt);
         setZoningMaxStories(result.maxStories);
-        setZoningSetbackSide(result.setbackSide || "");
-        setZoningSetbackRear(result.setbackRear || "");
+        setZoningSetbackSide(result.sideSetback || "");
+        setZoningSetbackRear(result.rearSetback || "");
         setZoningReviewRisk(result.reviewRisk || "Low");
 
         // Auto-select best matching parcel scenario
