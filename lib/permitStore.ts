@@ -9,7 +9,7 @@ import {
   type PermitTask,
 } from "./permitChecklist";
 import { getLead } from "./leadStore";
-import { getSupabaseServiceClient } from "./supabase";
+import { getSupabaseServiceClient, markSupabaseUnhealthy } from "./supabase";
 
 export type PermitPackage = {
   id: string;
@@ -58,8 +58,13 @@ export async function createPermitPackage(leadId: string, jurisdictionName = "Lo
   const supabase = getSupabaseServiceClient();
 
   if (supabase) {
-    await insertSupabasePackage(permitPackage);
-    return permitPackage;
+    try {
+      await insertSupabasePackage(permitPackage);
+      return permitPackage;
+    } catch (e) {
+      console.warn("Supabase insert package error, falling back to local:", e);
+      markSupabaseUnhealthy();
+    }
   }
 
   const packages = await readLocalPackages();
@@ -73,49 +78,55 @@ export async function getPermitPackageByLeadId(leadId: string) {
   const supabase = getSupabaseServiceClient();
 
   if (supabase) {
-    const { data, error } = await supabase
-      .from("permit_packages")
-      .select("*")
-      .eq("lead_id", leadId)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from("permit_packages")
+        .select("*")
+        .eq("lead_id", leadId)
+        .maybeSingle();
 
-    if (error || !data) {
-      return null;
+      if (error) {
+        console.warn("Supabase getPermitPackageByLeadId error, disabling Supabase:", error);
+        markSupabaseUnhealthy();
+      } else if (data) {
+        const packageId = String(data.id);
+
+        const [{ data: taskRows }, { data: docRows }] = await Promise.all([
+          supabase
+            .from("permit_tasks")
+            .select("*")
+            .eq("permit_package_id", packageId)
+            .order("sort_order"),
+          supabase
+            .from("document_requirements")
+            .select("*")
+            .eq("permit_package_id", packageId),
+        ]);
+
+        const tasks: PermitTask[] = (taskRows ?? []).map((row) => ({
+          category: String(row.category ?? ""),
+          taskName: String(row.task_name ?? ""),
+          ownerRole: String(row.owner_role ?? "builder") as PermitTask["ownerRole"],
+          status: String(row.status ?? "not_started") as PermitTask["status"],
+          dueStage: String(row.due_stage ?? ""),
+          notes: String(row.notes ?? ""),
+          sortOrder: Number(row.sort_order ?? 0),
+        }));
+
+        const documents: DocumentRequirement[] = (docRows ?? []).map((row) => ({
+          documentName: String(row.document_name ?? ""),
+          documentType: String(row.document_type ?? ""),
+          requiredFor: String(row.required_for ?? "city") as DocumentRequirement["requiredFor"],
+          status: String(row.status ?? "missing") as DocumentRequirement["status"],
+          ownerRole: String(row.owner_role ?? "builder") as DocumentRequirement["ownerRole"],
+        }));
+
+        return mapSupabasePackage(data as Record<string, unknown>, tasks, documents);
+      }
+    } catch (e) {
+      console.warn("Supabase getPermitPackageByLeadId exception, disabling Supabase:", e);
+      markSupabaseUnhealthy();
     }
-
-    const packageId = String(data.id);
-
-    const [{ data: taskRows }, { data: docRows }] = await Promise.all([
-      supabase
-        .from("permit_tasks")
-        .select("*")
-        .eq("permit_package_id", packageId)
-        .order("sort_order"),
-      supabase
-        .from("document_requirements")
-        .select("*")
-        .eq("permit_package_id", packageId),
-    ]);
-
-    const tasks: PermitTask[] = (taskRows ?? []).map((row) => ({
-      category: String(row.category ?? ""),
-      taskName: String(row.task_name ?? ""),
-      ownerRole: String(row.owner_role ?? "builder") as PermitTask["ownerRole"],
-      status: String(row.status ?? "not_started") as PermitTask["status"],
-      dueStage: String(row.due_stage ?? ""),
-      notes: String(row.notes ?? ""),
-      sortOrder: Number(row.sort_order ?? 0),
-    }));
-
-    const documents: DocumentRequirement[] = (docRows ?? []).map((row) => ({
-      documentName: String(row.document_name ?? ""),
-      documentType: String(row.document_type ?? ""),
-      requiredFor: String(row.required_for ?? "city") as DocumentRequirement["requiredFor"],
-      status: String(row.status ?? "missing") as DocumentRequirement["status"],
-      ownerRole: String(row.owner_role ?? "builder") as DocumentRequirement["ownerRole"],
-    }));
-
-    return mapSupabasePackage(data as Record<string, unknown>, tasks, documents);
   }
 
   const packages = await readLocalPackages();

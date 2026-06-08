@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { getSupabaseServiceClient } from "./supabase";
+import { getSupabaseServiceClient, markSupabaseUnhealthy } from "./supabase";
 
 export type LeadRecord = {
   id: string;
@@ -70,60 +70,66 @@ export async function createLead(input: CreateLeadInput) {
   const supabase = getSupabaseServiceClient();
 
   if (supabase) {
-    const { data, error } = await supabase
-      .from("leads")
-      .insert({
-        id: record.id,
-        created_at: record.createdAt,
-        updated_at: record.updatedAt,
-        proposal_number: record.proposalNumber,
-        proposal_status: record.proposalStatus,
-        share_token: record.shareToken,
-        customer_name: record.customerName,
-        email: record.email,
-        phone: record.phone,
-        property_address: record.propertyAddress,
-        parcel_scenario: record.parcelScenario,
-        zoning_source: record.zoningSource,
-        zoning_zone: record.zoningZone,
-        zoning_description: record.zoningDescription,
-        zoning_raw: record.zoningRaw,
-        zoning_lookup_status: record.zoningLookupStatus,
-        zoning_checked_at: record.zoningCheckedAt || null,
-        adu_permitted: record.aduPermitted,
-        setback_front: record.setbackFront,
-        setback_side: record.setbackSide,
-        setback_rear: record.setbackRear,
-        feasibility_result: record.feasibilityResult,
-        feasibility_confidence: record.feasibilityConfidence,
-        permit_path: record.permitPath,
-        configuration_json: record.configuration,
-        estimated_price: record.estimatedPrice,
-        estimate_low: record.estimateLow,
-        estimate_high: record.estimateHigh,
-        factory_cost: record.factoryCost,
-        site_cost: record.siteCost,
-        model_code: record.modelCode,
-        model_name: record.modelName,
-        square_feet: record.squareFeet,
-        timeline_weeks: record.timelineWeeks,
-        max_square_feet: record.maxSquareFeet,
-        max_stories: record.maxStories,
-        setback_target: record.setbackTarget,
-        review_risk: record.reviewRisk,
-        status: record.status,
-      })
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from("leads")
+        .insert({
+          id: record.id,
+          created_at: record.createdAt,
+          updated_at: record.updatedAt,
+          proposal_number: record.proposalNumber,
+          proposal_status: record.proposalStatus,
+          share_token: record.shareToken,
+          customer_name: record.customerName,
+          email: record.email,
+          phone: record.phone,
+          property_address: record.propertyAddress,
+          parcel_scenario: record.parcelScenario,
+          zoning_source: record.zoningSource,
+          zoning_zone: record.zoningZone,
+          zoning_description: record.zoningDescription,
+          zoning_raw: record.zoningRaw,
+          zoning_lookup_status: record.zoningLookupStatus,
+          zoning_checked_at: record.zoningCheckedAt || null,
+          adu_permitted: record.aduPermitted,
+          setback_front: record.setbackFront,
+          setback_side: record.setbackSide,
+          setback_rear: record.setbackRear,
+          feasibility_result: record.feasibilityResult,
+          feasibility_confidence: record.feasibilityConfidence,
+          permit_path: record.permitPath,
+          configuration_json: record.configuration,
+          estimated_price: record.estimatedPrice,
+          estimate_low: record.estimateLow,
+          estimate_high: record.estimateHigh,
+          factory_cost: record.factoryCost,
+          site_cost: record.siteCost,
+          model_code: record.modelCode,
+          model_name: record.modelName,
+          square_feet: record.squareFeet,
+          timeline_weeks: record.timelineWeeks,
+          max_square_feet: record.maxSquareFeet,
+          max_stories: record.maxStories,
+          setback_target: record.setbackTarget,
+          review_risk: record.reviewRisk,
+          status: record.status,
+        })
+        .select()
+        .single();
 
-    if (error) {
-      throw new Error(error.message);
+      if (error) {
+        console.warn("Supabase createLead error, disabling Supabase:", error);
+        markSupabaseUnhealthy();
+      } else if (data) {
+        return {
+          ...record,
+          id: data.id,
+        };
+      }
+    } catch (e) {
+      console.warn("Supabase createLead exception, disabling Supabase:", e);
+      markSupabaseUnhealthy();
     }
-
-    return {
-      ...record,
-      id: data.id,
-    };
   }
 
   const records = await readLocalLeads();
@@ -137,53 +143,59 @@ export async function getLead(id: string) {
   const supabase = getSupabaseServiceClient();
 
   if (supabase) {
-    const { data, error } = await supabase.from("leads").select("*").eq("id", id).single();
+    try {
+      const { data, error } = await supabase.from("leads").select("*").eq("id", id).single();
 
-    if (error || !data) {
-      return null;
+      if (error) {
+        console.warn("Supabase getLead error, disabling Supabase:", error);
+        markSupabaseUnhealthy();
+      } else if (data) {
+        return {
+          id: data.id,
+          createdAt: data.created_at ?? "",
+          updatedAt: data.updated_at ?? "",
+          proposalNumber: data.proposal_number ?? "",
+          proposalStatus: data.proposal_status ?? "",
+          shareToken: data.share_token ?? "",
+          customerName: data.customer_name ?? "",
+          email: data.email ?? "",
+          phone: data.phone ?? "",
+          propertyAddress: data.property_address ?? "",
+          parcelScenario: data.parcel_scenario ?? "",
+          zoningSource: data.zoning_source ?? "",
+          zoningZone: data.zoning_zone ?? "",
+          zoningDescription: data.zoning_description ?? "",
+          zoningRaw: data.zoning_raw ?? null,
+          zoningLookupStatus: data.zoning_lookup_status ?? "",
+          zoningCheckedAt: data.zoning_checked_at ?? "",
+          aduPermitted: data.adu_permitted ?? null,
+          setbackFront: data.setback_front ?? "",
+          setbackSide: data.setback_side ?? "",
+          setbackRear: data.setback_rear ?? "",
+          feasibilityResult: data.feasibility_result ?? "",
+          feasibilityConfidence: Number(data.feasibility_confidence ?? 0),
+          permitPath: data.permit_path ?? "",
+          estimatedPrice: Number(data.estimated_price ?? 0),
+          estimateLow: Number(data.estimate_low ?? 0),
+          estimateHigh: Number(data.estimate_high ?? 0),
+          factoryCost: Number(data.factory_cost ?? 0),
+          siteCost: Number(data.site_cost ?? 0),
+          modelCode: data.model_code ?? "",
+          modelName: data.model_name ?? "",
+          squareFeet: Number(data.square_feet ?? 0),
+          timelineWeeks: Number(data.timeline_weeks ?? 0),
+          maxSquareFeet: Number(data.max_square_feet ?? 0),
+          maxStories: Number(data.max_stories ?? 0),
+          setbackTarget: data.setback_target ?? "",
+          reviewRisk: data.review_risk ?? "",
+          configuration: data.configuration_json ?? {},
+          status: data.status ?? "new",
+        } satisfies LeadRecord;
+      }
+    } catch (e) {
+      console.warn("Supabase getLead exception, disabling Supabase:", e);
+      markSupabaseUnhealthy();
     }
-
-    return {
-      id: data.id,
-      createdAt: data.created_at ?? "",
-      updatedAt: data.updated_at ?? "",
-      proposalNumber: data.proposal_number ?? "",
-      proposalStatus: data.proposal_status ?? "",
-      shareToken: data.share_token ?? "",
-      customerName: data.customer_name ?? "",
-      email: data.email ?? "",
-      phone: data.phone ?? "",
-      propertyAddress: data.property_address ?? "",
-      parcelScenario: data.parcel_scenario ?? "",
-      zoningSource: data.zoning_source ?? "",
-      zoningZone: data.zoning_zone ?? "",
-      zoningDescription: data.zoning_description ?? "",
-      zoningRaw: data.zoning_raw ?? null,
-      zoningLookupStatus: data.zoning_lookup_status ?? "",
-      zoningCheckedAt: data.zoning_checked_at ?? "",
-      aduPermitted: data.adu_permitted ?? null,
-      setbackFront: data.setback_front ?? "",
-      setbackSide: data.setback_side ?? "",
-      setbackRear: data.setback_rear ?? "",
-      feasibilityResult: data.feasibility_result ?? "",
-      feasibilityConfidence: Number(data.feasibility_confidence ?? 0),
-      permitPath: data.permit_path ?? "",
-      estimatedPrice: Number(data.estimated_price ?? 0),
-      estimateLow: Number(data.estimate_low ?? 0),
-      estimateHigh: Number(data.estimate_high ?? 0),
-      factoryCost: Number(data.factory_cost ?? 0),
-      siteCost: Number(data.site_cost ?? 0),
-      modelCode: data.model_code ?? "",
-      modelName: data.model_name ?? "",
-      squareFeet: Number(data.square_feet ?? 0),
-      timelineWeeks: Number(data.timeline_weeks ?? 0),
-      maxSquareFeet: Number(data.max_square_feet ?? 0),
-      maxStories: Number(data.max_stories ?? 0),
-      setbackTarget: data.setback_target ?? "",
-      reviewRisk: data.review_risk ?? "",
-      configuration: data.configuration_json ?? {},
-      status: data.status ?? "new",
-    } satisfies LeadRecord;
   }
 
   const records = await readLocalLeads();
@@ -194,17 +206,23 @@ export async function getLeadByToken(token: string) {
   const supabase = getSupabaseServiceClient();
 
   if (supabase) {
-    const { data, error } = await supabase
-      .from("leads")
-      .select("*")
-      .eq("share_token", token)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from("leads")
+        .select("*")
+        .eq("share_token", token)
+        .single();
 
-    if (error || !data) {
-      return null;
+      if (error) {
+        console.warn("Supabase getLeadByToken error, disabling Supabase:", error);
+        markSupabaseUnhealthy();
+      } else if (data) {
+        return mapLeadRow(data);
+      }
+    } catch (e) {
+      console.warn("Supabase getLeadByToken exception, disabling Supabase:", e);
+      markSupabaseUnhealthy();
     }
-
-    return mapLeadRow(data);
   }
 
   const records = await readLocalLeads();
@@ -215,16 +233,22 @@ export async function listLeads() {
   const supabase = getSupabaseServiceClient();
 
   if (supabase) {
-    const { data, error } = await supabase
-      .from("leads")
-      .select("*")
-      .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from("leads")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    if (error || !data) {
-      return [];
+      if (error) {
+        console.warn("Supabase listLeads error, disabling Supabase:", error);
+        markSupabaseUnhealthy();
+      } else if (data) {
+        return data.map((item) => mapLeadRow(item));
+      }
+    } catch (e) {
+      console.warn("Supabase listLeads exception, disabling Supabase:", e);
+      markSupabaseUnhealthy();
     }
-
-    return data.map((item) => mapLeadRow(item));
   }
 
   const records = await readLocalLeads();

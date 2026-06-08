@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSupabaseServiceClient } from "../../../../lib/supabase";
+import { getSupabaseServiceClient, markSupabaseUnhealthy } from "../../../../lib/supabase";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 
@@ -41,18 +41,24 @@ export async function PATCH(
     const supabase = getSupabaseServiceClient();
 
     if (supabase) {
-      const { data, error } = await supabase
-        .from("leads")
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq("id", id)
-        .select()
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from("leads")
+          .update({ ...updates, updated_at: new Date().toISOString() })
+          .eq("id", id)
+          .select()
+          .single();
 
-      if (error) {
-        return NextResponse.json({ error: error.message }, { status: 400 });
+        if (error) {
+          console.warn("Supabase update lead error, disabling Supabase:", error);
+          markSupabaseUnhealthy();
+        } else if (data) {
+          return NextResponse.json({ id: data.id, status: data.status, proposalStatus: data.proposal_status });
+        }
+      } catch (e) {
+        console.warn("Supabase update lead exception, disabling Supabase:", e);
+        markSupabaseUnhealthy();
       }
-
-      return NextResponse.json({ id: data.id, status: data.status, proposalStatus: data.proposal_status });
     }
 
     // Local fallback
