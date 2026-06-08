@@ -43,8 +43,8 @@ export default async function BuilderDashboard() {
       <section className="dashboardStats">
         <Stat label="Total leads" value={String(leads.length)} />
         <Stat label="Pipeline value" value={formatCurrency(stats.totalValue)} />
-        <Stat label="Won" value={String(stats.wonCount)} />
-        <Stat label="Conversion" value={`${analytics.conversionRate}%`} />
+        <Stat label="Contracted revenue" value={formatCurrency(stats.wonValue)} />
+        <Stat label="Win rate" value={`${analytics.conversionRate}%`} />
       </section>
 
       {/* ── Analytics ── */}
@@ -200,9 +200,11 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 function getDashboardStats(leads: LeadRecord[]) {
+  const wonLeads = leads.filter((l) => l.status === "won");
   return {
     totalValue: leads.reduce((t, l) => t + l.estimatedPrice, 0),
-    wonCount: leads.filter((l) => l.status === "won").length,
+    wonCount: wonLeads.length,
+    wonValue: wonLeads.reduce((t, l) => t + l.estimatedPrice, 0),
     feasibleCount: leads.filter((l) => l.feasibilityResult === "Likely feasible").length,
     highRiskCount: leads.filter((l) => l.reviewRisk === "High").length,
   };

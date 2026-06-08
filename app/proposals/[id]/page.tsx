@@ -4,6 +4,7 @@ import { buildNextSteps, buildProposalSections, formatCurrency } from "../../../
 import { getLead } from "../../../lib/leadStore";
 import { PrintButton } from "../share/[token]/PrintButton";
 import { CopyLinkButton } from "./CopyLinkButton";
+import { ManufacturerMatch } from "../../configurator/ManufacturerMatch";
 
 export default async function ProposalPage({
   params,
@@ -89,6 +90,15 @@ export default async function ProposalPage({
             <Link className="button primary fullButton" href={`/permit/${lead.id}`}>
               Generate permit checklist
             </Link>
+          </div>
+
+          <div className="printHide">
+            <ManufacturerMatch
+              address={lead.propertyAddress}
+              maxSqFt={lead.maxSquareFeet || 0}
+              modelSqFt={lead.squareFeet}
+              budget={lead.estimatedPrice}
+            />
           </div>
         </aside>
       </section>

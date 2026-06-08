@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { buildNextSteps, buildProposalSections, formatCurrency } from "../../../../lib/proposalBuilder";
 import { getLeadByToken } from "../../../../lib/leadStore";
 import { PrintButton } from "./PrintButton";
+import { ManufacturerMatch } from "../../../configurator/ManufacturerMatch";
 
 export default async function SharedProposalPage({
   params,
@@ -76,6 +77,15 @@ export default async function SharedProposalPage({
             ))}
           </div>
           <PrintButton />
+
+          <div className="printHide">
+            <ManufacturerMatch
+              address={lead.propertyAddress}
+              maxSqFt={lead.maxSquareFeet || 0}
+              modelSqFt={lead.squareFeet}
+              budget={lead.estimatedPrice}
+            />
+          </div>
         </aside>
       </section>
     </main>

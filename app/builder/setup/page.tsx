@@ -32,7 +32,7 @@ const CATEGORIES = [
 ];
 
 export default function BuilderSetup() {
-  const [tab, setTab] = useState<"models" | "options">("models");
+  const [tab, setTab] = useState<"models" | "options" | "credentials">("models");
   const [models, setModels] = useState<Model[]>([]);
   const [options, setOptions] = useState<Option[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,6 +102,13 @@ export default function BuilderSetup() {
           type="button"
         >
           Options
+        </button>
+        <button
+          className={tab === "credentials" ? "setupTab active" : "setupTab"}
+          onClick={() => setTab("credentials")}
+          type="button"
+        >
+          Credentials
         </button>
       </div>
 
@@ -200,7 +207,174 @@ export default function BuilderSetup() {
           })}
         </div>
       )}
+
+      {!loading && tab === "credentials" && (
+        <div className="setupSection">
+          <CredentialsForm />
+        </div>
+      )}
     </main>
+  );
+}
+
+function CredentialsForm() {
+  const [companyName, setCompanyName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [licenseNumber, setLicenseNumber] = useState("");
+  const [insuranceCarrier, setInsuranceCarrier] = useState("");
+  const [insuranceLimit, setInsuranceLimit] = useState("");
+  const [insuranceExpiration, setInsuranceExpiration] = useState("");
+  const [bondProvider, setBondProvider] = useState("");
+  const [bondAmount, setBondAmount] = useState("");
+  const [warrantyInfo, setWarrantyInfo] = useState("");
+  const [serviceRegion, setServiceRegion] = useState("");
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      try {
+        const res = await fetch("/api/builder");
+        const data = await res.json();
+        if (!active) return;
+        if (data.credentials) {
+          const c = data.credentials;
+          setCompanyName(c.companyName ?? "");
+          setEmail(c.email ?? "");
+          setPhone(c.phone ?? "");
+          setLicenseNumber(c.licenseNumber ?? "");
+          setInsuranceCarrier(c.insuranceCarrier ?? "");
+          setInsuranceLimit(String(c.insuranceLimit ?? ""));
+          setInsuranceExpiration(c.insuranceExpiration ?? "");
+          setBondProvider(c.bondProvider ?? "");
+          setBondAmount(String(c.bondAmount ?? ""));
+          setWarrantyInfo(c.warrantyInfo ?? "");
+          setServiceRegion(c.serviceRegion ?? "");
+        }
+      } catch {
+        if (active) setError("Failed to load builder credentials.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setSaving(true);
+
+    try {
+      const res = await fetch("/api/builder", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companyName,
+          email,
+          phone,
+          licenseNumber,
+          insuranceCarrier,
+          insuranceLimit: Number(insuranceLimit) || 0,
+          insuranceExpiration,
+          bondProvider,
+          bondAmount: Number(bondAmount) || 0,
+          warrantyInfo,
+          serviceRegion,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to save credentials");
+      }
+
+      setSuccess("Credentials saved successfully.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to save.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return <p className="setupNotice">Loading credentials...</p>;
+  }
+
+  return (
+    <div className="dataPanel">
+      <div className="panelTitle">
+        <h2>Builder credentials</h2>
+        <span>Drive lender package metadata</span>
+      </div>
+      <form className="setupForm" onSubmit={submit} style={{ maxWidth: 600 }}>
+        <label>
+          Company legal name
+          <input className="setupInput" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="e.g. Apex Modular Builders Ltd." required />
+        </label>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <label>
+            Public email
+            <input className="setupInput" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="info@company.com" required />
+          </label>
+          <label>
+            Public phone
+            <input className="setupInput" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(555) 555-0199" required />
+          </label>
+        </div>
+        <label>
+          General contractor license number
+          <input className="setupInput" value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} placeholder="GC-12345-BC" required />
+        </label>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <label>
+            Liability insurance carrier
+            <input className="setupInput" value={insuranceCarrier} onChange={(e) => setInsuranceCarrier(e.target.value)} placeholder="Pacific Insurance" required />
+          </label>
+          <label>
+            Liability limit (CAD)
+            <input className="setupInput" type="number" value={insuranceLimit} onChange={(e) => setInsuranceLimit(e.target.value)} placeholder="2000000" required />
+          </label>
+        </div>
+        <label>
+          Insurance expiration date
+          <input className="setupInput" type="date" value={insuranceExpiration} onChange={(e) => setInsuranceExpiration(e.target.value)} required />
+        </label>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <label>
+            Surety bond provider
+            <input className="setupInput" value={bondProvider} onChange={(e) => setBondProvider(e.target.value)} placeholder="Assurance Corp" required />
+          </label>
+          <label>
+            Surety bond amount (CAD)
+            <input className="setupInput" type="number" value={bondAmount} onChange={(e) => setBondAmount(e.target.value)} placeholder="100000" required />
+          </label>
+        </div>
+        <label>
+          Home warranty program info
+          <input className="setupInput" value={warrantyInfo} onChange={(e) => setWarrantyInfo(e.target.value)} placeholder="e.g. 2-5-10 Year Residential Protection" required />
+        </label>
+        <label>
+          Service regions
+          <textarea className="setupInput" style={{ minHeight: 60 }} value={serviceRegion} onChange={(e) => setServiceRegion(e.target.value)} placeholder="Metro Vancouver, Southern BC" required />
+        </label>
+
+        {error && <p className="setupNotice error">{error}</p>}
+        {success && <p className="setupNotice success" style={{ color: "#3a8a5a", marginTop: 8 }}>{success}</p>}
+
+        <button className="button primary" type="submit" disabled={saving} style={{ marginTop: 16 }}>
+          {saving ? "Saving..." : "Save credentials"}
+        </button>
+      </form>
+    </div>
   );
 }
 

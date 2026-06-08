@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getLead } from "../../../lib/leadStore";
 import { formatCurrency } from "../../../lib/proposalBuilder";
 import { ProjectMilestones } from "./ProjectMilestones";
+import { PermitTracker } from "./PermitTracker";
+import { DrawReleaseLog } from "./DrawReleaseLog";
 
 export default async function ProjectPage({
   params,
@@ -42,23 +44,17 @@ export default async function ProjectPage({
             <ProjectMilestones leadId={lead.id} />
           </div>
 
-          <div className="dataPanel">
-            <div className="panelTitle">
-              <h2>Permit tracker</h2>
-              <span>Submission status</span>
-            </div>
-            <dl className="summaryList">
-              <div><dt>Permit path</dt><dd>{lead.permitPath}</dd></div>
-              <div><dt>Review risk</dt><dd>{lead.reviewRisk}</dd></div>
-              <div><dt>Setback target</dt><dd>{lead.setbackTarget}</dd></div>
-              <div><dt>Expected timeline</dt><dd>{lead.timelineWeeks} weeks from permit approval</dd></div>
-            </dl>
-            <div style={{ marginTop: 18 }}>
-              <Link className="button secondary" href={`/permit/${lead.id}`}>
-                View full permit checklist
-              </Link>
-            </div>
-          </div>
+          <PermitTracker
+            leadId={lead.id}
+            permitPath={lead.permitPath}
+            reviewRisk={lead.reviewRisk}
+            setbackTarget={lead.setbackTarget}
+          />
+
+          <DrawReleaseLog
+            leadId={lead.id}
+            totalPrice={lead.estimatedPrice}
+          />
         </div>
 
         <aside className="estimatePanel">
@@ -82,7 +78,7 @@ export default async function ProjectPage({
             ].map((m) => (
               <div key={m.stage}>
                 <span>{m.percent}%</span>
-                <p>{m.stage} — {formatCurrency(Math.round(lead.estimatedPrice * m.percent / 100))}</p>
+                <p style={{ margin: 0 }}>{m.stage} — {formatCurrency(Math.round(lead.estimatedPrice * m.percent / 100))}</p>
               </div>
             ))}
           </div>

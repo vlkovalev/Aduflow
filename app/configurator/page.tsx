@@ -1,5 +1,5 @@
 'use client';
-
+ 
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
@@ -8,22 +8,8 @@ import {
   parcelScenarios,
   type PricingCatalog,
 } from "../../lib/pricingEngine";
-
-type ZoningResult = {
-  address?: string;
-  zone: string;
-  zoneDescription: string;
-  maxSquareFeet: number | null;
-  maxStories: number | null;
-  setbackFront: string | null;
-  setbackSide: string | null;
-  setbackRear: string | null;
-  aduPermitted: boolean | null;
-  reviewRisk: "Low" | "Medium" | "High";
-  permitPath: string;
-  source?: string;
-  rawData?: Record<string, unknown>;
-};
+import { type ZoningResult } from "../../lib/zoningLookup";
+import { ManufacturerMatch } from "./ManufacturerMatch";
 
 export default function Configurator() {
   const [catalog, setCatalog] = useState<PricingCatalog>(defaultCatalog);
@@ -41,18 +27,36 @@ export default function Configurator() {
   const [zoningResult, setZoningResult] = useState<ZoningResult | null>(null);
   const [zoningStatus, setZoningStatus] = useState<"idle" | "loading" | "found" | "not_found">("idle");
 
+  // Zoning overrides
+  const [zoningMaxSqFt, setZoningMaxSqFt] = useState<number | null>(null);
+  const [zoningMaxStories, setZoningMaxStories] = useState<number | null>(null);
+  const [zoningSetbackSide, setZoningSetbackSide] = useState<string>("");
+  const [zoningSetbackRear, setZoningSetbackRear] = useState<string>("");
+  const [zoningReviewRisk, setZoningReviewRisk] = useState<"Low" | "Medium" | "High">("Low");
+  const [isEditingZoning, setIsEditingZoning] = useState(false);
+
   async function lookupAddress() {
     if (!addressInput.trim()) return;
     setZoningStatus("loading");
     setZoningResult(null);
+    setIsEditingZoning(false);
     try {
       const res = await fetch(`/api/zoning?address=${encodeURIComponent(addressInput.trim())}`);
       const data = await res.json();
       if (data.result) {
-        setZoningResult(data.result as ZoningResult);
+        const result = data.result as ZoningResult;
+        setZoningResult(result);
         setZoningStatus("found");
+
+        // Initialize override states
+        setZoningMaxSqFt(result.maxSquareFeet);
+        setZoningMaxStories(result.maxStories);
+        setZoningSetbackSide(result.setbackSide || "");
+        setZoningSetbackRear(result.setbackRear || "");
+        setZoningReviewRisk(result.reviewRisk || "Low");
+
         // Auto-select best matching parcel scenario
-        const risk = (data.result as ZoningResult).reviewRisk;
+        const risk = result.reviewRisk;
         if (risk === "High") setParcelType("tight-servicing");
         else if (risk === "Medium") setParcelType("corner-hoa");
         else setParcelType("urban-lane");
@@ -103,7 +107,11 @@ export default function Configurator() {
     foundation,
     utilities,
     site,
-    zoningResult,
+    zoningMaxSqFt,
+    zoningMaxStories,
+    zoningSetbackSide,
+    zoningSetbackRear,
+    zoningReviewRisk,
   }, catalog);
 
   return (
@@ -145,22 +153,118 @@ export default function Configurator() {
             </button>
           </div>
           {zoningStatus === "found" && zoningResult && (
-            <div className="zoningResult">
-              <div className="zoningBadge">
-                <span>{zoningResult.zone}</span>
-                <strong>{zoningResult.zoneDescription}</strong>
-              </div>
-              <div className="zoningDetails">
-                {zoningResult.maxSquareFeet && <span>Max ADU: {zoningResult.maxSquareFeet} sq ft</span>}
-                {zoningResult.maxStories && <span>{zoningResult.maxStories} storey max</span>}
-                {zoningResult.setbackRear && <span>Rear setback: {zoningResult.setbackRear}</span>}
-                {zoningResult.setbackSide && <span>Side setback: {zoningResult.setbackSide}</span>}
-                <span className={`zoningRisk risk-${zoningResult.reviewRisk.toLowerCase()}`}>
-                  {zoningResult.reviewRisk} review risk
-                </span>
-                <span>{zoningResult.permitPath}</span>
-              </div>
-              <p className="zoningNote">Parcel scenario auto-selected below. Adjust if needed.</p>
+            <div>
+              {!isEditingZoning ? (
+                <div className="zoningResult">
+                  <div className="zoningBadge">
+                    <span>{zoningResult.zone || zoningResult.zoneCode}</span>
+                    <strong>{zoningResult.zoneDescription}</strong>
+                  </div>
+                  <div className="zoningDetails" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
+                    <div>
+                      <span style={{ display: "block", fontSize: 11, color: "var(--muted)" }}>Max ADU Size</span>
+                      <strong style={{ fontSize: 15 }}>{zoningMaxSqFt ? `${zoningMaxSqFt} sq ft` : "N/A"}</strong>
+                    </div>
+                    <div>
+                      <span style={{ display: "block", fontSize: 11, color: "var(--muted)" }}>Max Stories</span>
+                      <strong style={{ fontSize: 15 }}>{zoningMaxStories ? `${zoningMaxStories} stories` : "N/A"}</strong>
+                    </div>
+                    <div>
+                      <span style={{ display: "block", fontSize: 11, color: "var(--muted)" }}>Side Setback</span>
+                      <strong style={{ fontSize: 15 }}>{zoningSetbackSide || "N/A"}</strong>
+                    </div>
+                    <div>
+                      <span style={{ display: "block", fontSize: 11, color: "var(--muted)" }}>Rear Setback</span>
+                      <strong style={{ fontSize: 15 }}>{zoningSetbackRear || "N/A"}</strong>
+                    </div>
+                    <div>
+                      <span style={{ display: "block", fontSize: 11, color: "var(--muted)" }}>Review Risk</span>
+                      <span className={`zoningRisk risk-${zoningReviewRisk.toLowerCase()}`} style={{ display: "inline-block", marginTop: 4 }}>
+                        {zoningReviewRisk}
+                      </span>
+                    </div>
+                    <div>
+                      <span style={{ display: "block", fontSize: 11, color: "var(--muted)" }}>Zoning Source</span>
+                      <strong style={{ fontSize: 13, color: "var(--muted)" }}>{zoningResult.source}</strong>
+                    </div>
+                  </div>
+                  <div style={{ marginTop: 14 }}>
+                    <button
+                      className="button secondary"
+                      type="button"
+                      style={{ minHeight: 32, padding: "0 12px", fontSize: 12, fontWeight: 700 }}
+                      onClick={() => setIsEditingZoning(true)}
+                    >
+                      ✏️ Edit Lot Constraints
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="zoningResult" style={{ border: "2px solid var(--forest)", background: "rgba(36, 69, 55, 0.02)" }}>
+                  <div className="zoningBadge">
+                    <span>{zoningResult.zone || zoningResult.zoneCode}</span>
+                    <strong>Adjust Lot Constraints</strong>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }} className="proposalForm">
+                    <label style={{ fontSize: 11, display: "grid", gap: 4 }}>
+                      Max ADU Sq Ft
+                      <input
+                        style={{ padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 4, width: "100%" }}
+                        type="number"
+                        value={zoningMaxSqFt || ""}
+                        onChange={(e) => setZoningMaxSqFt(Number(e.target.value) || null)}
+                      />
+                    </label>
+                    <label style={{ fontSize: 11, display: "grid", gap: 4 }}>
+                      Max Stories
+                      <input
+                        style={{ padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 4, width: "100%" }}
+                        type="number"
+                        value={zoningMaxStories || ""}
+                        onChange={(e) => setZoningMaxStories(Number(e.target.value) || null)}
+                      />
+                    </label>
+                    <label style={{ fontSize: 11, display: "grid", gap: 4 }}>
+                      Side Setback
+                      <input
+                        style={{ padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 4, width: "100%" }}
+                        value={zoningSetbackSide}
+                        onChange={(e) => setZoningSetbackSide(e.target.value)}
+                      />
+                    </label>
+                    <label style={{ fontSize: 11, display: "grid", gap: 4 }}>
+                      Rear Setback
+                      <input
+                        style={{ padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 4, width: "100%" }}
+                        value={zoningSetbackRear}
+                        onChange={(e) => setZoningSetbackRear(e.target.value)}
+                      />
+                    </label>
+                    <label style={{ fontSize: 11, display: "grid", gap: 4 }}>
+                      Review Risk
+                      <select
+                        style={{ padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 4, background: "white", width: "100%" }}
+                        value={zoningReviewRisk}
+                        onChange={(e) => setZoningReviewRisk(e.target.value as "Low" | "Medium" | "High")}
+                      >
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div style={{ marginTop: 14 }}>
+                    <button
+                      className="button primary"
+                      type="button"
+                      style={{ minHeight: 32, padding: "0 12px", fontSize: 12, fontWeight: 700 }}
+                      onClick={() => setIsEditingZoning(false)}
+                    >
+                      💾 Apply Overrides
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           {zoningStatus === "not_found" && (
@@ -296,6 +400,13 @@ export default function Configurator() {
               </div>
             ))}
           </div>
+
+          <ManufacturerMatch
+            address={addressInput}
+            maxSqFt={zoningMaxSqFt || 0}
+            modelSqFt={estimate.model.squareFeet}
+            budget={estimate.total}
+          />
         </aside>
       </section>
 
@@ -330,15 +441,15 @@ export default function Configurator() {
                 propertyAddress: formData.get("address") || addressInput,
                 parcelScenario: parcelType,
                 zoningSource: zoningResult?.source ?? "manual",
-                zoningZone: zoningResult?.zone ?? "",
+                zoningZone: zoningResult?.zone || zoningResult?.zoneCode || "",
                 zoningDescription: zoningResult?.zoneDescription ?? "",
                 zoningRaw: zoningResult?.rawData ?? zoningResult ?? null,
                 zoningLookupStatus: zoningResult ? "found" : "manual",
-                zoningCheckedAt: zoningResult ? new Date().toISOString() : "",
-                aduPermitted: zoningResult?.aduPermitted ?? null,
-                setbackFront: zoningResult?.setbackFront ?? "",
-                setbackSide: zoningResult?.setbackSide ?? "",
-                setbackRear: zoningResult?.setbackRear ?? "",
+                zoningCheckedAt: new Date().toISOString(),
+                aduPermitted: estimate.feasibility.fitsSize,
+                setbackFront: "",
+                setbackSide: zoningSetbackSide,
+                setbackRear: zoningSetbackRear,
                 feasibilityResult: estimate.feasibility.result,
                 feasibilityConfidence: estimate.feasibility.confidence,
                 permitPath: estimate.permitPath,
@@ -351,10 +462,10 @@ export default function Configurator() {
                 modelName: estimate.model.name,
                 squareFeet: estimate.model.squareFeet,
                 timelineWeeks: estimate.timelineWeeks,
-                maxSquareFeet: estimate.feasibility.maxSquareFeet,
-                maxStories: estimate.feasibility.maxStories,
+                maxSquareFeet: zoningMaxSqFt ?? estimate.feasibility.maxSquareFeet,
+                maxStories: zoningMaxStories ?? estimate.feasibility.maxStories,
                 setbackTarget: estimate.feasibility.setback,
-                reviewRisk: estimate.feasibility.reviewRisk,
+                reviewRisk: zoningReviewRisk,
                 configuration: {
                   modelCode,
                   modelName: estimate.model.name,
@@ -364,6 +475,12 @@ export default function Configurator() {
                   site,
                   parcelType,
                   drawMilestones: estimate.drawMilestones,
+                  // Keep edited overrides
+                  zoningMaxSqFt,
+                  zoningMaxStories,
+                  zoningSetbackSide,
+                  zoningSetbackRear,
+                  zoningReviewRisk,
                 },
               }),
             });
