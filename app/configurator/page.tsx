@@ -157,7 +157,7 @@ export default function Configurator() {
               {!isEditingZoning ? (
                 <div className="zoningResult">
                   <div className="zoningBadge">
-                    <span>{zoningResult.zone || zoningResult.zoneCode}</span>
+                    <span>{zoningResult.zoneCode}</span>
                     <strong>{zoningResult.zoneDescription}</strong>
                   </div>
                   <div className="zoningDetails" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
@@ -202,7 +202,7 @@ export default function Configurator() {
               ) : (
                 <div className="zoningResult" style={{ border: "2px solid var(--forest)", background: "rgba(36, 69, 55, 0.02)" }}>
                   <div className="zoningBadge">
-                    <span>{zoningResult.zone || zoningResult.zoneCode}</span>
+                    <span>{zoningResult.zoneCode}</span>
                     <strong>Adjust Lot Constraints</strong>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }} className="proposalForm">
@@ -441,7 +441,7 @@ export default function Configurator() {
                 propertyAddress: formData.get("address") || addressInput,
                 parcelScenario: parcelType,
                 zoningSource: zoningResult?.source ?? "manual",
-                zoningZone: zoningResult?.zone || zoningResult?.zoneCode || "",
+                zoningZone: zoningResult?.zoneCode || "",
                 zoningDescription: zoningResult?.zoneDescription ?? "",
                 zoningRaw: zoningResult?.rawData ?? zoningResult ?? null,
                 zoningLookupStatus: zoningResult ? "found" : "manual",
