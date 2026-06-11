@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { getBuilderCredentials, updateBuilderCredentials } from "../../../lib/builderStore";
+import { getSupabaseServiceClient } from "../../../lib/supabase";
 
 export const runtime = "nodejs";
 
 export async function GET() {
   try {
     const credentials = await getBuilderCredentials();
-    return NextResponse.json({ credentials });
+    const isDbActive = getSupabaseServiceClient() !== null;
+    return NextResponse.json({ credentials, isDbActive });
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : "Internal Server Error";
     return NextResponse.json({ error: errorMessage }, { status: 500 });

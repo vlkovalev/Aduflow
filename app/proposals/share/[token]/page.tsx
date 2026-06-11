@@ -3,6 +3,7 @@ import { buildNextSteps, buildProposalSections, formatCurrency } from "../../../
 import { getLeadByToken } from "../../../../lib/leadStore";
 import { PrintButton } from "./PrintButton";
 import { ManufacturerMatch } from "../../../configurator/ManufacturerMatch";
+import { FloorPlanPreview } from "../../../configurator/FloorPlanPreview";
 
 export default async function SharedProposalPage({
   params,
@@ -55,6 +56,8 @@ export default async function SharedProposalPage({
         </div>
 
         <aside className="estimatePanel">
+          <FloorPlanPreview modelCode={lead.modelCode} />
+
           <div className="estimateHeader">
             <span>Estimated package</span>
             <strong>{formatCurrency(lead.estimatedPrice)}</strong>

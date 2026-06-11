@@ -3,6 +3,7 @@ import { listLeads, type LeadRecord } from "../../lib/leadStore";
 import { formatCurrency } from "../../lib/proposalBuilder";
 import { LeadStatusSelect } from "./LeadStatusSelect";
 import { TopNav } from "../components/TopNav";
+import { getSupabaseServiceClient } from "../../lib/supabase";
 
 const STATUS_LABELS: Record<string, string> = {
   new: "New",
@@ -18,10 +19,33 @@ export default async function BuilderDashboard() {
   const analytics = getAnalytics(leads);
   const drawQueue = getDrawQueue(leads);
   const wonLeads = leads.filter((l) => l.status === "won");
+  
+  const isDbActive = getSupabaseServiceClient() !== null;
 
   return (
     <main className="appShell">
       <TopNav />
+
+      {!isDbActive && (
+        <div style={{
+          background: "var(--paper)",
+          borderLeft: "4px solid var(--gold)",
+          padding: "12px 16px",
+          borderRadius: 6,
+          margin: "12px 0 20px",
+          fontSize: 13,
+          color: "var(--muted)",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          lineHeight: 1.4
+        }}>
+          <span>⚠️</span>
+          <span>
+            <strong>Sandbox Mode Active:</strong> Supabase database environment variables are not configured. Your custom models, builder credentials, and homeowner leads reside in temporary local serverless files and will reset when Vercel restarts.
+          </span>
+        </div>
+      )}
 
       <section className="dashboardHeader">
         <div>

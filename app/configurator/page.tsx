@@ -11,6 +11,7 @@ import {
 import { type ZoningResult } from "../../lib/zoningLookup";
 import { ManufacturerMatch } from "./ManufacturerMatch";
 import { TopNav } from "../components/TopNav";
+import { FloorPlanPreview } from "./FloorPlanPreview";
 
 export default function Configurator() {
   const [catalog, setCatalog] = useState<PricingCatalog>(defaultCatalog);
@@ -69,6 +70,17 @@ export default function Configurator() {
     }
   }
 
+  // Load URL query param for model selection
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const m = params.get("model");
+      if (m) {
+        setModelCode(m);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     let active = true;
 
@@ -84,7 +96,14 @@ export default function Configurator() {
 
         setCatalog(nextCatalog);
         setCatalogStatus("Builder catalog");
-        setModelCode((current) => safeCurrent(current, nextCatalog.models.map((model) => model.code)));
+
+        // Only auto-select first model if model code is not already overridden by URL query
+        const params = new URLSearchParams(window.location.search);
+        const hasUrlModel = params.get("model");
+        if (!hasUrlModel) {
+          setModelCode((current) => safeCurrent(current, nextCatalog.models.map((model) => model.code)));
+        }
+
         setFinish((current) => safeCurrent(current, nextCatalog.optionGroups.finish.map((option) => option.value)));
         setFoundation((current) => safeCurrent(current, nextCatalog.optionGroups.foundation.map((option) => option.value)));
         setUtilities((current) => safeCurrent(current, nextCatalog.optionGroups.utilities.map((option) => option.value)));
@@ -278,6 +297,7 @@ export default function Configurator() {
         <div className="configPanel">
           <ChoiceGroup
             title="Parcel scenario"
+            description="Select the property's access and backyard layout. This determines the maximum ADU envelope allowed by local code and sets the permit path."
             value={parcelType}
             options={parcelScenarios.map((scenario) => ({
               value: scenario.value,
@@ -288,6 +308,7 @@ export default function Configurator() {
           />
           <ChoiceGroup
             title="Building model"
+            description="Select the footprint. Smaller units simplify setback clearance on narrow lots."
             value={modelCode}
             options={catalog.models.map((model) => ({
               value: model.code,
@@ -298,24 +319,28 @@ export default function Configurator() {
           />
           <ChoiceGroup
             title="Finish level"
+            description="Choose the interior specifications. Essential is built for rentals; Comfort adds quality tile packages; Premium features high-end custom millwork."
             value={finish}
             options={catalog.optionGroups.finish}
             onChange={setFinish}
           />
           <ChoiceGroup
             title="Foundation"
+            description="Slab is default for flat yards; Helical piles require zero excavation and protect nearby tree roots; Crawlspace permits easy access to utilities."
             value={foundation}
             options={catalog.optionGroups.foundation}
             onChange={setFoundation}
           />
           <ChoiceGroup
             title="Utilities"
+            description="Covers plumbing and power trenching from the main house. Standard covers typical yards; Complex covers runs >80ft or panel upgrades."
             value={utilities}
             options={catalog.optionGroups.utilities}
             onChange={setUtilities}
           />
           <ChoiceGroup
             title="Site condition"
+            description="Determines modular delivery logistics. Urban uses standard access; Tight requires crane staging; Rural includes regional travel surcharges."
             value={site}
             options={catalog.optionGroups.site}
             onChange={setSite}
@@ -328,6 +353,8 @@ export default function Configurator() {
             <strong>{estimate.feasibility.confidence}% confidence</strong>
             <p>{estimate.feasibility.note}</p>
           </div>
+
+          <FloorPlanPreview modelCode={modelCode} />
 
           <div className="estimateHeader">
             <span>Estimated package</span>
@@ -563,11 +590,13 @@ type Choice = {
 
 function ChoiceGroup({
   title,
+  description,
   value,
   options,
   onChange,
 }: {
   title: string;
+  description?: string;
   value: string;
   options: Choice[];
   onChange: (value: string) => void;
@@ -575,6 +604,11 @@ function ChoiceGroup({
   return (
     <fieldset className="choiceGroup">
       <legend>{title}</legend>
+      {description && (
+        <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 16px", lineHeight: 1.4 }}>
+          {description}
+        </p>
+      )}
       <div className="choiceGrid">
         {options.map((option) => (
           <label className={value === option.value ? "choice active" : "choice"} key={option.value}>

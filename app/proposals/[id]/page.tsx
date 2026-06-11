@@ -6,6 +6,7 @@ import { PrintButton } from "../share/[token]/PrintButton";
 import { CopyLinkButton } from "./CopyLinkButton";
 import { ManufacturerMatch } from "../../configurator/ManufacturerMatch";
 import { TopNav } from "../../components/TopNav";
+import { FloorPlanPreview } from "../../configurator/FloorPlanPreview";
 
 export default async function ProposalPage({
   params,
@@ -56,6 +57,8 @@ export default async function ProposalPage({
         </div>
 
         <aside className="estimatePanel">
+          <FloorPlanPreview modelCode={lead.modelCode} />
+
           <div className="estimateHeader">
             <span>Estimated package</span>
             <strong>{formatCurrency(lead.estimatedPrice)}</strong>

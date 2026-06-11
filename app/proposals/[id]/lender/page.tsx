@@ -119,100 +119,104 @@ export default async function LenderPackagePage({
         {/* Itemized Budget */}
         <section className="lenderSection">
           <h2>Itemized construction budget</h2>
-          <table className="lenderTable">
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th>Description</th>
-                <th style={{ textAlign: "right" }}>Cost (CAD)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Permits & Engineering</td>
-                <td>Architectural drafting, site surveys, structural reviews, city permit fees</td>
-                <td style={{ textAlign: "right" }}>{formatCurrency(permitFee)}</td>
-              </tr>
-              <tr>
-                <td>Site Preparation</td>
-                <td>Access planning, soil excavation, minor site grading, and preparation</td>
-                <td style={{ textAlign: "right" }}>{formatCurrency(siteAccess)}</td>
-              </tr>
-              <tr>
-                <td>Concrete Foundation</td>
-                <td>Foundation setup: {config.foundation === "slab" ? "Concrete Slab" : config.foundation === "helical" ? "Helical Piles" : "Crawlspace"} option</td>
-                <td style={{ textAlign: "right" }}>{formatCurrency(foundation)}</td>
-              </tr>
-              <tr>
-                <td>Utility Connection</td>
-                <td>Service lines hookup (water, sewer, and electrical panels)</td>
-                <td style={{ textAlign: "right" }}>{formatCurrency(utilities)}</td>
-              </tr>
-              <tr>
-                <td>Factory Modular Shell</td>
-                <td>Prefab structural shell, insulation, exterior cladding, roofing, doors, and windows</td>
-                <td style={{ textAlign: "right" }}>{formatCurrency(factoryShell)}</td>
-              </tr>
-              <tr>
-                <td>Interior Finishes</td>
-                <td>Kitchen cabinetry, countertops, plumbing fixtures, bathroom, and flooring ({config.finish || "Essential"})</td>
-                <td style={{ textAlign: "right" }}>{formatCurrency(finishLevel)}</td>
-              </tr>
-              <tr>
-                <td>GC Assembly & Margin</td>
-                <td>Modular set assembly, framing tie-ins, site supervision, and contractor margin</td>
-                <td style={{ textAlign: "right" }}>{formatCurrency(assemblyMargin)}</td>
-              </tr>
-              <tr className="lenderTotal" style={{ fontWeight: 800 }}>
-                <td>Contract Sum (Net)</td>
-                <td>Fixed contract price for the full build package</td>
-                <td style={{ textAlign: "right" }}>{formatCurrency(totalDraw)}</td>
-              </tr>
-              <tr>
-                <td>Lender Contingency (10%)</td>
-                <td>Recommended reserve to cover client-driven change orders or site issues</td>
-                <td style={{ textAlign: "right" }}>{formatCurrency(contingency)}</td>
-              </tr>
-              <tr className="lenderTotal" style={{ borderTop: "2px double var(--forest)" }}>
-                <td><strong>Gross Proposed Budget</strong></td>
-                <td><strong>Total budget including reserve</strong></td>
-                <td style={{ textAlign: "right", fontWeight: 800 }}>{formatCurrency(totalDraw + contingency)}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div className="lenderTableContainer">
+            <table className="lenderTable">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Description</th>
+                  <th style={{ textAlign: "right" }}>Cost (CAD)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Permits & Engineering</td>
+                  <td>Architectural drafting, site surveys, structural reviews, city permit fees</td>
+                  <td style={{ textAlign: "right" }}>{formatCurrency(permitFee)}</td>
+                </tr>
+                <tr>
+                  <td>Site Preparation</td>
+                  <td>Access planning, soil excavation, minor site grading, and preparation</td>
+                  <td style={{ textAlign: "right" }}>{formatCurrency(siteAccess)}</td>
+                </tr>
+                <tr>
+                  <td>Concrete Foundation</td>
+                  <td>Foundation setup: {config.foundation === "slab" ? "Concrete Slab" : config.foundation === "helical" ? "Helical Piles" : "Crawlspace"} option</td>
+                  <td style={{ textAlign: "right" }}>{formatCurrency(foundation)}</td>
+                </tr>
+                <tr>
+                  <td>Utility Connection</td>
+                  <td>Service lines hookup (water, sewer, and electrical panels)</td>
+                  <td style={{ textAlign: "right" }}>{formatCurrency(utilities)}</td>
+                </tr>
+                <tr>
+                  <td>Factory Modular Shell</td>
+                  <td>Prefab structural shell, insulation, exterior cladding, roofing, doors, and windows</td>
+                  <td style={{ textAlign: "right" }}>{formatCurrency(factoryShell)}</td>
+                </tr>
+                <tr>
+                  <td>Interior Finishes</td>
+                  <td>Kitchen cabinetry, countertops, plumbing fixtures, bathroom, and flooring ({config.finish || "Essential"})</td>
+                  <td style={{ textAlign: "right" }}>{formatCurrency(finishLevel)}</td>
+                </tr>
+                <tr>
+                  <td>GC Assembly & Margin</td>
+                  <td>Modular set assembly, framing tie-ins, site supervision, and contractor margin</td>
+                  <td style={{ textAlign: "right" }}>{formatCurrency(assemblyMargin)}</td>
+                </tr>
+                <tr className="lenderTotal" style={{ fontWeight: 800 }}>
+                  <td>Contract Sum (Net)</td>
+                  <td>Fixed contract price for the full build package</td>
+                  <td style={{ textAlign: "right" }}>{formatCurrency(totalDraw)}</td>
+                </tr>
+                <tr>
+                  <td>Lender Contingency (10%)</td>
+                  <td>Recommended reserve to cover client-driven change orders or site issues</td>
+                  <td style={{ textAlign: "right" }}>{formatCurrency(contingency)}</td>
+                </tr>
+                <tr className="lenderTotal" style={{ borderTop: "2px double var(--forest)" }}>
+                  <td><strong>Gross Proposed Budget</strong></td>
+                  <td><strong>Total budget including reserve</strong></td>
+                  <td style={{ textAlign: "right", fontWeight: 800 }}>{formatCurrency(totalDraw + contingency)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
 
         {/* Draw schedule */}
         <section className="lenderSection">
           <h2>Proposed draw release schedule</h2>
-          <table className="lenderTable lenderDrawTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Milestone</th>
-                <th>Release %</th>
-                <th>Release amount</th>
-                <th>Evidence required</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { stage: "Deposit and permit package submitted", percent: 10, evidence: "Signed contract, permit application receipt" },
-                { stage: "Foundation ready", percent: 20, evidence: "Geotagged site photos, city foundation inspection record" },
-                { stage: "Factory completion", percent: 35, evidence: "Factory QA report, completed module photo verification" },
-                { stage: "Set and weather-tight", percent: 20, evidence: "Site photos showing set completion, roof & wrap certificate" },
-                { stage: "Final inspection and occupancy", percent: 15, evidence: "Municipal certificate of occupancy, final occupancy permit" },
-              ].map((row, i) => (
-                <tr key={row.stage}>
-                  <td>{i + 1}</td>
-                  <td>{row.stage}</td>
-                  <td>{row.percent}%</td>
-                  <td>{formatCurrency(Math.round(totalDraw * row.percent / 100))}</td>
-                  <td className="lenderEvidence">{row.evidence}</td>
+          <div className="lenderTableContainer">
+            <table className="lenderTable lenderDrawTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Milestone</th>
+                  <th>Release %</th>
+                  <th>Release amount</th>
+                  <th>Evidence required</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {[
+                  { stage: "Deposit and permit package submitted", percent: 10, evidence: "Signed contract, permit application receipt" },
+                  { stage: "Foundation ready", percent: 20, evidence: "Geotagged site photos, city foundation inspection record" },
+                  { stage: "Factory completion", percent: 35, evidence: "Factory QA report, completed module photo verification" },
+                  { stage: "Set and weather-tight", percent: 20, evidence: "Site photos showing set completion, roof & wrap certificate" },
+                  { stage: "Final inspection and occupancy", percent: 15, evidence: "Municipal certificate of occupancy, final occupancy permit" },
+                ].map((row, i) => (
+                  <tr key={row.stage}>
+                    <td>{i + 1}</td>
+                    <td>{row.stage}</td>
+                    <td>{row.percent}%</td>
+                    <td>{formatCurrency(Math.round(totalDraw * row.percent / 100))}</td>
+                    <td className="lenderEvidence">{row.evidence}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <p className="lenderNote">
             Draw releases are subject to lender inspection and approval at each milestone. The builder or homeowner is responsible for providing evidence documentation. Releases must be authorized by the lender or an authorized inspector before disbursement.
           </p>

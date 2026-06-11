@@ -36,20 +36,25 @@ export default function BuilderSetup() {
   const [tab, setTab] = useState<"models" | "options" | "credentials">("models");
   const [models, setModels] = useState<Model[]>([]);
   const [options, setOptions] = useState<Option[]>([]);
+  const [isDbActive, setIsDbActive] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     async function load() {
       try {
-        const [modelsRes, optionsRes] = await Promise.all([
+        const [modelsRes, optionsRes, builderRes] = await Promise.all([
           fetch("/api/models"),
           fetch("/api/options"),
+          fetch("/api/builder"),
         ]);
         const modelsData = await modelsRes.json();
         const optionsData = await optionsRes.json();
+        const builderData = await builderRes.json();
+        
         setModels(modelsData.models ?? []);
         setOptions(optionsData.options ?? []);
+        setIsDbActive(builderData.isDbActive !== false);
       } catch {
         setError("Failed to load catalog data.");
       } finally {
@@ -106,6 +111,27 @@ export default function BuilderSetup() {
           Credentials
         </button>
       </div>
+
+      {!loading && !isDbActive && (
+        <div style={{
+          background: "var(--paper)",
+          borderLeft: "4px solid var(--gold)",
+          padding: "12px 16px",
+          borderRadius: 6,
+          margin: "12px 0 20px",
+          fontSize: 13,
+          color: "var(--muted)",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          lineHeight: 1.4
+        }}>
+          <span>⚠️</span>
+          <span>
+            <strong>Sandbox Mode Active:</strong> Supabase database environment variables are not configured. Changes to models, options, and credentials will reside in local temporary files and reset when the server restarts.
+          </span>
+        </div>
+      )}
 
       {loading && <p className="setupNotice">Loading catalog...</p>}
       {error && <p className="setupNotice error">{error}</p>}
@@ -425,6 +451,21 @@ function ModelRow({
       <td>${Number(model.base_price).toLocaleString()}</td>
       <td>{model.is_active ? "Yes" : "No"}</td>
       <td className="setupActions">
+        <Link
+          className="button secondary"
+          href={`/configurator?model=${model.model_code}`}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: 28,
+            padding: "0 10px",
+            fontSize: 11,
+            fontWeight: 700,
+          }}
+        >
+          👁️ Preview
+        </Link>
         <button className="button secondary" onClick={() => setEditing(true)} type="button">Edit</button>
         <button className="button danger" onClick={onDelete} type="button">Delete</button>
       </td>
