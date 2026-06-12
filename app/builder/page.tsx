@@ -40,7 +40,7 @@ export default async function BuilderDashboard() {
           gap: 8,
           lineHeight: 1.4
         }}>
-          <span>⚠️</span>
+          <span>Note</span>
           <span>
             <strong>Sandbox Mode Active:</strong> Supabase database environment variables are not configured. Your custom models, builder credentials, and homeowner leads reside in temporary local serverless files and will reset when Vercel restarts.
           </span>
@@ -53,7 +53,7 @@ export default async function BuilderDashboard() {
           <h1>Manage feasibility, prefab quotes, permits, and draw evidence.</h1>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          <Link className="button secondary" href="/builder/setup">⚙️ Setup Builder OS</Link>
+          <Link className="button secondary" href="/builder/setup">Complete builder setup</Link>
           <Link className="button primary" href="/configurator">New lead quote</Link>
         </div>
       </section>

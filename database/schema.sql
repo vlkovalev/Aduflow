@@ -80,7 +80,22 @@ CREATE TABLE draw_milestones (
  stage_name TEXT NOT NULL,
  percent NUMERIC NOT NULL,
  evidence_status TEXT DEFAULT 'not_started',
- lender_status TEXT DEFAULT 'not_notified'
+ lender_status TEXT DEFAULT 'not_notified',
+ evidence_notes TEXT,
+ released_at TEXT
+);
+
+CREATE TABLE project_milestones (
+ id UUID PRIMARY KEY,
+ lead_id UUID,
+ created_at TIMESTAMPTZ DEFAULT NOW(),
+ updated_at TIMESTAMPTZ DEFAULT NOW(),
+ sort_order NUMERIC,
+ label TEXT NOT NULL,
+ description TEXT,
+ target_date TEXT,
+ notes TEXT,
+ status TEXT DEFAULT 'pending'
 );
 
 CREATE TABLE permit_packages (

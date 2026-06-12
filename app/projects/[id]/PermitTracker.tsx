@@ -118,7 +118,7 @@ export function PermitTracker({ leadId, permitPath, reviewRisk, setbackTarget }:
               style={{ minHeight: 34, padding: "0 12px", fontSize: 13 }}
               onClick={() => setIsEditing(true)}
             >
-              ✏️ Update Permit Status
+              Update permit status
             </button>
             <Link className="button secondary" style={{ minHeight: 34, padding: "0 12px", fontSize: 13 }} href={`/permit/${leadId}`}>
               Open City Checklist
@@ -195,7 +195,7 @@ export function PermitTracker({ leadId, permitPath, reviewRisk, setbackTarget }:
             type="submit"
             style={{ minHeight: 34, padding: "0 12px", fontSize: 13, marginTop: 8 }}
           >
-            💾 Save Tracker Info
+            Save tracker info
           </button>
         </form>
       )}

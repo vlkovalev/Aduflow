@@ -16,7 +16,7 @@ export function buildProposalSections(lead: LeadRecord) {
       items: [
         ["Result", lead.feasibilityResult],
         ["Confidence", `${lead.feasibilityConfidence}%`],
-        ["Source", lead.zoningSource || "Manual scenario"],
+        ["Source", formatZoningSource(lead.zoningSource)],
         ["Zone", lead.zoningZone || "Not captured"],
         ["Zoning description", lead.zoningDescription || "Not captured"],
         ["Permit path", lead.permitPath],
@@ -84,4 +84,11 @@ export function formatCurrency(value: number) {
     currency: "CAD",
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+export function formatZoningSource(source: string) {
+  if (source === "zoneomics") return "Live zoning provider result";
+  if (source === "municipal_fallback") return "Municipal fallback estimate";
+  if (source === "manual") return "Manual assumption";
+  return source || "Manual assumption";
 }

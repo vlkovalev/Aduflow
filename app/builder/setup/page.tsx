@@ -25,6 +25,20 @@ type Option = {
   sort_order: number;
 };
 
+type BuilderCredentials = {
+  companyName?: string;
+  email?: string;
+  phone?: string;
+  licenseNumber?: string;
+  insuranceCarrier?: string;
+  insuranceLimit?: number;
+  insuranceExpiration?: string;
+  bondProvider?: string;
+  bondAmount?: number;
+  warrantyInfo?: string;
+  serviceRegion?: string;
+};
+
 const CATEGORIES = [
   { key: "finish", label: "Finish level" },
   { key: "foundation", label: "Foundation" },
@@ -36,6 +50,7 @@ export default function BuilderSetup() {
   const [tab, setTab] = useState<"models" | "options" | "credentials">("models");
   const [models, setModels] = useState<Model[]>([]);
   const [options, setOptions] = useState<Option[]>([]);
+  const [credentials, setCredentials] = useState<BuilderCredentials | null>(null);
   const [isDbActive, setIsDbActive] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -54,6 +69,7 @@ export default function BuilderSetup() {
         
         setModels(modelsData.models ?? []);
         setOptions(optionsData.options ?? []);
+        setCredentials(builderData.credentials ?? null);
         setIsDbActive(builderData.isDbActive !== false);
       } catch {
         setError("Failed to load catalog data.");
@@ -126,11 +142,20 @@ export default function BuilderSetup() {
           gap: 8,
           lineHeight: 1.4
         }}>
-          <span>⚠️</span>
+          <span>Note</span>
           <span>
             <strong>Sandbox Mode Active:</strong> Supabase database environment variables are not configured. Changes to models, options, and credentials will reside in local temporary files and reset when the server restarts.
           </span>
         </div>
+      )}
+
+      {!loading && (
+        <SetupChecklist
+          models={models}
+          options={options}
+          credentials={credentials}
+          isDbActive={isDbActive}
+        />
       )}
 
       {loading && <p className="setupNotice">Loading catalog...</p>}
@@ -235,6 +260,66 @@ export default function BuilderSetup() {
         </div>
       )}
     </main>
+  );
+}
+
+function SetupChecklist({
+  models,
+  options,
+  credentials,
+  isDbActive,
+}: {
+  models: Model[];
+  options: Option[];
+  credentials: BuilderCredentials | null;
+  isDbActive: boolean;
+}) {
+  const activeModels = models.filter((model) => model.is_active).length;
+  const categoriesWithOptions = new Set(
+    options.filter((option) => option.is_active).map((option) => option.option_category),
+  );
+  const credentialsComplete = Boolean(
+    credentials?.companyName &&
+      credentials?.email &&
+      credentials?.phone &&
+      credentials?.licenseNumber &&
+      credentials?.insuranceCarrier &&
+      credentials?.serviceRegion,
+  );
+
+  const items = [
+    {
+      title: "Database",
+      complete: isDbActive,
+      detail: isDbActive ? "Supabase credentials detected." : "Sandbox mode. Run schema and seed before real demos.",
+    },
+    {
+      title: "Models",
+      complete: activeModels > 0,
+      detail: activeModels > 0 ? `${activeModels} active model${activeModels === 1 ? "" : "s"} ready.` : "Add at least one active ADU model.",
+    },
+    {
+      title: "Options",
+      complete: categoriesWithOptions.size >= 4,
+      detail: `${categoriesWithOptions.size} of 4 option groups have active pricing.`,
+    },
+    {
+      title: "Credentials",
+      complete: credentialsComplete,
+      detail: credentialsComplete ? "Builder profile can populate lender packages." : "Complete license, insurance, and service region.",
+    },
+  ];
+
+  return (
+    <section className="setupChecklist" aria-label="Builder setup checklist">
+      {items.map((item) => (
+        <div className={item.complete ? "setupChecklistItem complete" : "setupChecklistItem"} key={item.title}>
+          <span>{item.complete ? "Complete" : "Needed"}</span>
+          <strong>{item.title}</strong>
+          <p>{item.detail}</p>
+        </div>
+      ))}
+    </section>
   );
 }
 
@@ -464,7 +549,7 @@ function ModelRow({
             fontWeight: 700,
           }}
         >
-          👁️ Preview
+          Preview
         </Link>
         <button className="button secondary" onClick={() => setEditing(true)} type="button">Edit</button>
         <button className="button danger" onClick={onDelete} type="button">Delete</button>

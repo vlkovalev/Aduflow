@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getLead } from "../../../../lib/leadStore";
-import { formatCurrency } from "../../../../lib/proposalBuilder";
+import { formatCurrency, formatZoningSource } from "../../../../lib/proposalBuilder";
 import { PrintButton } from "../../share/[token]/PrintButton";
 import { getBuilderCredentials } from "../../../../lib/builderStore";
 
@@ -78,6 +78,8 @@ export default async function LenderPackagePage({
               <tr><td>Project type</td><td>Accessory dwelling unit — {lead.modelName}</td></tr>
               <tr><td>Building size</td><td>{lead.squareFeet} sq ft</td></tr>
               <tr><td>Zoning review risk</td><td>{lead.reviewRisk}</td></tr>
+              <tr><td>Zoning source</td><td>{formatZoningSource(lead.zoningSource)}</td></tr>
+              <tr><td>Zone classification</td><td>{lead.zoningZone || "Not captured"}</td></tr>
               <tr><td>Permit path</td><td>{lead.permitPath}</td></tr>
               <tr><td>Estimated timeline</td><td>{lead.timelineWeeks} weeks from permit approval</td></tr>
             </tbody>

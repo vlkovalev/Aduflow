@@ -238,7 +238,7 @@ export function ManufacturerMatch({
                         onClick={() => setActiveRfqModal(p)}
                         type="button"
                       >
-                        ✉️ Request RFQ
+                        Request RFQ
                       </button>
                     )}
                   </div>
@@ -246,8 +246,8 @@ export function ManufacturerMatch({
 
                 {!isEligible && (
                   <div style={{ marginTop: 6, color: "var(--clay)", fontSize: 11, fontWeight: 700 }}>
-                    {sizeExceeded && `⚠️ Model size (${modelSqFt} sq ft) exceeds factory limit of ${p.maxSize} sq ft.`}
-                    {budgetTight && `⚠️ Budget is below manufacturing entry point (${formatCurrency(p.minPrice)}).`}
+                    {sizeExceeded && `Model size (${modelSqFt} sq ft) exceeds factory limit of ${p.maxSize} sq ft.`}
+                    {budgetTight && `Budget is below manufacturing entry point (${formatCurrency(p.minPrice)}).`}
                   </div>
                 )}
               </div>

@@ -180,6 +180,9 @@ export default function Configurator() {
                     <span>{zoningResult.zoneCode}</span>
                     <strong>{zoningResult.zoneDescription}</strong>
                   </div>
+                  <p className="zoningNote">
+                    Source: <strong>{formatZoningSource(zoningResult.source)}</strong>. This is a first-pass feasibility screen, not a permit approval.
+                  </p>
                   <div className="zoningDetails" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
                     <div>
                       <span style={{ display: "block", fontSize: 11, color: "var(--muted)" }}>Max ADU Size</span>
@@ -215,7 +218,7 @@ export default function Configurator() {
                       style={{ minHeight: 32, padding: "0 12px", fontSize: 12, fontWeight: 700 }}
                       onClick={() => setIsEditingZoning(true)}
                     >
-                      ✏️ Edit Lot Constraints
+                      Edit lot constraints
                     </button>
                   </div>
                 </div>
@@ -280,7 +283,7 @@ export default function Configurator() {
                       style={{ minHeight: 32, padding: "0 12px", fontSize: 12, fontWeight: 700 }}
                       onClick={() => setIsEditingZoning(false)}
                     >
-                      💾 Apply Overrides
+                      Apply overrides
                     </button>
                   </div>
                 </div>
@@ -288,7 +291,15 @@ export default function Configurator() {
             </div>
           )}
           {zoningStatus === "not_found" && (
-            <p className="zoningNote muted">No zoning data found for this address. Select a parcel scenario manually below.</p>
+            <div className="zoningResult">
+              <strong>No zoning result found.</strong>
+              <p className="zoningNote muted">
+                Check the city/province spelling, continue with a manual feasibility assumption below, or submit the address for builder review.
+              </p>
+              <button className="button secondary" type="button" onClick={() => setParcelType("urban-lane")}>
+                Continue with manual assumption
+              </button>
+            </div>
           )}
         </div>
       </section>
@@ -296,7 +307,7 @@ export default function Configurator() {
       <section className="configGrid">
         <div className="configPanel">
           <ChoiceGroup
-            title="Parcel scenario"
+            title="Manual feasibility assumption"
             description="Select the property's access and backyard layout. This determines the maximum ADU envelope allowed by local code and sets the permit path."
             value={parcelType}
             options={parcelScenarios.map((scenario) => ({
@@ -564,8 +575,11 @@ export default function Configurator() {
           </div>
 
           <button className="button primary" type="submit">
-            Request builder review
+            Send feasibility package
           </button>
+          <p className="formFinePrint">
+            This request creates a pre-construction estimate for builder review. It is not a final quote, financing approval, or permit approval. Your contact and property details will be shared with the ADUflow pilot builder or administrator for follow-up.
+          </p>
 
           {leadSubmitted ? (
             <p className="formNotice">
@@ -638,4 +652,11 @@ function formatCurrency(value: number) {
 
 function safeCurrent(current: string, values: string[]) {
   return values.includes(current) ? current : values[0] ?? current;
+}
+
+function formatZoningSource(source: string) {
+  if (source === "zoneomics") return "Live zoning provider result";
+  if (source === "municipal_fallback") return "Municipal fallback estimate";
+  if (source === "manual") return "Manual assumption";
+  return source || "Not available";
 }

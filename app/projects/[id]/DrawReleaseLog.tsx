@@ -1,49 +1,57 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { DEFAULT_DRAW_MILESTONES, type DrawMilestoneRecord } from "../../../lib/projectDefaults";
 import { formatCurrency } from "../../../lib/proposalBuilder";
 
-type DrawMilestone = {
-  stage: string;
-  percent: number;
-  status: "not_started" | "pending_verification" | "released";
-  evidenceNotes: string;
-  releasedAt: string;
-};
-
-const DEFAULT_DRAWS = [
-  { stage: "Deposit and permit package", percent: 10, status: "not_started", evidenceNotes: "", releasedAt: "" },
-  { stage: "Foundation ready", percent: 20, status: "not_started", evidenceNotes: "", releasedAt: "" },
-  { stage: "Factory completion", percent: 35, status: "not_started", evidenceNotes: "", releasedAt: "" },
-  { stage: "Set and weather-tight", percent: 20, status: "not_started", evidenceNotes: "", releasedAt: "" },
-  { stage: "Final inspection", percent: 15, status: "not_started", evidenceNotes: "", releasedAt: "" },
-] as DrawMilestone[];
-
 export function DrawReleaseLog({ leadId, totalPrice }: { leadId: string; totalPrice: number }) {
-  const storageKey = `project-draws-${leadId}`;
-  const [draws, setDraws] = useState<DrawMilestone[]>(DEFAULT_DRAWS);
+  const [draws, setDraws] = useState<DrawMilestoneRecord[]>(DEFAULT_DRAW_MILESTONES);
   const [activeDrawIndex, setActiveDrawIndex] = useState<number | null>(null);
   const [evidenceInput, setEvidenceInput] = useState("");
+  const [saveStatus, setSaveStatus] = useState("Saved");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    let active = true;
+
+    async function loadDraws() {
       try {
-        const saved = sessionStorage.getItem(storageKey);
-        if (saved) {
-          setDraws(JSON.parse(saved) as DrawMilestone[]);
+        const response = await fetch(`/api/projects/${leadId}/draws`);
+        const result = await response.json();
+        if (active && Array.isArray(result.draws)) {
+          setDraws(result.draws);
+          setSaveStatus("Saved");
         }
       } catch {
-        // noop
+        if (active) {
+          setSaveStatus("Using defaults");
+        }
       }
     }
-  }, [storageKey]);
 
-  function saveDraws(newDraws: DrawMilestone[]) {
+    loadDraws();
+    return () => {
+      active = false;
+    };
+  }, [leadId]);
+
+  async function saveDraws(newDraws: DrawMilestoneRecord[]) {
     setDraws(newDraws);
+    setSaveStatus("Saving...");
     try {
-      sessionStorage.setItem(storageKey, JSON.stringify(newDraws));
+      const response = await fetch(`/api/projects/${leadId}/draws`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ draws: newDraws }),
+      });
+      const result = await response.json();
+      if (response.ok && Array.isArray(result.draws)) {
+        setDraws(result.draws);
+        setSaveStatus("Saved");
+      } else {
+        setSaveStatus("Save failed");
+      }
     } catch {
-      // noop
+      setSaveStatus("Save failed");
     }
   }
 
@@ -60,10 +68,10 @@ export function DrawReleaseLog({ leadId, totalPrice }: { leadId: string; totalPr
     next[activeDrawIndex] = {
       ...next[activeDrawIndex],
       status: "pending_verification",
-      evidenceNotes: evidenceInput.trim() || "Uploaded simulated proof of work (geotagged photos & documentation).",
+      evidenceNotes: evidenceInput.trim() || "Uploaded simulated proof of work: geotagged photos and documentation.",
     };
 
-    saveDraws(next);
+    void saveDraws(next);
     setActiveDrawIndex(null);
   }
 
@@ -74,7 +82,7 @@ export function DrawReleaseLog({ leadId, totalPrice }: { leadId: string; totalPr
       status: "released",
       releasedAt: new Date().toLocaleDateString("en-CA"),
     };
-    saveDraws(next);
+    void saveDraws(next);
   }
 
   function handleResetDraw(index: number) {
@@ -85,14 +93,14 @@ export function DrawReleaseLog({ leadId, totalPrice }: { leadId: string; totalPr
       evidenceNotes: "",
       releasedAt: "",
     };
-    saveDraws(next);
+    void saveDraws(next);
   }
 
   return (
     <div className="dataPanel" style={{ marginTop: 24 }}>
       <div className="panelTitle">
-        <h2>Draw Release Log</h2>
-        <span>Request and authorize loan payouts</span>
+        <h2>Draw release log</h2>
+        <span>Request and authorize loan payouts - {saveStatus}</span>
       </div>
 
       <div style={{ display: "grid", gap: 16 }}>
@@ -120,7 +128,7 @@ export function DrawReleaseLog({ leadId, totalPrice }: { leadId: string; totalPr
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <span
-                    className={`statusDot`}
+                    className="statusDot"
                     style={{
                       background:
                         d.status === "released"
@@ -140,21 +148,20 @@ export function DrawReleaseLog({ leadId, totalPrice }: { leadId: string; totalPr
                 </div>
               </div>
 
-              {/* Status specific view */}
               {d.status === "released" && (
                 <div style={{ marginTop: 12, padding: "8px 12px", background: "rgba(58, 138, 90, 0.08)", borderRadius: 6, fontSize: 12 }}>
                   <p style={{ margin: 0, color: "#2d6643" }}>
-                    ✔️ <strong>Released on {d.releasedAt}</strong>
+                    <strong>Released on {d.releasedAt}</strong>
                   </p>
                   <p style={{ margin: "4px 0 0", color: "var(--muted)" }}>
-                    Release Notes: {d.evidenceNotes}
+                    Release notes: {d.evidenceNotes}
                   </p>
                   <button
                     className="button danger"
                     style={{ minHeight: 24, padding: "0 8px", fontSize: 11, marginTop: 8 }}
                     onClick={() => handleResetDraw(i)}
                   >
-                    Reset Milestone
+                    Reset milestone
                   </button>
                 </div>
               )}
@@ -162,10 +169,10 @@ export function DrawReleaseLog({ leadId, totalPrice }: { leadId: string; totalPr
               {d.status === "pending_verification" && (
                 <div style={{ marginTop: 12, padding: "8px 12px", background: "rgba(213, 169, 78, 0.08)", borderRadius: 6, fontSize: 12 }}>
                   <p style={{ margin: 0, color: "#8a6d2f" }}>
-                    ⌛ <strong>Pending Lender / Client Approval</strong>
+                    <strong>Pending lender / client approval</strong>
                   </p>
                   <p style={{ margin: "4px 0 0", color: "var(--muted)" }}>
-                    Evidence Log: {d.evidenceNotes}
+                    Evidence log: {d.evidenceNotes}
                   </p>
                   <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                     <button
@@ -173,14 +180,14 @@ export function DrawReleaseLog({ leadId, totalPrice }: { leadId: string; totalPr
                       style={{ minHeight: 26, padding: "0 10px", fontSize: 11 }}
                       onClick={() => handleApproveDraw(i)}
                     >
-                      Authorize Release
+                      Authorize release
                     </button>
                     <button
                       className="button secondary"
                       style={{ minHeight: 26, padding: "0 10px", fontSize: 11 }}
                       onClick={() => handleResetDraw(i)}
                     >
-                      Reject / Reject Evidence
+                      Reject evidence
                     </button>
                   </div>
                 </div>
@@ -194,7 +201,7 @@ export function DrawReleaseLog({ leadId, totalPrice }: { leadId: string; totalPr
                       style={{ minHeight: 30, padding: "0 12px", fontSize: 12 }}
                       onClick={() => handleRequestDraw(i)}
                     >
-                      📤 Submit Evidence / Request Draw
+                      Submit evidence / request draw
                     </button>
                   ) : (
                     <form onSubmit={submitEvidence} style={{ display: "grid", gap: 8, marginTop: 8 }}>
@@ -202,12 +209,12 @@ export function DrawReleaseLog({ leadId, totalPrice }: { leadId: string; totalPr
                         className="setupInput"
                         value={evidenceInput}
                         onChange={(e) => setEvidenceInput(e.target.value)}
-                        placeholder="Enter evidence notes (e.g. Photo IDs, inspection code, structural certificate link)"
+                        placeholder="Enter evidence notes, such as photo IDs, inspection code, or certificate link"
                         required
                       />
                       <div style={{ display: "flex", gap: 8 }}>
                         <button className="button primary" style={{ minHeight: 30, padding: "0 12px", fontSize: 12 }} type="submit">
-                          Submit Verification Request
+                          Submit verification request
                         </button>
                         <button
                           className="button secondary"

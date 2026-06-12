@@ -71,7 +71,7 @@ export default function Home() {
             </p>
             <div className="actions">
               <Link className="button primary" href="/configurator">
-                Build a concept
+                Check an address
               </Link>
               <Link className="button secondary" href="/builder">
                 View builder dashboard
