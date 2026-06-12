@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { randomUUID } from "node:crypto";
 import { getSupabaseServiceClient } from "./supabase";
 import { getLocalStorePath } from "./localStoreHelper";
 
