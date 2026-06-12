@@ -156,6 +156,7 @@ export async function getLead(id: string) {
       } else if (data) {
         return {
           id: data.id,
+          builderId: String(data.builder_id ?? "00000000-0000-0000-0000-000000000001"),
           createdAt: data.created_at ?? "",
           updatedAt: data.updated_at ?? "",
           proposalNumber: data.proposal_number ?? "",
