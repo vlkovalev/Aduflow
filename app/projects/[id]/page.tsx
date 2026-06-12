@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getLead } from "../../../lib/leadStore";
 import { formatCurrency } from "../../../lib/proposalBuilder";
 import { ProjectMilestones } from "./ProjectMilestones";
@@ -15,6 +16,16 @@ export default async function ProjectPage({
   const lead = await getLead(id);
 
   if (!lead) notFound();
+
+  const cookieStore = await cookies();
+  const builderId = cookieStore.get("builder_id")?.value;
+  if (!builderId) {
+    redirect("/builder/login");
+  }
+
+  if (lead.builderId !== builderId) {
+    notFound();
+  }
 
   return (
     <main className="appShell">

@@ -6,6 +6,7 @@ import { getLocalStorePath } from "./localStoreHelper";
 
 export type LeadRecord = {
   id: string;
+  builderId: string;
   createdAt: string;
   updatedAt: string;
   proposalNumber: string;
@@ -57,6 +58,7 @@ export async function createLead(input: CreateLeadInput) {
   const createdAt = new Date().toISOString();
   const record: LeadRecord = {
     ...input,
+    builderId: input.builderId || "00000000-0000-0000-0000-000000000001",
     id: randomUUID(),
     createdAt,
     updatedAt: createdAt,
@@ -76,6 +78,7 @@ export async function createLead(input: CreateLeadInput) {
         .from("leads")
         .insert({
           id: record.id,
+          builder_id: record.builderId,
           created_at: record.createdAt,
           updated_at: record.updatedAt,
           proposal_number: record.proposalNumber,
@@ -230,7 +233,7 @@ export async function getLeadByToken(token: string) {
   return records.find((record) => record.shareToken === token) ?? null;
 }
 
-export async function listLeads() {
+export async function listLeads(builderId = "00000000-0000-0000-0000-000000000001") {
   const supabase = getSupabaseServiceClient();
 
   if (supabase) {
@@ -238,6 +241,7 @@ export async function listLeads() {
       const { data, error } = await supabase
         .from("leads")
         .select("*")
+        .eq("builder_id", builderId)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -253,12 +257,15 @@ export async function listLeads() {
   }
 
   const records = await readLocalLeads();
-  return records.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  return records
+    .filter((r) => (r.builderId || "00000000-0000-0000-0000-000000000001") === builderId)
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
 
 function mapLeadRow(data: Record<string, unknown>) {
   return {
     id: String(data.id ?? ""),
+    builderId: String(data.builder_id ?? "00000000-0000-0000-0000-000000000001"),
     createdAt: String(data.created_at ?? ""),
     updatedAt: String(data.updated_at ?? ""),
     proposalNumber: String(data.proposal_number ?? ""),

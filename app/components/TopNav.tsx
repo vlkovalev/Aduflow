@@ -1,10 +1,21 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export function TopNav() {
   const pathname = usePathname();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setIsLoggedIn(document.cookie.includes("builder_id="));
+  }, [pathname]); // Refresh when pathname changes
+
+  function handleSignOut() {
+    document.cookie = "builder_id=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+    window.location.href = "/builder/login";
+  }
 
   // Highlight configurator link when on `/configurator`
   const isConfiguratorActive = pathname === "/configurator";
@@ -34,7 +45,23 @@ export function TopNav() {
         >
           Builder OS
         </Link>
+        {isLoggedIn && (
+          <button
+            onClick={handleSignOut}
+            className="navLink"
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "4px 0",
+              fontWeight: 700
+            }}
+          >
+            Sign Out
+          </button>
+        )}
       </div>
     </nav>
   );
 }
+

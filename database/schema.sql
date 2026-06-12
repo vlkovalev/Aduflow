@@ -20,6 +20,7 @@ CREATE TABLE models (
 CREATE TABLE options (
  id UUID PRIMARY KEY,
  model_id UUID,
+ builder_id UUID,
  option_name TEXT,
  option_value TEXT,
  option_detail TEXT,
@@ -106,6 +107,10 @@ CREATE TABLE permit_packages (
  permit_path TEXT,
  hoa_required BOOLEAN DEFAULT FALSE,
  revision_round NUMERIC DEFAULT 0,
+ application_number TEXT,
+ city_contact TEXT,
+ submission_date TEXT,
+ approval_date TEXT,
  created_at TIMESTAMPTZ DEFAULT NOW(),
  updated_at TIMESTAMPTZ DEFAULT NOW()
 );

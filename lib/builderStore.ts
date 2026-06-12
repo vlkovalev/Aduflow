@@ -33,10 +33,11 @@ const DEFAULT_CREDENTIALS: BuilderCredentials = {
 
 const localStorePath = getLocalStorePath("builder.json");
 
-export async function getBuilderCredentials(): Promise<BuilderCredentials> {
+export async function getBuilderCredentials(builderId = "00000000-0000-0000-0000-000000000001"): Promise<BuilderCredentials> {
   const supabase = getSupabaseServiceClient();
 
   // Load from local store first as primary source of credentials
+  const localStorePath = getLocalStorePath(`builder-${builderId}.json`);
   let localData: BuilderCredentials | null = null;
   try {
     const raw = await readFile(localStorePath, "utf8");
@@ -51,7 +52,7 @@ export async function getBuilderCredentials(): Promise<BuilderCredentials> {
       const { data, error } = await supabase
         .from("builders")
         .select("*")
-        .limit(1)
+        .eq("id", builderId)
         .maybeSingle();
 
       if (!error && data) {
@@ -72,11 +73,15 @@ export async function getBuilderCredentials(): Promise<BuilderCredentials> {
   return localData ?? DEFAULT_CREDENTIALS;
 }
 
-export async function updateBuilderCredentials(input: Partial<BuilderCredentials>): Promise<BuilderCredentials> {
-  const current = await getBuilderCredentials();
+export async function updateBuilderCredentials(
+  input: Partial<BuilderCredentials>,
+  builderId = "00000000-0000-0000-0000-000000000001"
+): Promise<BuilderCredentials> {
+  const current = await getBuilderCredentials(builderId);
   const updated = { ...current, ...input };
 
   // 1. Write to local JSON store
+  const localStorePath = getLocalStorePath(`builder-${builderId}.json`);
   await mkdir(path.dirname(localStorePath), { recursive: true });
   await writeFile(localStorePath, JSON.stringify(updated, null, 2));
 
@@ -87,7 +92,7 @@ export async function updateBuilderCredentials(input: Partial<BuilderCredentials
       const { data: existing } = await supabase
         .from("builders")
         .select("id")
-        .limit(1)
+        .eq("id", builderId)
         .maybeSingle();
 
       if (existing) {
@@ -98,13 +103,13 @@ export async function updateBuilderCredentials(input: Partial<BuilderCredentials
             email: updated.email,
             phone: updated.phone,
           })
-          .eq("id", existing.id);
+          .eq("id", builderId);
       } else {
         // Insert a new default UUID row
         await supabase
           .from("builders")
           .insert({
-            id: "00000000-0000-0000-0000-000000000001",
+            id: builderId,
             company_name: updated.companyName,
             email: updated.email,
             phone: updated.phone,
@@ -117,3 +122,77 @@ export async function updateBuilderCredentials(input: Partial<BuilderCredentials
 
   return updated;
 }
+
+export async function listBuilders() {
+  const supabase = getSupabaseServiceClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from("builders").select("*");
+      if (!error && data?.length) {
+        return data.map((b) => ({
+          id: b.id,
+          companyName: b.company_name,
+          email: b.email,
+          phone: b.phone,
+        }));
+      }
+    } catch {
+      // ignore
+    }
+  }
+  
+  // Local fallback
+  return [
+    {
+      id: "00000000-0000-0000-0000-000000000001",
+      companyName: "Apex Modular Builders",
+      email: "info@apexmodular.com",
+      phone: "(604) 555-0199",
+    },
+    {
+      id: "00000000-0000-0000-0000-000000000002",
+      companyName: "Cascade Prefab Co",
+      email: "hello@cascadeprefab.com",
+      phone: "(604) 555-0288",
+    }
+  ];
+}
+
+export async function createBuilder(companyName: string, email?: string, phone?: string) {
+  const id = randomUUID();
+  const builder = {
+    id,
+    companyName,
+    email: email || "",
+    phone: phone || "",
+  };
+  
+  const supabase = getSupabaseServiceClient();
+  if (supabase) {
+    try {
+      await supabase.from("builders").insert({
+        id,
+        company_name: companyName,
+        email: email || null,
+        phone: phone || null,
+      });
+    } catch (e) {
+      console.warn("Supabase createBuilder error:", e);
+    }
+  }
+  
+  // Also write builder specific local file
+  const localStorePath = getLocalStorePath(`builder-${id}.json`);
+  const defaultCreds = {
+    ...DEFAULT_CREDENTIALS,
+    companyName,
+    email: email || "",
+    phone: phone || "",
+  };
+  await mkdir(path.dirname(localStorePath), { recursive: true });
+  await writeFile(localStorePath, JSON.stringify(defaultCreds, null, 2));
+  
+  return builder;
+}
+
+

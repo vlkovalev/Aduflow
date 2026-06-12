@@ -20,6 +20,10 @@ export type PermitPackage = {
   permitPath: string;
   hoaRequired: boolean;
   revisionRound: number;
+  applicationNumber: string;
+  cityContact: string;
+  submissionDate: string;
+  approvalDate: string;
   createdAt: string;
   updatedAt: string;
   tasks: PermitTask[];
@@ -50,6 +54,10 @@ export async function createPermitPackage(leadId: string, jurisdictionName = "Lo
     permitPath: lead.permitPath,
     hoaRequired: isHoaLikely(lead),
     revisionRound: 0,
+    applicationNumber: "",
+    cityContact: "",
+    submissionDate: "",
+    approvalDate: "",
     createdAt: now,
     updatedAt: now,
     tasks: generatePermitTasks(lead),
@@ -149,6 +157,10 @@ async function insertSupabasePackage(permitPackage: PermitPackage) {
     permit_path: permitPackage.permitPath,
     hoa_required: permitPackage.hoaRequired,
     revision_round: permitPackage.revisionRound,
+    application_number: permitPackage.applicationNumber,
+    city_contact: permitPackage.cityContact,
+    submission_date: permitPackage.submissionDate,
+    approval_date: permitPackage.approvalDate,
     created_at: permitPackage.createdAt,
     updated_at: permitPackage.updatedAt,
   });
@@ -209,11 +221,68 @@ function mapSupabasePackage(
     permitPath: String(data.permit_path ?? ""),
     hoaRequired: Boolean(data.hoa_required),
     revisionRound: Number(data.revision_round ?? 0),
+    applicationNumber: String(data.application_number ?? ""),
+    cityContact: String(data.city_contact ?? ""),
+    submissionDate: String(data.submission_date ?? ""),
+    approvalDate: String(data.approval_date ?? ""),
     createdAt: String(data.created_at ?? ""),
     updatedAt: String(data.updated_at ?? ""),
     tasks,
     documents,
   } satisfies PermitPackage;
+}
+
+export async function updatePermitPackage(
+  leadId: string,
+  updates: Partial<Omit<PermitPackage, "id" | "leadId" | "tasks" | "documents">>
+) {
+  const existing = await getPermitPackageByLeadId(leadId) || await createPermitPackage(leadId);
+
+  const updated: PermitPackage = {
+    ...existing,
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const supabase = getSupabaseServiceClient();
+  if (supabase) {
+    try {
+      const { error } = await supabase
+        .from("permit_packages")
+        .update({
+          package_status: updated.packageStatus,
+          jurisdiction_name: updated.jurisdictionName,
+          permit_path: updated.permitPath,
+          hoa_required: updated.hoaRequired,
+          revision_round: updated.revisionRound,
+          application_number: updated.applicationNumber,
+          city_contact: updated.cityContact,
+          submission_date: updated.submissionDate,
+          approval_date: updated.approvalDate,
+          updated_at: updated.updatedAt,
+        })
+        .eq("lead_id", leadId);
+
+      if (!error) {
+        return updated;
+      }
+      console.warn("Supabase update package error, falling back to local:", error);
+      markSupabaseUnhealthy();
+    } catch (e) {
+      console.warn("Supabase update package exception, falling back to local:", e);
+      markSupabaseUnhealthy();
+    }
+  }
+
+  const packages = await readLocalPackages();
+  const index = packages.findIndex((item) => item.leadId === leadId);
+  if (index !== -1) {
+    packages[index] = updated;
+  } else {
+    packages.push(updated);
+  }
+  await writeLocalPackages(packages);
+  return updated;
 }
 
 async function readLocalPackages() {

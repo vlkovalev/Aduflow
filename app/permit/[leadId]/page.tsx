@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getLead } from "../../../lib/leadStore";
 import { createPermitPackage } from "../../../lib/permitStore";
 import { TopNav } from "../../components/TopNav";
@@ -13,6 +14,16 @@ export default async function PermitPage({
   const lead = await getLead(leadId);
 
   if (!lead) {
+    notFound();
+  }
+
+  const cookieStore = await cookies();
+  const builderId = cookieStore.get("builder_id")?.value;
+  if (!builderId) {
+    redirect("/builder/login");
+  }
+
+  if (lead.builderId !== builderId) {
     notFound();
   }
 

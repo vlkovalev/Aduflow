@@ -7,6 +7,7 @@ import { getLocalStorePath } from "./localStoreHelper";
 
 type ModelRow = {
   id?: string;
+  builder_id?: string;
   model_name?: string;
   model_code?: string;
   square_feet?: number;
@@ -17,6 +18,7 @@ type ModelRow = {
 
 type OptionRow = {
   id?: string;
+  builder_id?: string;
   option_name?: string;
   option_value?: string;
   option_detail?: string;
@@ -88,7 +90,7 @@ async function writeLocalOptions(data: OptionRow[]) {
 
 // -- Main Exports --
 
-export async function getPricingCatalog(): Promise<PricingCatalog> {
+export async function getPricingCatalog(builderId = "00000000-0000-0000-0000-000000000001"): Promise<PricingCatalog> {
   const supabase = getSupabaseServiceClient();
 
   if (supabase) {
@@ -96,13 +98,15 @@ export async function getPricingCatalog(): Promise<PricingCatalog> {
       const [modelsResult, optionsResult] = await Promise.all([
         supabase
           .from("models")
-          .select("id, model_name, model_code, square_feet, base_price, is_active, sort_order")
+          .select("id, model_name, model_code, square_feet, base_price, is_active, sort_order, builder_id")
           .eq("is_active", true)
+          .eq("builder_id", builderId)
           .order("sort_order"),
         supabase
           .from("options")
-          .select("option_name, option_value, option_detail, option_category, option_price, is_active, sort_order")
+          .select("option_name, option_value, option_detail, option_category, option_price, is_active, sort_order, builder_id")
           .eq("is_active", true)
+          .eq("builder_id", builderId)
           .order("sort_order"),
       ]);
 
@@ -125,8 +129,12 @@ export async function getPricingCatalog(): Promise<PricingCatalog> {
     const localModels = await readLocalModels();
     const localOptions = await readLocalOptions();
 
-    const activeModels = localModels.filter((m) => m.is_active !== false);
-    const activeOptions = localOptions.filter((o) => o.is_active !== false);
+    const activeModels = localModels.filter(
+      (m) => m.is_active !== false && (m.builder_id || "00000000-0000-0000-0000-000000000001") === builderId
+    );
+    const activeOptions = localOptions.filter(
+      (o) => o.is_active !== false && (o.builder_id || "00000000-0000-0000-0000-000000000001") === builderId
+    );
 
     const catalogModels = activeModels.map(mapModelRow).filter(Boolean) as Model[];
     const catalogOptions = mapOptionRows(activeOptions);
@@ -142,14 +150,15 @@ export async function getPricingCatalog(): Promise<PricingCatalog> {
 
 // -- Models CRUD --
 
-export async function listModels(): Promise<ModelRow[]> {
+export async function listModels(builderId = "00000000-0000-0000-0000-000000000001"): Promise<ModelRow[]> {
   const supabase = getSupabaseServiceClient();
 
   if (supabase) {
     try {
       const { data, error } = await supabase
         .from("models")
-        .select("id, model_name, model_code, square_feet, base_price, is_active, sort_order")
+        .select("id, model_name, model_code, square_feet, base_price, is_active, sort_order, builder_id")
+        .eq("builder_id", builderId)
         .order("sort_order");
       if (!error && data) return data as ModelRow[];
     } catch (e) {
@@ -157,13 +166,18 @@ export async function listModels(): Promise<ModelRow[]> {
     }
   }
 
-  return readLocalModels();
+  const local = await readLocalModels();
+  return local.filter((m) => (m.builder_id || "00000000-0000-0000-0000-000000000001") === builderId);
 }
 
-export async function createModel(input: { modelName: string; squareFeet: number; basePrice: number }): Promise<ModelRow> {
+export async function createModel(
+  input: { modelName: string; squareFeet: number; basePrice: number },
+  builderId = "00000000-0000-0000-0000-000000000001"
+): Promise<ModelRow> {
   const modelCode = input.modelName.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   const record: ModelRow = {
     id: randomUUID(),
+    builder_id: builderId,
     model_name: input.modelName,
     model_code: modelCode,
     square_feet: input.squareFeet,
@@ -253,14 +267,15 @@ export async function deleteModel(id: string): Promise<boolean> {
 
 // -- Options CRUD --
 
-export async function listOptions(): Promise<OptionRow[]> {
+export async function listOptions(builderId = "00000000-0000-0000-0000-000000000001"): Promise<OptionRow[]> {
   const supabase = getSupabaseServiceClient();
 
   if (supabase) {
     try {
       const { data, error } = await supabase
         .from("options")
-        .select("id, option_name, option_value, option_detail, option_category, option_price, is_active, sort_order")
+        .select("id, option_name, option_value, option_detail, option_category, option_price, is_active, sort_order, builder_id")
+        .eq("builder_id", builderId)
         .order("sort_order");
       if (!error && data) return data as OptionRow[];
     } catch (e) {
@@ -268,18 +283,18 @@ export async function listOptions(): Promise<OptionRow[]> {
     }
   }
 
-  return readLocalOptions();
+  const local = await readLocalOptions();
+  return local.filter((o) => (o.builder_id || "00000000-0000-0000-0000-000000000001") === builderId);
 }
 
-export async function createOption(input: {
-  optionName: string;
-  detail: string;
-  price: number;
-  category: string;
-}): Promise<OptionRow> {
+export async function createOption(
+  input: { optionName: string; detail: string; price: number; category: string },
+  builderId = "00000000-0000-0000-0000-000000000001"
+): Promise<OptionRow> {
   const optionValue = input.optionName.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   const record: OptionRow = {
     id: randomUUID(),
+    builder_id: builderId,
     option_name: input.optionName,
     option_value: optionValue,
     option_detail: input.detail,

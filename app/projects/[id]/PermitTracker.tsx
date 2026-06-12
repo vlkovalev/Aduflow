@@ -26,44 +26,90 @@ const STATUS_LABELS = {
   approved: "Issued / Approved",
 };
 
+function mapDbToPermitData(dbPackage: any): PermitData {
+  let status: PermitData["status"] = "drafting";
+  const dbStatus = dbPackage?.packageStatus || dbPackage?.package_status;
+  if (dbStatus === "submitted") status = "submitted";
+  else if (dbStatus === "under_review") status = "under_review";
+  else if (dbStatus === "approved" || dbStatus === "issued") status = "approved";
+  
+  return {
+    status,
+    appNumber: dbPackage?.applicationNumber || dbPackage?.application_number || "",
+    cityContact: dbPackage?.cityContact || dbPackage?.city_contact || "",
+    submissionDate: dbPackage?.submissionDate || dbPackage?.submission_date || "",
+    approvalDate: dbPackage?.approvalDate || dbPackage?.approval_date || "",
+  };
+}
+
 export function PermitTracker({ leadId, permitPath, reviewRisk, setbackTarget }: {
   leadId: string;
   permitPath: string;
   reviewRisk: string;
   setbackTarget: string;
 }) {
-  const storageKey = `project-permit-${leadId}`;
   const [permit, setPermit] = useState<PermitData>(DEFAULT_PERMIT);
   const [isEditing, setIsEditing] = useState(false);
+  const [saveStatus, setSaveStatus] = useState("Saved");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    let active = true;
+    async function loadPermit() {
       try {
-        const saved = sessionStorage.getItem(storageKey);
-        if (saved) {
-          setPermit(JSON.parse(saved) as PermitData);
+        const response = await fetch(`/api/permit-packages?leadId=${leadId}`);
+        const result = await response.json();
+        if (active && result.permitPackage) {
+          setPermit(mapDbToPermitData(result.permitPackage));
+          setSaveStatus("Saved");
         }
-      } catch {
-        // noop
+      } catch (err) {
+        console.error("Failed to load permit package:", err);
       }
     }
-  }, [storageKey]);
+    loadPermit();
+    return () => {
+      active = false;
+    };
+  }, [leadId]);
+
+  async function persist(next: PermitData) {
+    setSaveStatus("Saving...");
+    try {
+      const apiStatus = next.status === "drafting" ? "draft" : next.status;
+      const response = await fetch(`/api/permit-packages?leadId=${leadId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          packageStatus: apiStatus,
+          applicationNumber: next.appNumber,
+          cityContact: next.cityContact,
+          submissionDate: next.submissionDate,
+          approvalDate: next.approvalDate,
+        }),
+      });
+      const result = await response.json();
+      if (response.ok && result.permitPackage) {
+        setPermit(mapDbToPermitData(result.permitPackage));
+        setSaveStatus("Saved");
+      } else {
+        setSaveStatus("Save failed");
+      }
+    } catch {
+      setSaveStatus("Save failed");
+    }
+  }
 
   function updateField(field: keyof PermitData, value: string) {
     const next = { ...permit, [field]: value };
     setPermit(next);
-    try {
-      sessionStorage.setItem(storageKey, JSON.stringify(next));
-    } catch {
-      // noop
-    }
+    void persist(next);
   }
 
   return (
     <div className="dataPanel" style={{ marginTop: 24 }}>
       <div className="panelTitle">
         <h2>Permit & HOA Tracker</h2>
-        <span>Manage municipal reviews</span>
+        <span>Manage municipal reviews — {saveStatus}</span>
       </div>
 
       {!isEditing ? (

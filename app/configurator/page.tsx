@@ -86,7 +86,9 @@ export default function Configurator() {
 
     async function loadCatalog() {
       try {
-        const response = await fetch("/api/catalog");
+        const params = new URLSearchParams(window.location.search);
+        const builderId = params.get("builderId") || "00000000-0000-0000-0000-000000000001";
+        const response = await fetch(`/api/catalog?builderId=${builderId}`);
         const result = await response.json();
         const nextCatalog = result.catalog as PricingCatalog;
 
@@ -467,6 +469,9 @@ export default function Configurator() {
             setSubmitError("");
             setLeadSubmitted(false);
 
+            const params = new URLSearchParams(window.location.search);
+            const builderId = params.get("builderId") || "00000000-0000-0000-0000-000000000001";
+
             const formData = new FormData(event.currentTarget);
             const response = await fetch("/api/leads", {
               method: "POST",
@@ -474,6 +479,7 @@ export default function Configurator() {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
+                builderId,
                 customerName: formData.get("name"),
                 email: formData.get("email"),
                 phone: formData.get("phone"),

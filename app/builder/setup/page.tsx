@@ -58,11 +58,17 @@ export default function BuilderSetup() {
   useEffect(() => {
     async function load() {
       try {
-        const [modelsRes, optionsRes, builderRes] = await Promise.all([
+        const builderRes = await fetch("/api/builder");
+        if (builderRes.status === 401) {
+          window.location.href = "/builder/login";
+          return;
+        }
+        
+        const [modelsRes, optionsRes] = await Promise.all([
           fetch("/api/models"),
           fetch("/api/options"),
-          fetch("/api/builder"),
         ]);
+        
         const modelsData = await modelsRes.json();
         const optionsData = await optionsRes.json();
         const builderData = await builderRes.json();

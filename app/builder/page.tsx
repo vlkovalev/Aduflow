@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { listLeads, type LeadRecord } from "../../lib/leadStore";
 import { formatCurrency } from "../../lib/proposalBuilder";
@@ -14,7 +16,13 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default async function BuilderDashboard() {
-  const leads = await listLeads();
+  const cookieStore = await cookies();
+  const builderId = cookieStore.get("builder_id")?.value;
+  if (!builderId) {
+    redirect("/builder/login");
+  }
+
+  const leads = await listLeads(builderId);
   const stats = getDashboardStats(leads);
   const analytics = getAnalytics(leads);
   const drawQueue = getDrawQueue(leads);

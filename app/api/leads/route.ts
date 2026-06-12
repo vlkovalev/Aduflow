@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { createLead, listLeads, type CreateLeadInput } from "../../../lib/leadStore";
 
+import { cookies } from "next/headers";
+
 export const runtime = "nodejs";
 
 export async function GET() {
-  const leads = await listLeads();
+  const cookieStore = await cookies();
+  const builderId = cookieStore.get("builder_id")?.value || "00000000-0000-0000-0000-000000000001";
+  const leads = await listLeads(builderId);
 
   return NextResponse.json({
     leads: leads.map((lead) => ({
@@ -21,6 +25,7 @@ export async function GET() {
     })),
   });
 }
+
 
 export async function POST(request: Request) {
   try {
@@ -72,6 +77,7 @@ function validateLead(body: Partial<CreateLeadInput>) {
   }
 
   return {
+    builderId: String(body.builderId ?? "00000000-0000-0000-0000-000000000001"),
     customerName: String(body.customerName),
     email: String(body.email),
     phone: String(body.phone ?? ""),
