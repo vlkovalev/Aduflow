@@ -100,7 +100,6 @@ export default function Configurator() {
         setCatalogStatus("Builder catalog");
 
         // Only auto-select first model if model code is not already overridden by URL query
-        const params = new URLSearchParams(window.location.search);
         const hasUrlModel = params.get("model");
         if (!hasUrlModel) {
           setModelCode((current) => safeCurrent(current, nextCatalog.models.map((model) => model.code)));
