@@ -7,6 +7,7 @@ import { CopyLinkButton } from "./CopyLinkButton";
 import { ManufacturerMatch } from "../../configurator/ManufacturerMatch";
 import { TopNav } from "../../components/TopNav";
 import { FloorPlanPreview } from "../../configurator/FloorPlanPreview";
+import { readEnv } from "../../../lib/env";
 
 export default async function ProposalPage({
   params,
@@ -22,7 +23,7 @@ export default async function ProposalPage({
 
   const sections = buildProposalSections(lead);
   const nextSteps = buildNextSteps(lead);
-  const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/proposals/share/${lead.shareToken}`;
+  const shareUrl = `${readEnv("NEXT_PUBLIC_SITE_URL") ?? ""}/proposals/share/${lead.shareToken}`;
 
   return (
     <main className="appShell">

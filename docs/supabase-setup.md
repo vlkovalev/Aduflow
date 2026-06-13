@@ -8,7 +8,18 @@ Create or update `.env.local` with:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-publishable-or-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+Vercel may require lowercase environment variable names. ADUflow supports both uppercase and lowercase formats:
+
+```bash
+next_public_supabase_url=your-project-url
+next_public_supabase_anon_key=your-publishable-or-anon-key
+supabase_service_role_key=your-secret-service-key
+next_public_site_url=https://your-vercel-domain
 ```
 
 Do not commit `.env.local`.

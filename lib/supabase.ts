@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { readEnv } from "./env";
 
 let browserClient: SupabaseClient | null = null;
 let serviceClient: SupabaseClient | null = null;
@@ -13,8 +14,8 @@ export function isSupabaseActive() {
 }
 
 export function getSupabaseBrowserClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseUrl = readEnv("NEXT_PUBLIC_SUPABASE_URL");
+  const supabaseAnonKey = readEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
 
   if (!supabaseUrl || !supabaseAnonKey || !isSupabaseHealthy) {
     return null;
@@ -58,8 +59,8 @@ export function getSupabaseBrowserClient() {
 }
 
 export function getSupabaseServiceClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = readEnv("NEXT_PUBLIC_SUPABASE_URL");
+  const serviceRoleKey = readEnv("SUPABASE_SERVICE_ROLE_KEY");
 
   if (!supabaseUrl || !serviceRoleKey || !isSupabaseHealthy) {
     return null;
@@ -104,5 +105,4 @@ export function getSupabaseServiceClient() {
 
   return serviceClient;
 }
-
 
