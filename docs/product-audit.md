@@ -35,7 +35,7 @@ The core product idea is strong: feasibility before configuration, then proposal
 | Configure models/pricing | Builder setup supports models and options. | No bulk import, CSV template, duplicate protection, or active/inactive toggle editing for all fields. |
 | Store credentials | Builder credentials are captured and used in lender package. | Needs validation and "lender package preview" from setup. |
 | Qualify property | Address lookup exists with provider/fallback path. | Without a live zoning provider, it is only a municipal-rule demo. The UI should label this more strongly. |
-| Track project after win | Active project tracker and draw log exist. | Project milestones and draw logs use `sessionStorage`, so they are not durable or shared across devices. |
+| Track project after win | Active project tracker, draw log, and permit tracker now persist through app APIs. | Browser and Supabase smoke testing are still needed before relying on this in a real builder demo. |
 
 ## 4. Data Entry and Configuration Audit
 
@@ -127,7 +127,7 @@ Reference examples reviewed: [PermitFlow](https://www.permitflow.com/), [Symbium
 1. Clean visible encoding artifacts in UI labels and comments.
 2. Run and verify Supabase schema/seed in the connected project, then test a full lead save.
 3. Add stronger zoning source labels: live provider, fallback estimate, or manual assumption.
-4. Persist project milestones and draw logs in the database/local JSON structure instead of `sessionStorage`.
+4. Smoke-test persisted project milestones, draw logs, and permit status after running the Supabase schema.
 5. Add a builder setup checklist and sample CSV/import path for models and options.
 6. Add screenshots and troubleshooting to the builder guide.
 7. Add basic auth or at minimum a single-builder demo warning before showing the dashboard to more than one builder.

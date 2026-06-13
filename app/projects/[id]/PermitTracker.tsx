@@ -11,6 +11,19 @@ type PermitData = {
   approvalDate: string;
 };
 
+type PermitPackageResponse = {
+  packageStatus?: string;
+  package_status?: string;
+  applicationNumber?: string;
+  application_number?: string;
+  cityContact?: string;
+  city_contact?: string;
+  submissionDate?: string;
+  submission_date?: string;
+  approvalDate?: string;
+  approval_date?: string;
+};
+
 const DEFAULT_PERMIT: PermitData = {
   status: "drafting",
   appNumber: "",
@@ -26,7 +39,7 @@ const STATUS_LABELS = {
   approved: "Issued / Approved",
 };
 
-function mapDbToPermitData(dbPackage: any): PermitData {
+function mapDbToPermitData(dbPackage: PermitPackageResponse | null | undefined): PermitData {
   let status: PermitData["status"] = "drafting";
   const dbStatus = dbPackage?.packageStatus || dbPackage?.package_status;
   if (dbStatus === "submitted") status = "submitted";
@@ -109,7 +122,7 @@ export function PermitTracker({ leadId, permitPath, reviewRisk, setbackTarget }:
     <div className="dataPanel" style={{ marginTop: 24 }}>
       <div className="panelTitle">
         <h2>Permit & HOA Tracker</h2>
-        <span>Manage municipal reviews — {saveStatus}</span>
+        <span>Manage municipal reviews - {saveStatus}</span>
       </div>
 
       {!isEditing ? (

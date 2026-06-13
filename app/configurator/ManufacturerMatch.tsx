@@ -94,7 +94,12 @@ export function ManufacturerMatch({
   const [submittingRfq, setSubmittingRfq] = useState<string | null>(null);
   const [rfqSentList, setRfqSentList] = useState<Record<string, boolean>>({});
   const [activeRfqModal, setActiveRfqModal] = useState<Partner | null>(null);
-  const [builderCredentials, setBuilderCredentials] = useState<any>(null);
+  const [builderCredentials, setBuilderCredentials] = useState<{
+    companyName?: string;
+    email?: string;
+    phone?: string;
+    licenseNumber?: string;
+  } | null>(null);
 
   const normAddress = address.toLowerCase();
 

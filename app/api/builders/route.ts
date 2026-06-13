@@ -7,8 +7,11 @@ export async function GET() {
   try {
     const builders = await listBuilders();
     return NextResponse.json({ builders });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unable to list builders" },
+      { status: 500 },
+    );
   }
 }
 
@@ -26,7 +29,10 @@ export async function POST(request: Request) {
     );
 
     return NextResponse.json({ builder });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unable to create builder" },
+      { status: 500 },
+    );
   }
 }
