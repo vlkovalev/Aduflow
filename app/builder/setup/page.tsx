@@ -366,9 +366,9 @@ function CatalogImportPanel({ onImported }: { onImported: () => Promise<void> })
       <div className="panelTitle">
         <div>
           <h2>Upload a catalog package</h2>
-          <p>Import builder models or pricing options from a CSV file. Preview validates rows before anything is saved.</p>
+          <p>Import builder models or pricing options from an Excel or CSV file. Preview validates rows before anything is saved.</p>
         </div>
-        <span>CSV import</span>
+        <span>Spreadsheet import</span>
       </div>
 
       <div className="catalogImportGrid">
@@ -394,7 +394,7 @@ function CatalogImportPanel({ onImported }: { onImported: () => Promise<void> })
           <input
             className="setupInput"
             type="file"
-            accept=".csv,text/csv"
+            accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             onChange={(event) => {
               setFile(event.target.files?.[0] ?? null);
               setPreview(null);
@@ -414,9 +414,9 @@ function CatalogImportPanel({ onImported }: { onImported: () => Promise<void> })
 
       <div className="catalogImportHelp">
         {kind === "models" ? (
-          <p>Required columns: model_name, square_feet, base_price. Optional: model_code, is_active, sort_order.</p>
+          <p>Required columns: model_name, square_feet, base_price. Upload CSV or the first worksheet of an XLSX file.</p>
         ) : (
-          <p>Required columns: option_category, option_name, option_price. Categories must be finish, foundation, utilities, or site.</p>
+          <p>Required columns: option_category, option_name, option_price. XLSX imports read the first worksheet.</p>
         )}
       </div>
 

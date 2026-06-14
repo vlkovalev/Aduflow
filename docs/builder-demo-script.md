@@ -25,7 +25,7 @@ Show one builder that ADUflow can reduce early lead qualification time and creat
 3. Open `/builder/setup`.
    - Show the setup checklist.
    - Confirm database, models, options, and credentials.
-   - Open the Import tab and show the model/options CSV templates.
+   - Open the Import tab and show the model/options CSV templates and Excel upload support.
    - Say: "Your catalog and credentials drive every customer-facing output."
 
 4. Open `/configurator`.

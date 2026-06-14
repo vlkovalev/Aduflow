@@ -9,9 +9,9 @@ Use the builder setup import tool when a builder already has model pricing or op
 3. Open `/builder/setup`.
 4. Choose the `Import` tab.
 5. Select `Models` or `Options`.
-6. Download the CSV template.
+6. Download the CSV template, or prepare an Excel workbook with the same columns.
 7. Fill the template from the builder's current price sheet.
-8. Upload the CSV and click `Preview import`.
+8. Upload the CSV or XLSX file and click `Preview import`.
 9. Fix any validation errors.
 10. Click `Confirm import`.
 
@@ -68,9 +68,11 @@ site,Tight Urban Access,tight-urban-access,Small crew and compact equipment allo
 - Confirm import replaces existing rows with the same builder and same model code.
 - Confirm import replaces existing options with the same builder, category, and option value.
 - The importer supports quoted CSV cells.
-- Excel files should be saved as CSV before upload.
+- `.xlsx` Excel files are supported.
+- For `.xlsx` files, ADUflow reads the first worksheet only.
+- Legacy `.xls` files should be saved as `.xlsx` or CSV before upload.
 - PDF plan sets are not imported yet. They should be converted into a model/options CSV first.
 
 ## Demo Talking Point
 
-"You do not need to manually rebuild your catalog in ADUflow. For the pilot, give us your model price sheet and option allowances as CSV. ADUflow validates the rows, previews the import, and then pushes that catalog into the configurator, proposals, and lender package."
+"You do not need to manually rebuild your catalog in ADUflow. For the pilot, give us your model price sheet and option allowances as Excel or CSV. ADUflow validates the rows, previews the import, and then pushes that catalog into the configurator, proposals, and lender package."
