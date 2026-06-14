@@ -39,6 +39,19 @@ type BuilderCredentials = {
   serviceRegion?: string;
 };
 
+type ImportKind = "models" | "options";
+
+type ImportPreview = {
+  kind: ImportKind;
+  dryRun: boolean;
+  imported: boolean;
+  validRows?: number;
+  previewRows?: Record<string, string | number | boolean | undefined>[];
+  importedRows?: number;
+  errors?: string[];
+  error?: string;
+};
+
 const CATEGORIES = [
   { key: "finish", label: "Finish level" },
   { key: "foundation", label: "Foundation" },
@@ -46,8 +59,22 @@ const CATEGORIES = [
   { key: "site", label: "Site condition" },
 ];
 
+const MODEL_TEMPLATE = [
+  "model_name,model_code,square_feet,base_price,is_active,sort_order",
+  "Backyard Studio 312,backyard-studio-312,312,72000,true,1",
+  "Garden Suite 624,garden-suite-624,624,154000,true,2",
+].join("\n");
+
+const OPTION_TEMPLATE = [
+  "option_category,option_name,option_value,option_detail,option_price,is_active,sort_order",
+  "finish,Standard Finish,standard,Durable baseline finish package,0,true,1",
+  "foundation,Screw Piles,screw-piles,Fast install foundation package,18000,true,1",
+  "utilities,Full Utility Hookup,full-hookup,Water sewer and electrical tie-ins,32000,true,1",
+  "site,Tight Urban Access,tight-urban-access,Small crew and compact equipment allowance,9500,true,1",
+].join("\n");
+
 export default function BuilderSetup() {
-  const [tab, setTab] = useState<"models" | "options" | "credentials">("models");
+  const [tab, setTab] = useState<"models" | "options" | "import" | "credentials">("models");
   const [models, setModels] = useState<Model[]>([]);
   const [options, setOptions] = useState<Option[]>([]);
   const [credentials, setCredentials] = useState<BuilderCredentials | null>(null);
@@ -55,35 +82,37 @@ export default function BuilderSetup() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const builderRes = await fetch("/api/builder");
-        if (builderRes.status === 401) {
-          window.location.href = "/builder/login";
-          return;
-        }
-        
-        const [modelsRes, optionsRes] = await Promise.all([
-          fetch("/api/models"),
-          fetch("/api/options"),
-        ]);
-        
-        const modelsData = await modelsRes.json();
-        const optionsData = await optionsRes.json();
-        const builderData = await builderRes.json();
-        
-        setModels(modelsData.models ?? []);
-        setOptions(optionsData.options ?? []);
-        setCredentials(builderData.credentials ?? null);
-        setIsDbActive(builderData.isDbActive !== false);
-      } catch {
-        setError("Failed to load catalog data.");
-      } finally {
-        setLoading(false);
+  async function loadCatalogData() {
+    setError("");
+    try {
+      const builderRes = await fetch("/api/builder");
+      if (builderRes.status === 401) {
+        window.location.href = "/builder/login";
+        return;
       }
+
+      const [modelsRes, optionsRes] = await Promise.all([
+        fetch("/api/models"),
+        fetch("/api/options"),
+      ]);
+
+      const modelsData = await modelsRes.json();
+      const optionsData = await optionsRes.json();
+      const builderData = await builderRes.json();
+
+      setModels(modelsData.models ?? []);
+      setOptions(optionsData.options ?? []);
+      setCredentials(builderData.credentials ?? null);
+      setIsDbActive(builderData.isDbActive !== false);
+    } catch {
+      setError("Failed to load catalog data.");
+    } finally {
+      setLoading(false);
     }
-    load();
+  }
+
+  useEffect(() => {
+    loadCatalogData();
   }, []);
 
   async function deleteModel(id: string) {
@@ -124,6 +153,13 @@ export default function BuilderSetup() {
           type="button"
         >
           Options
+        </button>
+        <button
+          className={tab === "import" ? "setupTab active" : "setupTab"}
+          onClick={() => setTab("import")}
+          type="button"
+        >
+          Import
         </button>
         <button
           className={tab === "credentials" ? "setupTab active" : "setupTab"}
@@ -265,7 +301,172 @@ export default function BuilderSetup() {
           <CredentialsForm />
         </div>
       )}
+
+      {!loading && tab === "import" && (
+        <div className="setupSection">
+          <CatalogImportPanel onImported={loadCatalogData} />
+        </div>
+      )}
     </main>
+  );
+}
+
+function CatalogImportPanel({ onImported }: { onImported: () => Promise<void> }) {
+  const [kind, setKind] = useState<ImportKind>("models");
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<ImportPreview | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState("");
+
+  const template = kind === "models" ? MODEL_TEMPLATE : OPTION_TEMPLATE;
+  const templateName = kind === "models" ? "aduflow-models-template.csv" : "aduflow-options-template.csv";
+  const canImport = Boolean(preview && !preview.errors?.length && preview.validRows && file);
+
+  async function sendImport(dryRun: boolean) {
+    if (!file) {
+      setPreview({ kind, dryRun: true, imported: false, errors: ["Choose a CSV file before importing."] });
+      return;
+    }
+
+    setBusy(true);
+    setStatus("");
+
+    try {
+      const form = new FormData();
+      form.append("kind", kind);
+      form.append("dryRun", String(dryRun));
+      form.append("file", file);
+
+      const res = await fetch("/api/catalog/import", {
+        method: "POST",
+        body: form,
+      });
+      const data = (await res.json()) as ImportPreview;
+      setPreview(data);
+
+      if (!res.ok || data.error) {
+        setStatus(data.error ?? "Import failed.");
+        return;
+      }
+
+      if (!dryRun && data.imported) {
+        setStatus(`Imported ${data.importedRows ?? 0} ${kind}.`);
+        setFile(null);
+        await onImported();
+      }
+    } catch {
+      setStatus("Import failed. Check the CSV format and try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="dataPanel">
+      <div className="panelTitle">
+        <div>
+          <h2>Upload a catalog package</h2>
+          <p>Import builder models or pricing options from a CSV file. Preview validates rows before anything is saved.</p>
+        </div>
+        <span>CSV import</span>
+      </div>
+
+      <div className="catalogImportGrid">
+        <label>
+          Package type
+          <select
+            className="setupInput"
+            value={kind}
+            onChange={(event) => {
+              setKind(event.target.value as ImportKind);
+              setPreview(null);
+              setFile(null);
+              setStatus("");
+            }}
+          >
+            <option value="models">Models</option>
+            <option value="options">Options</option>
+          </select>
+        </label>
+
+        <label>
+          CSV file
+          <input
+            className="setupInput"
+            type="file"
+            accept=".csv,text/csv"
+            onChange={(event) => {
+              setFile(event.target.files?.[0] ?? null);
+              setPreview(null);
+              setStatus("");
+            }}
+          />
+        </label>
+
+        <a
+          className="button secondary catalogTemplateButton"
+          href={`data:text/csv;charset=utf-8,${encodeURIComponent(template)}`}
+          download={templateName}
+        >
+          Download template
+        </a>
+      </div>
+
+      <div className="catalogImportHelp">
+        {kind === "models" ? (
+          <p>Required columns: model_name, square_feet, base_price. Optional: model_code, is_active, sort_order.</p>
+        ) : (
+          <p>Required columns: option_category, option_name, option_price. Categories must be finish, foundation, utilities, or site.</p>
+        )}
+      </div>
+
+      <div className="catalogImportActions">
+        <button className="button secondary" type="button" onClick={() => sendImport(true)} disabled={busy || !file}>
+          {busy ? "Checking..." : "Preview import"}
+        </button>
+        <button className="button primary" type="button" onClick={() => sendImport(false)} disabled={busy || !canImport}>
+          {busy ? "Importing..." : "Confirm import"}
+        </button>
+      </div>
+
+      {status && <p className="setupNotice success catalogImportStatus">{status}</p>}
+
+      {preview?.errors?.length ? (
+        <div className="catalogImportErrors">
+          <strong>Fix these rows before importing:</strong>
+          {preview.errors.map((item) => (
+            <p key={item}>{item}</p>
+          ))}
+        </div>
+      ) : null}
+
+      {preview?.previewRows?.length ? (
+        <div className="catalogPreviewTable">
+          <div className="panelTitle compact">
+            <h3>Preview</h3>
+            <span>{preview.validRows} valid row{preview.validRows === 1 ? "" : "s"}</span>
+          </div>
+          <table className="setupTable">
+            <thead>
+              <tr>
+                {Object.keys(preview.previewRows[0]).map((key) => (
+                  <th key={key}>{key}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {preview.previewRows.map((row, index) => (
+                <tr key={`${kind}-${index}`}>
+                  {Object.values(row).map((value, valueIndex) => (
+                    <td key={`${kind}-${index}-${valueIndex}`}>{String(value ?? "")}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+    </div>
   );
 }
 

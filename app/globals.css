@@ -961,6 +961,10 @@ input {
   color: #a5332a;
 }
 
+.setupNotice.success {
+  color: #2d6643;
+}
+
 .setupEmpty {
   color: var(--muted);
   font-size: 14px;
@@ -1011,6 +1015,87 @@ input {
   line-height: 1.4;
 }
 
+.catalogImportGrid {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(260px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-top: 18px;
+}
+
+.catalogImportGrid label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--muted);
+}
+
+.catalogTemplateButton {
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+}
+
+.catalogImportHelp {
+  margin-top: 12px;
+  border-left: 4px solid var(--gold);
+  padding: 10px 14px;
+  background: var(--paper);
+  border-radius: 6px;
+}
+
+.catalogImportHelp p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.catalogImportActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.catalogImportStatus {
+  width: auto;
+  margin: 14px 0 0;
+}
+
+.catalogImportErrors {
+  margin-top: 18px;
+  border: 1px solid rgba(165, 51, 42, 0.28);
+  border-radius: 8px;
+  background: #fff7f5;
+  padding: 14px;
+  color: #a5332a;
+}
+
+.catalogImportErrors strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.catalogImportErrors p {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+
+.catalogPreviewTable {
+  margin-top: 22px;
+  overflow-x: auto;
+}
+
+.panelTitle.compact {
+  margin-bottom: 12px;
+}
+
+.panelTitle.compact h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
 @media (max-width: 900px) {
   .setupChecklist {
     grid-template-columns: 1fr 1fr;
@@ -1019,6 +1104,10 @@ input {
   .setupForm,
   .setupForm:not(.inline) {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .catalogImportGrid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1030,6 +1119,10 @@ input {
   .setupForm,
   .setupForm:not(.inline) {
     grid-template-columns: 1fr;
+  }
+
+  .catalogImportActions {
+    display: grid;
   }
 }
 

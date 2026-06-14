@@ -5,7 +5,7 @@ import { defaultCatalog, type Model, type OptionChoice, type PricingCatalog } fr
 import { getSupabaseServiceClient } from "./supabase";
 import { getLocalStorePath } from "./localStoreHelper";
 
-type ModelRow = {
+export type ModelRow = {
   id?: string;
   builder_id?: string;
   model_name?: string;
@@ -16,7 +16,7 @@ type ModelRow = {
   sort_order?: number;
 };
 
-type OptionRow = {
+export type OptionRow = {
   id?: string;
   builder_id?: string;
   option_name?: string;
@@ -207,6 +207,54 @@ export async function createModel(
   return record;
 }
 
+export async function importModels(
+  rows: Array<{
+    modelName: string;
+    modelCode?: string;
+    squareFeet: number;
+    basePrice: number;
+    isActive?: boolean;
+    sortOrder?: number;
+  }>,
+  builderId = "00000000-0000-0000-0000-000000000001",
+): Promise<ModelRow[]> {
+  const records: ModelRow[] = rows.map((row, index) => ({
+    id: randomUUID(),
+    builder_id: builderId,
+    model_name: row.modelName,
+    model_code: row.modelCode || slugify(row.modelName),
+    square_feet: row.squareFeet,
+    base_price: row.basePrice,
+    is_active: row.isActive ?? true,
+    sort_order: row.sortOrder ?? index + 1,
+  }));
+
+  const duplicateCodes = records.map((row) => row.model_code).filter(Boolean) as string[];
+  const supabase = getSupabaseServiceClient();
+
+  if (supabase) {
+    try {
+      if (duplicateCodes.length) {
+        await supabase.from("models").delete().eq("builder_id", builderId).in("model_code", duplicateCodes);
+      }
+      const { data, error } = await supabase.from("models").insert(records).select();
+      if (!error && data) return data as ModelRow[];
+    } catch (e) {
+      console.warn("Supabase importModels error, fallback to local:", e);
+    }
+  }
+
+  const local = await readLocalModels();
+  const filtered = local.filter(
+    (row) =>
+      (row.builder_id || "00000000-0000-0000-0000-000000000001") !== builderId ||
+      !duplicateCodes.includes(row.model_code ?? ""),
+  );
+  const next = [...filtered, ...records];
+  await writeLocalModels(next);
+  return records;
+}
+
 export async function updateModel(
   id: string,
   updates: { modelName?: string; squareFeet?: number; basePrice?: number; isActive?: boolean; sortOrder?: number }
@@ -323,6 +371,62 @@ export async function createOption(
   local.push(record);
   await writeLocalOptions(local);
   return record;
+}
+
+export async function importOptions(
+  rows: Array<{
+    optionCategory: string;
+    optionName: string;
+    optionValue?: string;
+    optionDetail?: string;
+    optionPrice: number;
+    isActive?: boolean;
+    sortOrder?: number;
+  }>,
+  builderId = "00000000-0000-0000-0000-000000000001",
+): Promise<OptionRow[]> {
+  const records: OptionRow[] = rows.map((row, index) => ({
+    id: randomUUID(),
+    builder_id: builderId,
+    option_name: row.optionName,
+    option_value: row.optionValue || slugify(row.optionName),
+    option_detail: row.optionDetail || "",
+    option_category: normalizeCategory(row.optionCategory),
+    option_price: row.optionPrice,
+    is_active: row.isActive ?? true,
+    sort_order: row.sortOrder ?? index + 1,
+  }));
+
+  const duplicateKeys = new Set(records.map((row) => `${row.option_category}:${row.option_value}`));
+  const supabase = getSupabaseServiceClient();
+
+  if (supabase) {
+    try {
+      const existing = await listOptions(builderId);
+      const idsToDelete = existing
+        .filter((row) => duplicateKeys.has(`${normalizeCategory(row.option_category ?? "")}:${row.option_value}`))
+        .map((row) => row.id)
+        .filter(Boolean) as string[];
+
+      if (idsToDelete.length) {
+        await supabase.from("options").delete().eq("builder_id", builderId).in("id", idsToDelete);
+      }
+      const { data, error } = await supabase.from("options").insert(records).select();
+      if (!error && data) return data as OptionRow[];
+    } catch (e) {
+      console.warn("Supabase importOptions error, fallback to local:", e);
+    }
+  }
+
+  const local = await readLocalOptions();
+  const filtered = local.filter((row) => {
+    const rowBuilderId = row.builder_id || "00000000-0000-0000-0000-000000000001";
+    const key = `${normalizeCategory(row.option_category ?? "")}:${row.option_value}`;
+    return rowBuilderId !== builderId || !duplicateKeys.has(key);
+  });
+  const next = [...filtered, ...records];
+  await writeLocalOptions(next);
+  return records;
 }
 
 export async function updateOption(
