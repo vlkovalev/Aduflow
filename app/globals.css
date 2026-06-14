@@ -627,6 +627,47 @@ input {
   line-height: 1.35;
 }
 
+.selectGroup {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+
+.selectGroup > span {
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.selectGroup small {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.selectGroup select {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 0 12px;
+  font: inherit;
+  font-weight: 700;
+}
+
+.selectGroup select:focus {
+  outline: 2px solid rgba(36, 69, 55, 0.18);
+  border-color: var(--forest);
+}
+
+.selectGroup em {
+  color: var(--muted);
+  font-size: 13px;
+  font-style: normal;
+  line-height: 1.4;
+}
+
 .estimateRange {
   display: flex;
   justify-content: space-between;

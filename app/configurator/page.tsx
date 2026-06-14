@@ -149,7 +149,7 @@ export default function Configurator() {
         <span className="sourceBadge">{catalogStatus}</span>
       </section>
 
-      {/* ── Address lookup ── */}
+      {/* Address lookup */}
       <section className="addressLookup">
         <div className="addressLookupInner">
           <label className="addressLabel">
@@ -329,28 +329,28 @@ export default function Configurator() {
             }))}
             onChange={setModelCode}
           />
-          <ChoiceGroup
+          <SelectGroup
             title="Finish level"
-            description="Choose the interior specifications. Essential is built for rentals; Comfort adds quality tile packages; Premium features high-end custom millwork."
+            description="Choose the interior specifications."
             value={finish}
             options={catalog.optionGroups.finish}
             onChange={setFinish}
           />
-          <ChoiceGroup
+          <SelectGroup
             title="Foundation"
             description="Slab is default for flat yards; Helical piles require zero excavation and protect nearby tree roots; Crawlspace permits easy access to utilities."
             value={foundation}
             options={catalog.optionGroups.foundation}
             onChange={setFoundation}
           />
-          <ChoiceGroup
+          <SelectGroup
             title="Utilities"
             description="Covers plumbing and power trenching from the main house. Standard covers typical yards; Complex covers runs >80ft or panel upgrades."
             value={utilities}
             options={catalog.optionGroups.utilities}
             onChange={setUtilities}
           />
-          <ChoiceGroup
+          <SelectGroup
             title="Site condition"
             description="Determines modular delivery logistics. Urban uses standard access; Tight requires crane staging; Rural includes regional travel surcharges."
             value={site}
@@ -644,6 +644,37 @@ function ChoiceGroup({
         ))}
       </div>
     </fieldset>
+  );
+}
+
+function SelectGroup({
+  title,
+  description,
+  value,
+  options,
+  onChange,
+}: {
+  title: string;
+  description?: string;
+  value: string;
+  options: Choice[];
+  onChange: (value: string) => void;
+}) {
+  const selected = options.find((option) => option.value === value);
+
+  return (
+    <label className="selectGroup">
+      <span>{title}</span>
+      {description && <small>{description}</small>}
+      <select value={value} onChange={(event) => onChange(event.target.value)}>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label} - {option.detail}
+          </option>
+        ))}
+      </select>
+      {selected ? <em>{selected.detail}</em> : null}
+    </label>
   );
 }
 
