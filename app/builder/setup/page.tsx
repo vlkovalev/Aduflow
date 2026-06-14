@@ -390,7 +390,7 @@ function CatalogImportPanel({ onImported }: { onImported: () => Promise<void> })
         </label>
 
         <label>
-          CSV file
+          Excel or CSV file
           <input
             className="setupInput"
             type="file"
