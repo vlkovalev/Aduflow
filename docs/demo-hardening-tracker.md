@@ -4,6 +4,8 @@ Date: June 11, 2026
 
 Purpose: track the readiness actions needed before ADUflow is presented to builders or exposed to homeowners. This is a lightweight follow-up artifact for the ADUflow follow-up agent. It should be updated after each hardening pass with status, evidence, and verification notes.
 
+Companion tracker: `docs/builder-presentation-readiness.md` tracks the guided builder-presentation checklist, including local QA, browser/mobile QA, demo script, screenshots, Vercel/Supabase verification, and external blockers.
+
 Status key:
 
 - Complete: implemented and verified from repo evidence or a successful manual check.

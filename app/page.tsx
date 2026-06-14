@@ -46,6 +46,27 @@ const segments = [
   "Small cabins",
 ];
 
+const builderProof = [
+  {
+    title: "Qualify faster",
+    copy: "Turn an address into a first-pass feasibility package before your estimator spends hours on a cold lead.",
+  },
+  {
+    title: "Quote consistently",
+    copy: "Use your active models, option pricing, credentials, and service region to keep every proposal aligned with your business.",
+  },
+  {
+    title: "Support financing",
+    copy: "Generate a lender-oriented package with scope, budget split, draw schedule, evidence needs, and builder credentials.",
+  },
+];
+
+const pilotLimits = [
+  "Zoning results are first-pass screens, not permit approvals.",
+  "Fallback data must be reviewed by the builder before customer commitments.",
+  "Pilot login is builder-scoped for demos; production auth is the next hardening step.",
+];
+
 export default function Home() {
   return (
     <main>
@@ -149,6 +170,28 @@ export default function Home() {
         ))}
       </section>
 
+      <section className="band">
+        <div className="sectionHeader">
+          <p className="eyebrow">For ADU and prefab builders</p>
+          <h2>A guided pilot for reducing dead-end ADU leads.</h2>
+          <p>
+            ADUflow is ready for builder conversations as a pilot workflow:
+            address-first feasibility, catalog-based pricing, proposal, lender
+            package, permit tracker, and draw log.
+          </p>
+        </div>
+      </section>
+
+      <section className="workflow">
+        {builderProof.map((item) => (
+          <article className="workflowCard" key={item.title}>
+            <span>✓</span>
+            <h3>{item.title}</h3>
+            <p>{item.copy}</p>
+          </article>
+        ))}
+      </section>
+
       <section className="roadmap">
         {roadmap.map((item) => (
           <article key={item.title}>
@@ -156,6 +199,20 @@ export default function Home() {
             <p>{item.copy}</p>
           </article>
         ))}
+      </section>
+
+      <section className="band">
+        <div className="sectionHeader">
+          <p className="eyebrow">Pilot boundaries</p>
+          <h2>What to say clearly in every builder demo.</h2>
+        </div>
+        <div className="chipRow">
+          {pilotLimits.map((limit) => (
+            <span className="chip" key={limit}>
+              {limit}
+            </span>
+          ))}
+        </div>
       </section>
     </main>
   );
