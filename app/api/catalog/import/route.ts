@@ -178,7 +178,7 @@ function readCentralDirectory(input: Buffer) {
     const extraLength = input.readUInt16LE(offset + 30);
     const commentLength = input.readUInt16LE(offset + 32);
     const localHeaderOffset = input.readUInt32LE(offset + 42);
-    const name = input.subarray(offset + 46, offset + 46 + fileNameLength).toString("utf8");
+    const name = input.subarray(offset + 46, offset + 46 + fileNameLength).toString("utf8").replaceAll("\\", "/");
 
     entries.set(name, { method, compressedSize, localHeaderOffset });
     offset += 46 + fileNameLength + extraLength + commentLength;

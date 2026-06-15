@@ -320,6 +320,10 @@ function CatalogImportPanel({ onImported }: { onImported: () => Promise<void> })
 
   const template = kind === "models" ? MODEL_TEMPLATE : OPTION_TEMPLATE;
   const templateName = kind === "models" ? "aduflow-models-template.csv" : "aduflow-options-template.csv";
+  const excelTemplateHref =
+    kind === "models"
+      ? "/templates/aduflow-models-template.xlsx"
+      : "/templates/aduflow-options-template.xlsx";
   const canImport = Boolean(preview && !preview.errors?.length && preview.validRows && file);
 
   async function sendImport(dryRun: boolean) {
@@ -403,13 +407,22 @@ function CatalogImportPanel({ onImported }: { onImported: () => Promise<void> })
           />
         </label>
 
-        <a
-          className="button secondary catalogTemplateButton"
-          href={`data:text/csv;charset=utf-8,${encodeURIComponent(template)}`}
-          download={templateName}
-        >
-          Download template
-        </a>
+        <div className="catalogTemplateActions">
+          <a
+            className="button secondary catalogTemplateButton"
+            href={excelTemplateHref}
+            download
+          >
+            Download Excel
+          </a>
+          <a
+            className="button secondary catalogTemplateButton"
+            href={`data:text/csv;charset=utf-8,${encodeURIComponent(template)}`}
+            download={templateName}
+          >
+            Download CSV
+          </a>
+        </div>
       </div>
 
       <div className="catalogImportHelp">

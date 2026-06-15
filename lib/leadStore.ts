@@ -53,12 +53,13 @@ export type CreateLeadInput = Omit<
 >;
 
 const localStorePath = getLocalStorePath("leads.json");
+const defaultBuilderId = "00000000-0000-0000-0000-000000000001";
 
 export async function createLead(input: CreateLeadInput) {
   const createdAt = new Date().toISOString();
   const record: LeadRecord = {
     ...input,
-    builderId: input.builderId || "00000000-0000-0000-0000-000000000001",
+    builderId: input.builderId || defaultBuilderId,
     id: randomUUID(),
     createdAt,
     updatedAt: createdAt,
@@ -156,7 +157,7 @@ export async function getLead(id: string) {
       } else if (data) {
         return {
           id: data.id,
-          builderId: String(data.builder_id ?? "00000000-0000-0000-0000-000000000001"),
+          builderId: String(data.builder_id ?? defaultBuilderId),
           createdAt: data.created_at ?? "",
           updatedAt: data.updated_at ?? "",
           proposalNumber: data.proposal_number ?? "",
@@ -259,14 +260,14 @@ export async function listLeads(builderId = "00000000-0000-0000-0000-00000000000
 
   const records = await readLocalLeads();
   return records
-    .filter((r) => (r.builderId || "00000000-0000-0000-0000-000000000001") === builderId)
+    .filter((r) => (r.builderId || defaultBuilderId) === builderId)
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
 
 function mapLeadRow(data: Record<string, unknown>) {
   return {
     id: String(data.id ?? ""),
-    builderId: String(data.builder_id ?? "00000000-0000-0000-0000-000000000001"),
+    builderId: String(data.builder_id ?? defaultBuilderId),
     createdAt: String(data.created_at ?? ""),
     updatedAt: String(data.updated_at ?? ""),
     proposalNumber: String(data.proposal_number ?? ""),
@@ -311,7 +312,7 @@ function mapLeadRow(data: Record<string, unknown>) {
 async function readLocalLeads() {
   try {
     const raw = await readFile(localStorePath, "utf8");
-    return JSON.parse(raw) as LeadRecord[];
+    return (JSON.parse(raw) as Partial<LeadRecord>[]).map(normalizeLocalLead);
   } catch {
     return [];
   }
@@ -320,4 +321,22 @@ async function readLocalLeads() {
 async function writeLocalLeads(records: LeadRecord[]) {
   await mkdir(path.dirname(localStorePath), { recursive: true });
   await writeFile(localStorePath, JSON.stringify(records, null, 2));
+}
+
+function normalizeLocalLead(record: Partial<LeadRecord>) {
+  return {
+    ...record,
+    builderId: record.builderId || defaultBuilderId,
+    zoningSource: record.zoningSource ?? "",
+    zoningZone: record.zoningZone ?? "",
+    zoningDescription: record.zoningDescription ?? "",
+    zoningRaw: record.zoningRaw ?? null,
+    zoningLookupStatus: record.zoningLookupStatus ?? "manual",
+    zoningCheckedAt: record.zoningCheckedAt ?? "",
+    aduPermitted: record.aduPermitted ?? null,
+    setbackFront: record.setbackFront ?? "",
+    setbackSide: record.setbackSide ?? "",
+    setbackRear: record.setbackRear ?? "",
+    status: record.status || "new",
+  } as LeadRecord;
 }

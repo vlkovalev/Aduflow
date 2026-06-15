@@ -5,6 +5,8 @@ import { getLead } from "../../../lib/leadStore";
 import { createPermitPackage } from "../../../lib/permitStore";
 import { TopNav } from "../../components/TopNav";
 
+const defaultBuilderId = "00000000-0000-0000-0000-000000000001";
+
 export default async function PermitPage({
   params,
 }: {
@@ -23,7 +25,7 @@ export default async function PermitPage({
     redirect("/builder/login");
   }
 
-  if (lead.builderId !== builderId) {
+  if ((lead.builderId || defaultBuilderId) !== builderId) {
     notFound();
   }
 

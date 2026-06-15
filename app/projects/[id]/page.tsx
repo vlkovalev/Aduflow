@@ -7,6 +7,8 @@ import { ProjectMilestones } from "./ProjectMilestones";
 import { PermitTracker } from "./PermitTracker";
 import { DrawReleaseLog } from "./DrawReleaseLog";
 
+const defaultBuilderId = "00000000-0000-0000-0000-000000000001";
+
 export default async function ProjectPage({
   params,
 }: {
@@ -23,7 +25,7 @@ export default async function ProjectPage({
     redirect("/builder/login");
   }
 
-  if (lead.builderId !== builderId) {
+  if ((lead.builderId || defaultBuilderId) !== builderId) {
     notFound();
   }
 
@@ -41,7 +43,7 @@ export default async function ProjectPage({
       <section className="proposalHero">
         <p className="eyebrow">Active project</p>
         <h1>{lead.modelName}</h1>
-        <p>{lead.customerName} — {lead.propertyAddress}</p>
+        <p>{lead.customerName} - {lead.propertyAddress}</p>
       </section>
 
       <section className="proposalDetailGrid" style={{ marginBottom: 24 }}>
@@ -89,7 +91,7 @@ export default async function ProjectPage({
             ].map((m) => (
               <div key={m.stage}>
                 <span>{m.percent}%</span>
-                <p style={{ margin: 0 }}>{m.stage} — {formatCurrency(Math.round(lead.estimatedPrice * m.percent / 100))}</p>
+                <p style={{ margin: 0 }}>{m.stage} - {formatCurrency(Math.round(lead.estimatedPrice * m.percent / 100))}</p>
               </div>
             ))}
           </div>

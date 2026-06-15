@@ -1,22 +1,136 @@
-INSERT INTO models (id, model_name, model_code, square_feet, base_price, region, sort_order)
+INSERT INTO builders (id, company_name, email, phone)
 VALUES
- ('00000000-0000-0000-0000-000000000101', 'Backyard Studio 312', 'studio-312', 312, 72000, 'North America', 1),
- ('00000000-0000-0000-0000-000000000102', 'Garden Suite 624', 'suite-624', 624, 154000, 'North America', 2),
- ('00000000-0000-0000-0000-000000000103', 'Two-Bed ADU 816', 'adu-816', 816, 196000, 'North America', 3)
-ON CONFLICT (id) DO NOTHING;
+ ('00000000-0000-0000-0000-000000000001', 'Apex Modular Builders', 'info@apexmodular.com', '(604) 555-0199'),
+ ('00000000-0000-0000-0000-000000000002', 'Cascade Prefab Co', 'hello@cascadeprefab.com', '(604) 555-0288')
+ON CONFLICT (id) DO UPDATE SET
+ company_name = EXCLUDED.company_name,
+ email = EXCLUDED.email,
+ phone = EXCLUDED.phone;
 
-INSERT INTO options (id, option_name, option_value, option_detail, option_category, option_price, sort_order)
+INSERT INTO models (id, builder_id, model_name, model_code, square_feet, base_price, region, sort_order)
 VALUES
- ('00000000-0000-0000-0000-000000000201', 'Essential', 'essential', 'Durable rental-ready finish', 'finish', 0, 1),
- ('00000000-0000-0000-0000-000000000202', 'Comfort', 'comfort', 'Upgraded kitchen and bath package', 'finish', 18500, 2),
- ('00000000-0000-0000-0000-000000000203', 'Premium', 'premium', 'Higher-end millwork and fixtures', 'finish', 34500, 3),
- ('00000000-0000-0000-0000-000000000204', 'Slab', 'slab', 'Simple prepared urban site', 'foundation', 22000, 1),
- ('00000000-0000-0000-0000-000000000205', 'Helical piles', 'helical', 'Lower disturbance backyard install', 'foundation', 28500, 2),
- ('00000000-0000-0000-0000-000000000206', 'Crawlspace', 'crawl', 'Best for servicing and cold climates', 'foundation', 42000, 3),
- ('00000000-0000-0000-0000-000000000207', 'Basic tie-in', 'basic', 'Short utility run allowance', 'utilities', 14500, 1),
- ('00000000-0000-0000-0000-000000000208', 'Standard tie-in', 'standard', 'Typical water, sewer, power scope', 'utilities', 26500, 2),
- ('00000000-0000-0000-0000-000000000209', 'Complex tie-in', 'complex', 'Long run or panel upgrade allowance', 'utilities', 48500, 3),
- ('00000000-0000-0000-0000-000000000210', 'Urban lot', 'urban', 'Lane or driveway access', 'site', 8500, 1),
- ('00000000-0000-0000-0000-000000000211', 'Tight access', 'tight', 'Crane planning or smaller modules', 'site', 18500, 2),
- ('00000000-0000-0000-0000-000000000212', 'Rural lot', 'rural', 'Delivery distance and site prep allowance', 'site', 24500, 3)
-ON CONFLICT (id) DO NOTHING;
+ ('00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000001', 'Backyard Studio 312', 'studio-312', 312, 72000, 'North America', 1),
+ ('00000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-000000000001', 'Garden Suite 624', 'suite-624', 624, 154000, 'North America', 2),
+ ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-000000000001', 'Two-Bed ADU 816', 'adu-816', 816, 196000, 'North America', 3)
+ON CONFLICT (id) DO UPDATE SET
+ builder_id = EXCLUDED.builder_id,
+ model_name = EXCLUDED.model_name,
+ model_code = EXCLUDED.model_code,
+ square_feet = EXCLUDED.square_feet,
+ base_price = EXCLUDED.base_price,
+ region = EXCLUDED.region,
+ is_active = TRUE,
+ sort_order = EXCLUDED.sort_order;
+
+INSERT INTO options (id, builder_id, option_name, option_value, option_detail, option_category, option_price, sort_order)
+VALUES
+ ('00000000-0000-0000-0000-000000000201', '00000000-0000-0000-0000-000000000001', 'Essential', 'essential', 'Durable rental-ready finish', 'finish', 0, 1),
+ ('00000000-0000-0000-0000-000000000202', '00000000-0000-0000-0000-000000000001', 'Comfort', 'comfort', 'Upgraded kitchen and bath package', 'finish', 18500, 2),
+ ('00000000-0000-0000-0000-000000000203', '00000000-0000-0000-0000-000000000001', 'Premium', 'premium', 'Higher-end millwork and fixtures', 'finish', 34500, 3),
+ ('00000000-0000-0000-0000-000000000204', '00000000-0000-0000-0000-000000000001', 'Slab', 'slab', 'Simple prepared urban site', 'foundation', 22000, 1),
+ ('00000000-0000-0000-0000-000000000205', '00000000-0000-0000-0000-000000000001', 'Helical piles', 'helical', 'Lower disturbance backyard install', 'foundation', 28500, 2),
+ ('00000000-0000-0000-0000-000000000206', '00000000-0000-0000-0000-000000000001', 'Crawlspace', 'crawl', 'Best for servicing and cold climates', 'foundation', 42000, 3),
+ ('00000000-0000-0000-0000-000000000207', '00000000-0000-0000-0000-000000000001', 'Basic tie-in', 'basic', 'Short utility run allowance', 'utilities', 14500, 1),
+ ('00000000-0000-0000-0000-000000000208', '00000000-0000-0000-0000-000000000001', 'Standard tie-in', 'standard', 'Typical water, sewer, power scope', 'utilities', 26500, 2),
+ ('00000000-0000-0000-0000-000000000209', '00000000-0000-0000-0000-000000000001', 'Complex tie-in', 'complex', 'Long run or panel upgrade allowance', 'utilities', 48500, 3),
+ ('00000000-0000-0000-0000-000000000210', '00000000-0000-0000-0000-000000000001', 'Urban lot', 'urban', 'Lane or driveway access', 'site', 8500, 1),
+ ('00000000-0000-0000-0000-000000000211', '00000000-0000-0000-0000-000000000001', 'Tight access', 'tight', 'Crane planning or smaller modules', 'site', 18500, 2),
+ ('00000000-0000-0000-0000-000000000212', '00000000-0000-0000-0000-000000000001', 'Rural lot', 'rural', 'Delivery distance and site prep allowance', 'site', 24500, 3)
+ON CONFLICT (id) DO UPDATE SET
+ builder_id = EXCLUDED.builder_id,
+ option_name = EXCLUDED.option_name,
+ option_value = EXCLUDED.option_value,
+ option_detail = EXCLUDED.option_detail,
+ option_category = EXCLUDED.option_category,
+ option_price = EXCLUDED.option_price,
+ is_active = TRUE,
+ sort_order = EXCLUDED.sort_order;
+
+INSERT INTO leads (
+ id, builder_id, created_at, updated_at, proposal_number, proposal_status, share_token,
+ customer_name, email, phone, property_address, parcel_scenario, zoning_source, zoning_zone,
+ zoning_description, zoning_lookup_status, zoning_checked_at, adu_permitted, setback_front,
+ setback_side, setback_rear, feasibility_result, feasibility_confidence, permit_path,
+ configuration_json, estimated_price, estimate_low, estimate_high, factory_cost, site_cost,
+ model_code, model_name, square_feet, timeline_weeks, max_square_feet, max_stories,
+ setback_target, review_risk, status
+)
+VALUES (
+ '00000000-0000-0000-0000-000000000301',
+ '00000000-0000-0000-0000-000000000001',
+ NOW(),
+ NOW(),
+ 'ADF-GOLDEN-DEMO',
+ 'draft',
+ '00000000-0000-0000-0000-000000000401',
+ 'Morgan Chen',
+ 'morgan.demo@example.com',
+ '(604) 555-0144',
+ '456 Lane Way, Vancouver, BC',
+ 'corner-hoa',
+ 'municipal-fallback',
+ 'R1-1',
+ 'Residential infill lot with lane access and ADU review pathway.',
+ 'fallback',
+ NOW(),
+ TRUE,
+ 'Confirm front setback with survey',
+ '4 ft target',
+ '4 ft target',
+ 'Likely feasible',
+ 78,
+ 'Municipal plus design review',
+ '{"finish":"comfort","foundation":"helical","utilities":"standard","site":"urban","modelName":"Garden Suite 624"}'::jsonb,
+ 232000,
+ 213000,
+ 264000,
+ 172500,
+ 59500,
+ 'suite-624',
+ 'Garden Suite 624',
+ 624,
+ 30,
+ 720,
+ 1,
+ 'Confirm sightline and HOA rules',
+ 'Medium',
+ 'won'
+)
+ON CONFLICT (id) DO UPDATE SET
+ builder_id = EXCLUDED.builder_id,
+ updated_at = NOW(),
+ proposal_number = EXCLUDED.proposal_number,
+ proposal_status = EXCLUDED.proposal_status,
+ share_token = EXCLUDED.share_token,
+ customer_name = EXCLUDED.customer_name,
+ email = EXCLUDED.email,
+ phone = EXCLUDED.phone,
+ property_address = EXCLUDED.property_address,
+ parcel_scenario = EXCLUDED.parcel_scenario,
+ zoning_source = EXCLUDED.zoning_source,
+ zoning_zone = EXCLUDED.zoning_zone,
+ zoning_description = EXCLUDED.zoning_description,
+ zoning_lookup_status = EXCLUDED.zoning_lookup_status,
+ zoning_checked_at = EXCLUDED.zoning_checked_at,
+ adu_permitted = EXCLUDED.adu_permitted,
+ setback_front = EXCLUDED.setback_front,
+ setback_side = EXCLUDED.setback_side,
+ setback_rear = EXCLUDED.setback_rear,
+ feasibility_result = EXCLUDED.feasibility_result,
+ feasibility_confidence = EXCLUDED.feasibility_confidence,
+ permit_path = EXCLUDED.permit_path,
+ configuration_json = EXCLUDED.configuration_json,
+ estimated_price = EXCLUDED.estimated_price,
+ estimate_low = EXCLUDED.estimate_low,
+ estimate_high = EXCLUDED.estimate_high,
+ factory_cost = EXCLUDED.factory_cost,
+ site_cost = EXCLUDED.site_cost,
+ model_code = EXCLUDED.model_code,
+ model_name = EXCLUDED.model_name,
+ square_feet = EXCLUDED.square_feet,
+ timeline_weeks = EXCLUDED.timeline_weeks,
+ max_square_feet = EXCLUDED.max_square_feet,
+ max_stories = EXCLUDED.max_stories,
+ setback_target = EXCLUDED.setback_target,
+ review_risk = EXCLUDED.review_risk,
+ status = EXCLUDED.status;

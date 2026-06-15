@@ -169,6 +169,43 @@
     margin-top: 20px;
   }
 
+  .screens {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 26px;
+  }
+
+  .screen {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: white;
+    overflow: hidden;
+    box-shadow: 0 18px 40px rgba(23,32,27,0.08);
+  }
+
+  .screen img {
+    display: block;
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+    object-position: top left;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .screen strong {
+    display: block;
+    padding: 12px 14px 2px;
+    color: var(--forest);
+    font-size: 14px;
+  }
+
+  .screen p {
+    padding: 0 14px 14px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
   .nav {
     position: fixed;
     bottom: 28px;
@@ -200,7 +237,8 @@
   }
 
   @media (max-width: 700px) {
-    .two-col, .cards { grid-template-columns: 1fr; }
+    .two-col, .cards, .screens { grid-template-columns: 1fr; }
+    .screen img { height: 210px; }
   }
 </style>
 </head>
@@ -271,6 +309,48 @@
       <div class="card"><h3>Options</h3><p>Manage finish, foundation, utilities, and site options with stable values, descriptions, and prices.</p></div>
       <div class="card"><h3>Credentials</h3><p>Store builder legal name, license, insurance, warranty, and service region for lender exports.</p></div>
       <div class="card"><h3>Analytics</h3><p>Track proposal value, lead status, likely feasible leads, high-risk leads, and model demand.</p></div>
+    </div>
+  </section>
+
+  <section class="slide light">
+    <p class="eyebrow">Visual walkthrough</p>
+    <h2>Use these screens when explaining the pilot.</h2>
+    <div class="screens">
+      <div class="screen">
+        <img src="../screenshots/03-builder-setup-models.png" alt="Builder setup model catalog">
+        <strong>Builder setup</strong>
+        <p>Confirm database, active models, option groups, and credentials before any demo.</p>
+      </div>
+      <div class="screen">
+        <img src="../screenshots/04-builder-import-tab.png" alt="Catalog spreadsheet import">
+        <strong>Spreadsheet import</strong>
+        <p>Builders can download Excel or CSV templates, then upload catalog packages instead of manually entering every option.</p>
+      </div>
+      <div class="screen">
+        <img src="../screenshots/05-configurator.png" alt="Homeowner configurator">
+        <strong>Configurator</strong>
+        <p>The customer-facing flow starts with address feasibility and then prices the selected model.</p>
+      </div>
+      <div class="screen">
+        <img src="../screenshots/07-proposal.png" alt="Generated proposal package">
+        <strong>Proposal package</strong>
+        <p>The output combines feasibility, budget, design envelope, next steps, and factory matching.</p>
+      </div>
+      <div class="screen">
+        <img src="../screenshots/08-lender-package.png" alt="Lender package">
+        <strong>Lender package</strong>
+        <p>The same lead becomes a printable package with credentials, itemized budget, and draw schedule.</p>
+      </div>
+      <div class="screen">
+        <img src="../screenshots/09-permit-tracker.png" alt="Permit checklist">
+        <strong>Permit checklist</strong>
+        <p>Proposal data turns into municipal, HOA, lender, and builder action items.</p>
+      </div>
+      <div class="screen">
+        <img src="../screenshots/10-project-tracker.png" alt="Project tracker">
+        <strong>Project tracker</strong>
+        <p>Converted leads continue into milestones, permit tracking, and draw release logs.</p>
+      </div>
     </div>
   </section>
 
@@ -366,12 +446,12 @@
         </ul>
       </div>
       <div class="col">
-        <h3>Screenshots to capture</h3>
+        <h3>Available screenshots</h3>
         <ul class="list">
-          <li>Address lookup result with source label.</li>
-          <li>Configurator estimate and cost split.</li>
-          <li>Builder setup checklist.</li>
-          <li>Proposal, lender package, permit tracker, and draw log.</li>
+          <li>Homepage and builder login.</li>
+          <li>Builder setup and spreadsheet import.</li>
+          <li>Configurator, dashboard, proposal, and lender package.</li>
+          <li>Permit checklist and project tracker.</li>
         </ul>
       </div>
     </div>

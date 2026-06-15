@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseServiceClient, markSupabaseUnhealthy } from "../../../../lib/supabase";
+import { getLead } from "../../../../lib/leadStore";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { getLocalStorePath } from "../../../../lib/localStoreHelper";
@@ -10,6 +11,20 @@ const VALID_STATUSES = ["new", "contacted", "qualified", "won", "lost"] as const
 type LeadStatus = (typeof VALID_STATUSES)[number];
 
 const localStorePath = getLocalStorePath("leads.json");
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const lead = await getLead(id);
+
+  if (!lead) {
+    return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ lead });
+}
 
 export async function PATCH(
   request: Request,

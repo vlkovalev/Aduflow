@@ -1037,6 +1037,15 @@ input {
   justify-content: center;
 }
 
+.catalogTemplateActions {
+  display: flex;
+  gap: 8px;
+}
+
+.catalogTemplateActions .button {
+  white-space: nowrap;
+}
+
 .catalogImportHelp {
   margin-top: 12px;
   border-left: 4px solid var(--gold);

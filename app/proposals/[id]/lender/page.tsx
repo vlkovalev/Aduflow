@@ -75,7 +75,7 @@ export default async function LenderPackagePage({
             <tbody>
               <tr><td>Homeowner</td><td>{lead.customerName}</td></tr>
               <tr><td>Property address</td><td>{lead.propertyAddress}</td></tr>
-              <tr><td>Project type</td><td>Accessory dwelling unit — {lead.modelName}</td></tr>
+              <tr><td>Project type</td><td>Accessory dwelling unit - {lead.modelName}</td></tr>
               <tr><td>Building size</td><td>{lead.squareFeet} sq ft</td></tr>
               <tr><td>Zoning review risk</td><td>{lead.reviewRisk}</td></tr>
               <tr><td>Zoning source</td><td>{formatZoningSource(lead.zoningSource)}</td></tr>
