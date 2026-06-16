@@ -11,7 +11,15 @@ NEXT_PUBLIC_SUPABASE_URL=your-project-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-publishable-or-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# REQUIRED in production — signs HttpOnly session cookies (HMAC-SHA256).
+# Generate with: openssl rand -hex 32
+APP_SECRET=your-strong-random-secret
 ```
+
+> **Security note:** `APP_SECRET` must be set to a strong random value in any
+> deployed environment. Without it the app falls back to a development-only
+> secret (and logs a warning), which would make session cookies forgeable.
 
 Vercel may require lowercase environment variable names. ADUflow supports both uppercase and lowercase formats:
 
@@ -30,10 +38,12 @@ In the Supabase dashboard SQL editor:
 
 1. Open `database/schema.sql`.
 2. Run the full schema.
-3. Open `database/seed.sql`.
-4. Run the seed data.
+3. Open `database/rls.sql`.
+4. Run it to add the `builders.password_hash` column and enable Row Level Security policies. This script is backward compatible (it only adds a nullable column and policies).
+5. Open `database/seed.sql`.
+6. Run the seed data.
 
-The schema creates the builder catalog, lead, permit, project milestone, and draw milestone tables used by the app.
+The schema creates the builder catalog, lead, permit, project milestone, and draw milestone tables used by the app. `database/rls.sql` adds password-based login support and defense-in-depth tenant isolation policies.
 
 ## 3. Verify App Behavior
 

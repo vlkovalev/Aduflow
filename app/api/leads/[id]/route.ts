@@ -4,6 +4,7 @@ import { getLead } from "../../../../lib/leadStore";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { getLocalStorePath } from "../../../../lib/localStoreHelper";
+import { requireBuilder } from "../../../../lib/apiAuth";
 
 export const runtime = "nodejs";
 
@@ -16,10 +17,14 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const auth = await requireBuilder();
+  if (auth.response) return auth.response;
+
   const { id } = await params;
   const lead = await getLead(id);
 
-  if (!lead) {
+  // Do not disclose existence of leads owned by another builder (IDOR fix).
+  if (!lead || lead.builderId !== auth.builderId) {
     return NextResponse.json({ error: "Lead not found" }, { status: 404 });
   }
 
@@ -30,7 +35,16 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const auth = await requireBuilder();
+  if (auth.response) return auth.response;
+
   const { id } = await params;
+
+  // Verify ownership before any mutation.
+  const existingLead = await getLead(id);
+  if (!existingLead || existingLead.builderId !== auth.builderId) {
+    return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+  }
 
   try {
     const body = await request.json();

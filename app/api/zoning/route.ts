@@ -7,8 +7,15 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const address = url.searchParams.get("address");
 
-  if (!address || address.trim().length < 6) {
+  if (!address || address.trim().length === 0) {
     return NextResponse.json({ error: "address is required" }, { status: 400 });
+  }
+
+  if (address.trim().length < 6) {
+    return NextResponse.json(
+      { error: "address is too short — enter a full street address including city and province/state" },
+      { status: 400 },
+    );
   }
 
   const result = await lookupZoning(address.trim());

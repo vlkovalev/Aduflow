@@ -25,6 +25,9 @@ export default function Configurator() {
   const [leadSubmitted, setLeadSubmitted] = useState(false);
   const [proposalUrl, setProposalUrl] = useState("");
   const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [builderId, setBuilderId] = useState("");
+  const [redesignAck, setRedesignAck] = useState(false);
   const [addressInput, setAddressInput] = useState("");
   const [zoningResult, setZoningResult] = useState<ZoningResult | null>(null);
   const [zoningStatus, setZoningStatus] = useState<"idle" | "loading" | "found" | "not_found">("idle");
@@ -70,13 +73,17 @@ export default function Configurator() {
     }
   }
 
-  // Load URL query param for model selection
+  // Load URL query params for model selection and builder routing.
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const m = params.get("model");
       if (m) {
         setModelCode(m);
+      }
+      const b = params.get("builderId");
+      if (b) {
+        setBuilderId(b.trim());
       }
     }
   }, []);
@@ -87,8 +94,13 @@ export default function Configurator() {
     async function loadCatalog() {
       try {
         const params = new URLSearchParams(window.location.search);
-        const builderId = params.get("builderId") || "00000000-0000-0000-0000-000000000001";
-        const response = await fetch(`/api/catalog?builderId=${builderId}`);
+        const paramBuilderId = params.get("builderId");
+        // Without a builder reference there is no per-builder catalog to load;
+        // keep the default catalog rather than querying a magic shared id.
+        if (!paramBuilderId) {
+          return;
+        }
+        const response = await fetch(`/api/catalog?builderId=${encodeURIComponent(paramBuilderId)}`);
         const result = await response.json();
         const nextCatalog = result.catalog as PricingCatalog;
 
@@ -468,10 +480,29 @@ export default function Configurator() {
             setSubmitError("");
             setLeadSubmitted(false);
 
-            const params = new URLSearchParams(window.location.search);
-            const builderId = params.get("builderId") || "00000000-0000-0000-0000-000000000001";
+            // Guard against double submission (audit BUG-09).
+            if (isSubmitting) return;
+
+            // A lead must be routed to a real builder (audit F-02, BUG-15).
+            if (!builderId) {
+              setSubmitError(
+                "This configurator link is missing a builder reference, so the request cannot be submitted. Please use the link provided by your builder.",
+              );
+              return;
+            }
+
+            // If the design does not fit the zoning envelope, require explicit
+            // acknowledgement before sending (audit BUG-10).
+            if (!estimate.feasibility.fitsSize && !redesignAck) {
+              setSubmitError(
+                "This configuration exceeds the zoning envelope and will likely require a redesign. Please confirm you understand before submitting.",
+              );
+              return;
+            }
 
             const formData = new FormData(event.currentTarget);
+            setIsSubmitting(true);
+            try {
             const response = await fetch("/api/leads", {
               method: "POST",
               headers: {
@@ -528,7 +559,7 @@ export default function Configurator() {
                 },
               }),
             });
-            const result = await response.json();
+            const result = await response.json().catch(() => ({}));
 
             if (!response.ok) {
               setSubmitError(result.error ?? "Unable to create proposal");
@@ -537,6 +568,11 @@ export default function Configurator() {
 
             setProposalUrl(result.proposalUrl);
             setLeadSubmitted(true);
+            } catch {
+              setSubmitError("Network error while submitting. Please try again.");
+            } finally {
+              setIsSubmitting(false);
+            }
           }}
         >
           <label>
@@ -579,8 +615,28 @@ export default function Configurator() {
             </div>
           </div>
 
-          <button className="button primary" type="submit">
-            Send feasibility package
+          {!estimate.feasibility.fitsSize ? (
+            <label style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 13, lineHeight: 1.4 }}>
+              <input
+                type="checkbox"
+                checked={redesignAck}
+                onChange={(event) => setRedesignAck(event.target.checked)}
+                style={{ marginTop: 3 }}
+              />
+              <span>
+                I understand this configuration exceeds the zoning envelope and will likely require a redesign or variance before it can be built.
+              </span>
+            </label>
+          ) : null}
+
+          {!builderId ? (
+            <p className="formNotice error">
+              This configurator link is missing a builder reference. Submission is disabled. Please use the link provided by your builder.
+            </p>
+          ) : null}
+
+          <button className="button primary" type="submit" disabled={isSubmitting || !builderId}>
+            {isSubmitting ? "Sending…" : "Send feasibility package"}
           </button>
           <p className="formFinePrint">
             This request creates a pre-construction estimate for builder review. It is not a final quote, financing approval, or permit approval. Your contact and property details will be shared with the ADUflow pilot builder or administrator for follow-up.

@@ -1,7 +1,7 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { inflateRawSync } from "node:zlib";
 import { importModels, importOptions } from "../../../../lib/catalogStore";
+import { requireBuilder } from "../../../../lib/apiAuth";
 
 export const runtime = "nodejs";
 
@@ -43,6 +43,9 @@ type ValidationResult =
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireBuilder();
+    if (auth.response) return auth.response;
+
     const form = await request.formData();
     const kind = String(form.get("kind") ?? "") as ImportKind;
     const dryRun = String(form.get("dryRun") ?? "true") !== "false";
@@ -70,12 +73,10 @@ export async function POST(request: Request) {
       });
     }
 
-    const cookieStore = await cookies();
-    const builderId = cookieStore.get("builder_id")?.value || "00000000-0000-0000-0000-000000000001";
     const importedRows =
       validation.kind === "models"
-        ? await importModels(validation.rows, builderId)
-        : await importOptions(validation.rows, builderId);
+        ? await importModels(validation.rows, auth.builderId)
+        : await importOptions(validation.rows, auth.builderId);
 
     return NextResponse.json({
       kind,

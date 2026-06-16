@@ -14,7 +14,7 @@ export default async function LenderPackagePage({
 
   if (!lead) notFound();
 
-  const credentials = await getBuilderCredentials();
+  const credentials = await getBuilderCredentials(lead.builderId);
 
   const today = new Date().toLocaleDateString("en-CA", {
     year: "numeric",

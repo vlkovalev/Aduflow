@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { listLeads, type LeadRecord } from "../../lib/leadStore";
@@ -6,6 +5,7 @@ import { formatCurrency } from "../../lib/proposalBuilder";
 import { LeadStatusSelect } from "./LeadStatusSelect";
 import { TopNav } from "../components/TopNav";
 import { getSupabaseServiceClient } from "../../lib/supabase";
+import { getAuthenticatedBuilderId } from "../../lib/auth";
 
 const STATUS_LABELS: Record<string, string> = {
   new: "New",
@@ -16,8 +16,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default async function BuilderDashboard() {
-  const cookieStore = await cookies();
-  const builderId = cookieStore.get("builder_id")?.value;
+  const builderId = await getAuthenticatedBuilderId();
   if (!builderId) {
     redirect("/builder/login");
   }

@@ -1,11 +1,9 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import { getLead } from "../../../lib/leadStore";
 import { createPermitPackage } from "../../../lib/permitStore";
 import { TopNav } from "../../components/TopNav";
-
-const defaultBuilderId = "00000000-0000-0000-0000-000000000001";
+import { getAuthenticatedBuilderId } from "../../../lib/auth";
 
 export default async function PermitPage({
   params,
@@ -19,13 +17,12 @@ export default async function PermitPage({
     notFound();
   }
 
-  const cookieStore = await cookies();
-  const builderId = cookieStore.get("builder_id")?.value;
+  const builderId = await getAuthenticatedBuilderId();
   if (!builderId) {
     redirect("/builder/login");
   }
 
-  if ((lead.builderId || defaultBuilderId) !== builderId) {
+  if (lead.builderId !== builderId) {
     notFound();
   }
 

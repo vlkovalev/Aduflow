@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { listOptions, createOption } from "../../../lib/catalogStore";
+import { requireBuilder } from "../../../lib/apiAuth";
 
 export const runtime = "nodejs";
 
@@ -8,49 +8,57 @@ const VALID_CATEGORIES = ["finish", "foundation", "utilities", "site"] as const;
 
 export async function GET() {
   try {
-    const cookieStore = await cookies();
-    const builderId = cookieStore.get("builder_id")?.value || "00000000-0000-0000-0000-000000000001";
-    const options = await listOptions(builderId);
+    const auth = await requireBuilder();
+    if (auth.response) return auth.response;
+    const options = await listOptions(auth.builderId);
     return NextResponse.json({ options });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to list options" },
+      { status: 500 },
+    );
   }
 }
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireBuilder();
+    if (auth.response) return auth.response;
+
     const body = await request.json();
 
-    if (!body.optionName || !body.category || body.price === undefined) {
+    const optionName = String(body.optionName ?? "").trim();
+    const category = String(body.category ?? "").trim();
+    const price = Number(body.price);
+
+    if (!optionName || !category || body.price === undefined) {
       return NextResponse.json(
         { error: "optionName, category, and price are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    if (!VALID_CATEGORIES.includes(body.category)) {
+    if (!VALID_CATEGORIES.includes(category as (typeof VALID_CATEGORIES)[number])) {
       return NextResponse.json(
         { error: `category must be one of: ${VALID_CATEGORIES.join(", ")}` },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const cookieStore = await cookies();
-    const builderId = cookieStore.get("builder_id")?.value || "00000000-0000-0000-0000-000000000001";
+    if (!Number.isFinite(price) || price < 0) {
+      return NextResponse.json({ error: "price must be 0 or greater" }, { status: 400 });
+    }
 
-    const option = await createOption({
-      optionName: String(body.optionName),
-      detail: String(body.detail ?? ""),
-      price: Number(body.price),
-      category: String(body.category),
-    }, builderId);
+    const option = await createOption(
+      { optionName, detail: String(body.detail ?? ""), price, category },
+      auth.builderId,
+    );
 
     return NextResponse.json({ option });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to create option" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 }
-
