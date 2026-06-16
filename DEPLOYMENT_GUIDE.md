@@ -26,27 +26,21 @@ Your ADUflow application is now **production-ready** with all critical security 
 
 ## 🚀 Deployment Steps
 
-### 1. Merge the Fixes
-
-Go to GitHub and create a Pull Request:
-👉 **https://github.com/vlkovalev/Aduflow/pull/new/security-and-functionality-fixes**
-
-Review the changes and merge into `main`.
+### 1. Code Merged
+All security and functionality fixes have been successfully merged into the `main` branch. Pull or sync the latest changes to your local environment.
 
 ### 2. Update Environment Variables
 
 Add this new required variable to your Vercel environment:
 
 ```
-APP_SECRET=<generate-a-random-64-char-string>
+APP_SECRET=87780472d8f8329b11c23fafc737d517c08e576c3061694c166479c65a726175
 ```
 
-**Generate the secret:**
+**To generate a new secret (optional):**
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
-
-Or use: https://generate-secret.vercel.app/64
 
 **Add to Vercel:**
 1. Go to: https://vercel.com/vlkovalev/aduflow/settings/environment-variables
@@ -55,43 +49,18 @@ Or use: https://generate-secret.vercel.app/64
 
 ### 3. Apply Database Migration (Supabase)
 
-Run this SQL in your Supabase SQL Editor:
+Copy and run the contents of [database/rls.sql](file:///C:/Users/heliu/Desktop/WebSItes/ADUflow/database/rls.sql) in your Supabase SQL Editor. This enables RLS policies on all tables (including child tables like draws, milestones, and permit checklists) and configures the builder password credentials field.
 
-```sql
--- Add password_hash column (backward compatible)
-ALTER TABLE builders 
-ADD COLUMN IF NOT EXISTS password_hash TEXT;
-
--- Add RLS policies
-ALTER TABLE builders ENABLE ROW LEVEL SECURITY;
-ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
-ALTER TABLE models ENABLE ROW LEVEL SECURITY;
-ALTER TABLE options ENABLE ROW LEVEL SECURITY;
-
--- Builders can only see their own data
-CREATE POLICY builder_isolation ON builders
-  FOR ALL USING (id::text = current_setting('app.builder_id', true));
-
-CREATE POLICY lead_isolation ON leads
-  FOR ALL USING (builder_id::text = current_setting('app.builder_id', true));
-
-CREATE POLICY model_isolation ON models
-  FOR ALL USING (builder_id::text = current_setting('app.builder_id', true));
-
-CREATE POLICY option_isolation ON options
-  FOR ALL USING (builder_id::text = current_setting('app.builder_id', true));
-```
-
-**Or use the migration file:**
+**Or use the command line:**
 ```bash
 psql $DATABASE_URL < database/rls.sql
 ```
 
 ### 4. Redeploy on Vercel
 
-After merging and adding environment variables:
-1. Vercel will auto-deploy, OR
-2. Manually trigger: https://vercel.com/vlkovalev/aduflow
+After verifying your environment variables and database migration:
+1. Push any final changes to trigger Vercel auto-deploy, OR
+2. Manually trigger a deployment: https://vercel.com/vlkovalev/aduflow
 
 ---
 
@@ -270,5 +239,4 @@ All critical issues are fixed. The application is now:
 ---
 
 **Questions?** All fixes are documented in:
-- `/home/ubuntu/aduflow_audit/00_EXECUTIVE_SUMMARY.md`
-- Full code changes: `git diff main..security-and-functionality-fixes`
+- [walkthrough.md](file:///C:/Users/heliu/.gemini/antigravity/brain/d8c13955-5682-4029-99e3-42a96783c262/walkthrough.md)
