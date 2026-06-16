@@ -257,7 +257,8 @@ export async function importModels(
 
 export async function updateModel(
   id: string,
-  updates: { modelName?: string; squareFeet?: number; basePrice?: number; isActive?: boolean; sortOrder?: number }
+  updates: { modelName?: string; squareFeet?: number; basePrice?: number; isActive?: boolean; sortOrder?: number },
+  builderId?: string,
 ): Promise<ModelRow | null> {
   const mappedUpdates: Partial<ModelRow> = {};
   if (updates.modelName !== undefined) {
@@ -273,20 +274,22 @@ export async function updateModel(
 
   if (supabase) {
     try {
-      const { data, error } = await supabase
-        .from("models")
-        .update(mappedUpdates)
-        .eq("id", id)
-        .select()
-        .single();
+      // Scope the update to the owning builder so one tenant cannot mutate
+      // another tenant's catalog rows (IDOR fix).
+      let query = supabase.from("models").update(mappedUpdates).eq("id", id);
+      if (builderId) query = query.eq("builder_id", builderId);
+      const { data, error } = await query.select().single();
       if (!error && data) return data as ModelRow;
+      if (!error && !data) return null;
     } catch (e) {
       console.warn("Supabase updateModel error, fallback to local:", e);
     }
   }
 
   const local = await readLocalModels();
-  const index = local.findIndex((m) => m.id === id);
+  const index = local.findIndex(
+    (m) => m.id === id && (!builderId || (m.builder_id || "00000000-0000-0000-0000-000000000001") === builderId),
+  );
   if (index !== -1) {
     local[index] = { ...local[index], ...mappedUpdates };
     await writeLocalModels(local);
@@ -295,12 +298,14 @@ export async function updateModel(
   return null;
 }
 
-export async function deleteModel(id: string): Promise<boolean> {
+export async function deleteModel(id: string, builderId?: string): Promise<boolean> {
   const supabase = getSupabaseServiceClient();
 
   if (supabase) {
     try {
-      const { error } = await supabase.from("models").delete().eq("id", id);
+      let query = supabase.from("models").delete().eq("id", id);
+      if (builderId) query = query.eq("builder_id", builderId);
+      const { error } = await query;
       if (!error) return true;
     } catch (e) {
       console.warn("Supabase deleteModel error, fallback to local:", e);
@@ -308,7 +313,13 @@ export async function deleteModel(id: string): Promise<boolean> {
   }
 
   const local = await readLocalModels();
-  const filtered = local.filter((m) => m.id !== id);
+  const exists = local.some(
+    (m) => m.id === id && (!builderId || (m.builder_id || "00000000-0000-0000-0000-000000000001") === builderId),
+  );
+  if (!exists) return false;
+  const filtered = local.filter(
+    (m) => !(m.id === id && (!builderId || (m.builder_id || "00000000-0000-0000-0000-000000000001") === builderId)),
+  );
   await writeLocalModels(filtered);
   return true;
 }
@@ -431,7 +442,8 @@ export async function importOptions(
 
 export async function updateOption(
   id: string,
-  updates: { optionName?: string; detail?: string; price?: number; isActive?: boolean; sortOrder?: number }
+  updates: { optionName?: string; detail?: string; price?: number; isActive?: boolean; sortOrder?: number },
+  builderId?: string,
 ): Promise<OptionRow | null> {
   const mappedUpdates: Partial<OptionRow> = {};
   if (updates.optionName !== undefined) {
@@ -447,20 +459,21 @@ export async function updateOption(
 
   if (supabase) {
     try {
-      const { data, error } = await supabase
-        .from("options")
-        .update(mappedUpdates)
-        .eq("id", id)
-        .select()
-        .single();
+      // Scope to the owning builder (IDOR fix).
+      let query = supabase.from("options").update(mappedUpdates).eq("id", id);
+      if (builderId) query = query.eq("builder_id", builderId);
+      const { data, error } = await query.select().single();
       if (!error && data) return data as OptionRow;
+      if (!error && !data) return null;
     } catch (e) {
       console.warn("Supabase updateOption error, fallback to local:", e);
     }
   }
 
   const local = await readLocalOptions();
-  const index = local.findIndex((o) => o.id === id);
+  const index = local.findIndex(
+    (o) => o.id === id && (!builderId || (o.builder_id || "00000000-0000-0000-0000-000000000001") === builderId),
+  );
   if (index !== -1) {
     local[index] = { ...local[index], ...mappedUpdates };
     await writeLocalOptions(local);
@@ -469,12 +482,14 @@ export async function updateOption(
   return null;
 }
 
-export async function deleteOption(id: string): Promise<boolean> {
+export async function deleteOption(id: string, builderId?: string): Promise<boolean> {
   const supabase = getSupabaseServiceClient();
 
   if (supabase) {
     try {
-      const { error } = await supabase.from("options").delete().eq("id", id);
+      let query = supabase.from("options").delete().eq("id", id);
+      if (builderId) query = query.eq("builder_id", builderId);
+      const { error } = await query;
       if (!error) return true;
     } catch (e) {
       console.warn("Supabase deleteOption error, fallback to local:", e);
@@ -482,7 +497,13 @@ export async function deleteOption(id: string): Promise<boolean> {
   }
 
   const local = await readLocalOptions();
-  const filtered = local.filter((o) => o.id !== id);
+  const exists = local.some(
+    (o) => o.id === id && (!builderId || (o.builder_id || "00000000-0000-0000-0000-000000000001") === builderId),
+  );
+  if (!exists) return false;
+  const filtered = local.filter(
+    (o) => !(o.id === id && (!builderId || (o.builder_id || "00000000-0000-0000-0000-000000000001") === builderId)),
+  );
   await writeLocalOptions(filtered);
   return true;
 }

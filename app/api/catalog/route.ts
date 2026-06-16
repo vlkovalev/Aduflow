@@ -1,13 +1,27 @@
 import { NextResponse } from "next/server";
 import { getPricingCatalog } from "../../../lib/catalogStore";
+import { isUuid } from "../../../lib/auth";
 
 export const runtime = "nodejs";
 
+/**
+ * Public, consumer-facing catalog read used by the configurator. It requires a
+ * valid builder id rather than silently serving a shared "magic" tenant's
+ * catalog (audit F-02). An unknown/invalid id simply yields an empty catalog,
+ * and the configurator falls back to its bundled default.
+ */
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const builderId = url.searchParams.get("builderId") || "00000000-0000-0000-0000-000000000001";
-  const catalog = await getPricingCatalog(builderId);
+  const builderId = url.searchParams.get("builderId")?.trim() ?? "";
 
+  if (!isUuid(builderId)) {
+    return NextResponse.json(
+      { error: "A valid builderId query parameter is required." },
+      { status: 400 },
+    );
+  }
+
+  const catalog = await getPricingCatalog(builderId);
   return NextResponse.json({ catalog });
 }
 

@@ -277,6 +277,33 @@ function normalizeAddress(value: string) {
   return value.toLowerCase().replace(/[,.]/g, " ").replace(/\s+/g, " ").trim();
 }
 
+/**
+ * Token-boundary match: returns true only when every token of `fragment`
+ * appears as a contiguous run of whole tokens inside `address`.
+ *
+ * This replaces a naive `String.includes` test which produced false
+ * positives (e.g. the fragment "bc" matched the substring inside
+ * "abcdef"). Matching on whole-token boundaries prevents that (BUG-07).
+ */
+function matchesFragment(normalizedAddress: string, fragment: string): boolean {
+  const fragTokens = normalizeAddress(fragment).split(" ").filter(Boolean);
+  if (fragTokens.length === 0) return false;
+  const addrTokens = normalizedAddress.split(" ").filter(Boolean);
+  if (fragTokens.length > addrTokens.length) return false;
+
+  for (let i = 0; i + fragTokens.length <= addrTokens.length; i += 1) {
+    let allMatch = true;
+    for (let j = 0; j < fragTokens.length; j += 1) {
+      if (addrTokens[i + j] !== fragTokens[j]) {
+        allMatch = false;
+        break;
+      }
+    }
+    if (allMatch) return true;
+  }
+  return false;
+}
+
 /** Convert reviewRisk to a 0–1 confidence score for municipal fallback results. */
 function confidenceFromRisk(risk: "Low" | "Medium" | "High"): number {
   if (risk === "Low") return 0.70;
@@ -288,9 +315,16 @@ function confidenceFromRisk(risk: "Low" | "Medium" | "High"): number {
 function jurisdictionFromMatch(fragment: string): string {
   return fragment
     .split(",")
-    .map((s) => {
-      const t = s.trim();
-      return t.charAt(0).toUpperCase() + t.slice(1);
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((part) => {
+      // Two-letter province/state codes are upper-cased (e.g. "bc" -> "BC").
+      if (/^[a-z]{2}$/.test(part)) return part.toUpperCase();
+      // Everything else is title-cased word-by-word (e.g. "north york" -> "North York").
+      return part
+        .split(" ")
+        .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : w))
+        .join(" ");
     })
     .join(", ");
 }
@@ -303,7 +337,7 @@ function lookupZoningMock(address: string): ZoningResult | null {
 
   for (const rule of MUNICIPAL_RULES) {
     for (const fragment of rule.match) {
-      if (normalized.includes(normalizeAddress(fragment))) {
+      if (matchesFragment(normalized, fragment)) {
         const { match: _match, reviewRisk, permitPath, ...fields } = rule;
         return {
           source: "municipal_fallback",
@@ -321,7 +355,7 @@ function lookupZoningMock(address: string): ZoningResult | null {
 
   for (const region of REGION_FALLBACKS) {
     for (const fragment of region.match) {
-      if (normalized.includes(normalizeAddress(fragment))) {
+      if (matchesFragment(normalized, fragment)) {
         const { reviewRisk, permitPath, ...fields } = region.result;
         return {
           source: "municipal_fallback",

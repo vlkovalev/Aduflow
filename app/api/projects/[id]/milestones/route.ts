@@ -4,14 +4,29 @@ import {
   saveProjectMilestones,
 } from "../../../../../lib/projectStore";
 import { type ProjectMilestoneRecord } from "../../../../../lib/projectDefaults";
+import { getLead } from "../../../../../lib/leadStore";
+import { requireBuilder } from "../../../../../lib/apiAuth";
 
 export const runtime = "nodejs";
+
+/** Confirm the project (lead) belongs to the authenticated builder (IDOR fix). */
+async function authorizeProject(id: string): Promise<{ response: NextResponse | null }> {
+  const auth = await requireBuilder();
+  if (auth.response) return { response: auth.response };
+  const lead = await getLead(id);
+  if (!lead || lead.builderId !== auth.builderId) {
+    return { response: NextResponse.json({ error: "Not found" }, { status: 404 }) };
+  }
+  return { response: null };
+}
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const authz = await authorizeProject(id);
+  if (authz.response) return authz.response;
   const milestones = await getProjectMilestones(id);
   return NextResponse.json({ milestones });
 }
@@ -21,6 +36,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const authz = await authorizeProject(id);
+  if (authz.response) return authz.response;
 
   try {
     const body = await request.json();

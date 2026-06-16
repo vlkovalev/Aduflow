@@ -1,43 +1,50 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { listModels, createModel } from "../../../lib/catalogStore";
+import { requireBuilder } from "../../../lib/apiAuth";
 
 export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const cookieStore = await cookies();
-    const builderId = cookieStore.get("builder_id")?.value || "00000000-0000-0000-0000-000000000001";
-    const models = await listModels(builderId);
+    const auth = await requireBuilder();
+    if (auth.response) return auth.response;
+    const models = await listModels(auth.builderId);
     return NextResponse.json({ models });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to list models" },
+      { status: 500 },
+    );
   }
 }
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireBuilder();
+    if (auth.response) return auth.response;
+
     const body = await request.json();
 
-    if (!body.modelName || !body.squareFeet || !body.basePrice) {
-      return NextResponse.json({ error: "modelName, squareFeet, and basePrice are required" }, { status: 400 });
+    const modelName = String(body.modelName ?? "").trim();
+    const squareFeet = Number(body.squareFeet);
+    const basePrice = Number(body.basePrice);
+
+    if (!modelName) {
+      return NextResponse.json({ error: "modelName is required" }, { status: 400 });
+    }
+    if (!Number.isFinite(squareFeet) || squareFeet <= 0) {
+      return NextResponse.json({ error: "squareFeet must be greater than 0" }, { status: 400 });
+    }
+    if (!Number.isFinite(basePrice) || basePrice <= 0) {
+      return NextResponse.json({ error: "basePrice must be greater than 0" }, { status: 400 });
     }
 
-    const cookieStore = await cookies();
-    const builderId = cookieStore.get("builder_id")?.value || "00000000-0000-0000-0000-000000000001";
-
-    const model = await createModel({
-      modelName: String(body.modelName),
-      squareFeet: Number(body.squareFeet),
-      basePrice: Number(body.basePrice),
-    }, builderId);
-
+    const model = await createModel({ modelName, squareFeet, basePrice }, auth.builderId);
     return NextResponse.json({ model });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to create model" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 }
-

@@ -9,11 +9,17 @@ export function TopNav() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    setIsLoggedIn(document.cookie.includes("builder_id="));
+    // The session itself is an HttpOnly cookie that JS cannot read. A separate,
+    // non-sensitive flag cookie (aduflow_auth) reflects login state for the UI.
+    setIsLoggedIn(document.cookie.split("; ").some((c) => c.startsWith("aduflow_auth=")));
   }, [pathname]); // Refresh when pathname changes
 
-  function handleSignOut() {
-    document.cookie = "builder_id=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+  async function handleSignOut() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Ignore network errors; still redirect to the login page.
+    }
     window.location.href = "/builder/login";
   }
 
