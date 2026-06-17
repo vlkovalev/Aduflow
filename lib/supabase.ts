@@ -3,21 +3,29 @@ import { readEnv } from "./env";
 
 let browserClient: SupabaseClient | null = null;
 let serviceClient: SupabaseClient | null = null;
-let isSupabaseHealthy = true;
+
+// A transient Supabase error (timeout, network blip) used to disable Supabase
+// for the rest of the warm instance's lifetime, silently falling back to
+// instance-local /tmp storage. On serverless that caused different concurrent
+// instances to disagree about where data lives, and data written during a
+// "degraded" window could vanish on cold start. Instead, treat unhealthy as a
+// short cooldown: retry Supabase on the next call once it elapses.
+const UNHEALTHY_COOLDOWN_MS = 30_000;
+let unhealthyUntil = 0;
 
 export function markSupabaseUnhealthy() {
-  isSupabaseHealthy = false;
+  unhealthyUntil = Date.now() + UNHEALTHY_COOLDOWN_MS;
 }
 
 export function isSupabaseActive() {
-  return isSupabaseHealthy;
+  return Date.now() >= unhealthyUntil;
 }
 
 export function getSupabaseBrowserClient() {
   const supabaseUrl = readEnv("NEXT_PUBLIC_SUPABASE_URL");
   const supabaseAnonKey = readEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
 
-  if (!supabaseUrl || !supabaseAnonKey || !isSupabaseHealthy) {
+  if (!supabaseUrl || !supabaseAnonKey || !isSupabaseActive()) {
     return null;
   }
 
@@ -36,7 +44,7 @@ export function getSupabaseBrowserClient() {
             return res;
           } catch (err) {
             clearTimeout(timer);
-            isSupabaseHealthy = false;
+            markSupabaseUnhealthy();
             console.error("Supabase browser client request failed, fallback enabled:", err);
             return new Response(
               JSON.stringify({
@@ -62,7 +70,7 @@ export function getSupabaseServiceClient() {
   const supabaseUrl = readEnv("NEXT_PUBLIC_SUPABASE_URL");
   const serviceRoleKey = readEnv("SUPABASE_SERVICE_ROLE_KEY");
 
-  if (!supabaseUrl || !serviceRoleKey || !isSupabaseHealthy) {
+  if (!supabaseUrl || !serviceRoleKey || !isSupabaseActive()) {
     return null;
   }
 
@@ -84,7 +92,7 @@ export function getSupabaseServiceClient() {
             return res;
           } catch (err) {
             clearTimeout(timer);
-            isSupabaseHealthy = false;
+            markSupabaseUnhealthy();
             console.error("Supabase service client request failed, fallback enabled:", err);
             return new Response(
               JSON.stringify({

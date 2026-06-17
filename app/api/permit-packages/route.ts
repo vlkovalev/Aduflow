@@ -72,27 +72,23 @@ export async function PUT(request: Request) {
 
   try {
     const body = await request.json();
-    
-    const updates = {
-      packageStatus: body.packageStatus,
-      jurisdictionName: body.jurisdictionName,
-      permitPath: body.permitPath,
-      hoaRequired: body.hoaRequired,
-      revisionRound: body.revisionRound,
-      applicationNumber: body.applicationNumber,
-      cityContact: body.cityContact,
-      submissionDate: body.submissionDate,
-      approvalDate: body.approvalDate,
-    };
+    const updates: Record<string, unknown> = {};
 
-    // Remove undefined values
-    Object.keys(updates).forEach(
-      (key) => {
-        if (updates[key as keyof typeof updates] === undefined) {
-          delete updates[key as keyof typeof updates];
-        }
+    if (body.packageStatus !== undefined) updates.packageStatus = cleanText(body.packageStatus, 50);
+    if (body.jurisdictionName !== undefined) updates.jurisdictionName = cleanText(body.jurisdictionName, 200);
+    if (body.permitPath !== undefined) updates.permitPath = cleanText(body.permitPath, 100);
+    if (body.hoaRequired !== undefined) updates.hoaRequired = Boolean(body.hoaRequired);
+    if (body.revisionRound !== undefined) {
+      const round = Number(body.revisionRound);
+      if (!Number.isFinite(round) || round < 0) {
+        return NextResponse.json({ error: "revisionRound must be a non-negative number." }, { status: 400 });
       }
-    );
+      updates.revisionRound = round;
+    }
+    if (body.applicationNumber !== undefined) updates.applicationNumber = cleanText(body.applicationNumber, 100);
+    if (body.cityContact !== undefined) updates.cityContact = cleanText(body.cityContact, 200);
+    if (body.submissionDate !== undefined) updates.submissionDate = cleanText(body.submissionDate, 50);
+    if (body.approvalDate !== undefined) updates.approvalDate = cleanText(body.approvalDate, 50);
 
     const updated = await updatePermitPackage(leadId, updates);
     return NextResponse.json({ permitPackage: updated });
@@ -102,5 +98,14 @@ export async function PUT(request: Request) {
       { status: 400 },
     );
   }
+}
+
+/** Trim, length-cap, and strip control characters from free-text input. */
+function cleanText(value: unknown, maxLen: number): string {
+  return String(value ?? "")
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .trim()
+    .slice(0, maxLen);
 }
 

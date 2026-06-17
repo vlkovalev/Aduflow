@@ -7,6 +7,8 @@ export const runtime = "nodejs";
 
 type ImportKind = "models" | "options";
 
+const MAX_IMPORT_FILE_BYTES = 5 * 1024 * 1024; // 5 MB
+
 type CsvRow = Record<string, string>;
 type WorkbookFile = {
   method: number;
@@ -57,6 +59,13 @@ export async function POST(request: Request) {
 
     if (!file || typeof file !== "object" || typeof (file as Blob).arrayBuffer !== "function") {
       return NextResponse.json({ error: "CSV or XLSX file is required" }, { status: 400 });
+    }
+
+    if ((file as Blob).size > MAX_IMPORT_FILE_BYTES) {
+      return NextResponse.json(
+        { error: `File is too large. Maximum size is ${MAX_IMPORT_FILE_BYTES / (1024 * 1024)} MB.` },
+        { status: 400 },
+      );
     }
 
     const parsedRows = await parseImportRows(file as Blob);

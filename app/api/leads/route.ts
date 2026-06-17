@@ -3,6 +3,7 @@ import { createLead, listLeads, type CreateLeadInput } from "../../../lib/leadSt
 import { requireBuilder } from "../../../lib/apiAuth";
 import { builderExists } from "../../../lib/builderStore";
 import { isUuid } from "../../../lib/auth";
+import { clientIp, rateLimit } from "../../../lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -29,6 +30,16 @@ export async function GET() {
 
 
 export async function POST(request: Request) {
+  // Public, unauthenticated endpoint — throttle spam/abuse (audit finding).
+  const ip = clientIp(request);
+  const limit = rateLimit(`lead:${ip}`, 10, 60);
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Too many submissions. Please try again shortly." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } },
+    );
+  }
+
   let body: Partial<CreateLeadInput> & { builderId?: unknown };
   try {
     body = await request.json();

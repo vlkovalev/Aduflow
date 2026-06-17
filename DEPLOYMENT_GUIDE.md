@@ -34,13 +34,15 @@ All security and functionality fixes have been successfully merged into the `mai
 Add this new required variable to your Vercel environment:
 
 ```
-APP_SECRET=87780472d8f8329b11c23fafc737d517c08e576c3061694c166479c65a726175
+APP_SECRET=<generate-a-random-64-char-string>
 ```
 
-**To generate a new secret (optional):**
+**Generate a secret:**
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
+
+> A previous version of this guide committed a literal `APP_SECRET` value to git history. That value is compromised — if it is still set in Vercel, replace it with a freshly generated one immediately. Anyone who can read the repo can forge builder session cookies signed with the old value.
 
 **Add to Vercel:**
 1. Go to: https://vercel.com/vlkovalev/aduflow/settings/environment-variables

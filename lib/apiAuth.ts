@@ -4,19 +4,15 @@ import { getAuthenticatedBuilderId } from "./auth";
 /**
  * Require an authenticated builder session for an API route.
  *
- * Returns both `builderId` and `response` always populated so callers do not
- * rely on discriminated-union narrowing (which is unavailable because this
- * project compiles with `strict: false` / `strictNullChecks: false`).
- *
  * Usage:
  *   const auth = await requireBuilder();
  *   if (auth.response) return auth.response;
- *   const builderId = auth.builderId; // non-null past the guard above
+ *   const builderId = auth.builderId; // narrowed to `string` by the guard above
  */
-export async function requireBuilder(): Promise<{
-  builderId: string | null;
-  response: NextResponse | null;
-}> {
+export async function requireBuilder(): Promise<
+  | { builderId: string; response: null }
+  | { builderId: null; response: NextResponse }
+> {
   const builderId = await getAuthenticatedBuilderId();
   if (!builderId) {
     return {
