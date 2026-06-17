@@ -9,3 +9,4 @@ tsconfig.tsbuildinfo
 .fuse_hidden*
 **/.fuse_hidden*
 .gemini/
+.claude/settings.local.json
