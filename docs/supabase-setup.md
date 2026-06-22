@@ -40,10 +40,12 @@ In the Supabase dashboard SQL editor:
 2. Run the full schema.
 3. Open `database/rls.sql`.
 4. Run it to add the `builders.password_hash` column and enable Row Level Security policies. This script is backward compatible (it only adds a nullable column and policies).
-5. Open `database/seed.sql`.
-6. Run the seed data.
+5. Open `database/email-verification.sql`.
+6. Run it to add builder email verification columns. Existing password-enabled builder rows are marked verified so current pilot accounts are not locked out.
+7. Open `database/seed.sql`.
+8. Run the seed data.
 
-The schema creates the builder catalog, lead, permit, project milestone, and draw milestone tables used by the app. `database/rls.sql` adds password-based login support and defense-in-depth tenant isolation policies.
+The schema creates the builder catalog, lead, permit, project milestone, and draw milestone tables used by the app. `database/rls.sql` adds password-based login support and defense-in-depth tenant isolation policies. `database/email-verification.sql` enables verified-email gating for new builder registrations.
 
 ## 3. Verify App Behavior
 
@@ -54,13 +56,13 @@ Run these checks locally:
 3. Add or edit one model.
 4. Add or edit one option in each category.
 5. Save builder credentials.
-6. Open `/configurator`.
-7. Enter an address and create a lead.
-8. Open the generated proposal.
-9. Open the lender package.
-10. Mark the lead as won in `/builder`.
-11. Open the project tracker and update one milestone and one draw.
-12. Refresh the page and confirm the milestone/draw changes remain.
+6. Use `Create test lead` in `/builder` to generate a sandbox proposal.
+7. Open the generated proposal.
+8. Open the lender package.
+9. Mark the lead as won in `/builder`.
+10. Open the project tracker and update one milestone and one draw.
+11. Refresh the page and confirm the milestone/draw changes remain.
+12. Open `/configurator`, enter an address, and create a real lead only after you have a builder-specific configurator link.
 
 ## 4. If Tables Are Missing
 

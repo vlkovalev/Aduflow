@@ -74,6 +74,8 @@ type LocalBuilderAccount = {
   email: string;
   phone: string;
   passwordHash: string;
+  emailVerified?: boolean;
+  emailVerificationSentAt?: string | null;
   stripeCustomerId?: string | null;
   subscriptionStatus?: string;
   subscriptionPlan?: string | null;
@@ -279,6 +281,7 @@ export async function registerBuilder(params: {
           "Unable to create account in database. Ensure the builders.password_hash column exists (see database/rls.sql).",
         );
       }
+      await setBuilderEmailVerification(id, false);
       return { id, companyName: params.companyName, email, phone: params.phone || "" };
     } catch (e) {
       if (e instanceof AuthError) throw e;
@@ -290,7 +293,15 @@ export async function registerBuilder(params: {
   if (accounts.some((a) => a.email.toLowerCase() === email)) {
     throw new AuthError("An account with that email already exists.");
   }
-  accounts.push({ id, companyName: params.companyName, email, phone: params.phone || "", passwordHash });
+  accounts.push({
+    id,
+    companyName: params.companyName,
+    email,
+    phone: params.phone || "",
+    passwordHash,
+    emailVerified: false,
+    emailVerificationSentAt: new Date().toISOString(),
+  });
   await writeLocalAccounts(accounts);
 
   // Seed an empty per-tenant credentials file pre-filled only with public profile.
@@ -341,6 +352,106 @@ export async function verifyBuilderLogin(emailRaw: string, password: string): Pr
     return { id: account.id, companyName: account.companyName, email: account.email, phone: account.phone };
   }
   return null;
+}
+
+export async function isBuilderEmailVerified(builderId: string): Promise<boolean> {
+  const supabase = getSupabaseServiceClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("builders")
+        .select("email_verified")
+        .eq("id", builderId)
+        .maybeSingle();
+      if (!error && data && "email_verified" in data) {
+        return data.email_verified !== false;
+      }
+      if (!error) return true;
+    } catch {
+      // If the migration hasn't run yet, do not lock all builders out.
+      return true;
+    }
+  }
+
+  const accounts = await readLocalAccounts();
+  const account = accounts.find((a) => a.id === builderId);
+  return account?.emailVerified === true;
+}
+
+export async function getBuilderEmailVerificationTarget(
+  builderId: string,
+): Promise<{ id: string; email: string } | null> {
+  const supabase = getSupabaseServiceClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("builders")
+        .select("id, email")
+        .eq("id", builderId)
+        .maybeSingle();
+      if (!error && data?.email) {
+        return { id: data.id, email: data.email };
+      }
+    } catch {
+      // Fall through to local accounts.
+    }
+  }
+
+  const accounts = await readLocalAccounts();
+  const account = accounts.find((a) => a.id === builderId);
+  return account ? { id: account.id, email: account.email } : null;
+}
+
+export async function markBuilderEmailVerified(builderId: string): Promise<boolean> {
+  const supabase = getSupabaseServiceClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("builders")
+        .update({ email_verified: true, email_verified_at: new Date().toISOString() })
+        .eq("id", builderId)
+        .select("id")
+        .maybeSingle();
+      if (!error) return Boolean(data);
+    } catch {
+      // Fall through to local accounts.
+    }
+  }
+
+  const accounts = await readLocalAccounts();
+  const index = accounts.findIndex((a) => a.id === builderId);
+  if (index === -1) return false;
+  accounts[index].emailVerified = true;
+  await writeLocalAccounts(accounts);
+  return true;
+}
+
+export async function setBuilderEmailVerification(builderId: string, verified: boolean): Promise<void> {
+  const now = new Date().toISOString();
+  const supabase = getSupabaseServiceClient();
+  if (supabase) {
+    try {
+      const { error } = await supabase
+        .from("builders")
+        .update({
+          email_verified: verified,
+          email_verified_at: verified ? now : null,
+          email_verification_sent_at: now,
+        })
+        .eq("id", builderId);
+      if (!error) return;
+    } catch {
+      // Fall through to local accounts.
+    }
+  }
+
+  const accounts = await readLocalAccounts();
+  const index = accounts.findIndex((a) => a.id === builderId);
+  if (index !== -1) {
+    accounts[index].emailVerified = verified;
+    accounts[index].emailVerificationSentAt = now;
+    await writeLocalAccounts(accounts);
+  }
 }
 
 // ── Password reset ───────────────────────────────────────────────────────────

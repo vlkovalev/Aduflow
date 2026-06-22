@@ -24,6 +24,9 @@ export default function BuilderLogin() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [verificationUrl, setVerificationUrl] = useState("");
 
   // Shared
   const [email, setEmail] = useState("");
@@ -36,6 +39,9 @@ export default function BuilderLogin() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setNotice("");
+    setNeedsVerification(false);
+    setVerificationUrl("");
     if (!email.trim() || !password) {
       setError("Please enter your email and password.");
       return;
@@ -51,6 +57,10 @@ export default function BuilderLogin() {
       if (res.ok) {
         window.location.href = "/builder";
       } else {
+        if (data.requiresVerification) {
+          setNeedsVerification(true);
+          setNotice("Check your inbox for the verification link before signing in.");
+        }
         setError(data.error || "Unable to sign in.");
       }
     } catch {
@@ -63,6 +73,9 @@ export default function BuilderLogin() {
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setNotice("");
+    setNeedsVerification(false);
+    setVerificationUrl("");
     if (!companyName.trim()) {
       setError("Company name is required.");
       return;
@@ -89,9 +102,41 @@ export default function BuilderLogin() {
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        window.location.href = "/builder";
+        setIsRegistering(false);
+        setPassword("");
+        setNeedsVerification(true);
+        setVerificationUrl(typeof data.verificationUrl === "string" ? data.verificationUrl : "");
+        setNotice(data.message || "Account created. Check your email to verify your account before signing in.");
       } else {
         setError(data.error || "Unable to create account.");
+      }
+    } catch {
+      setError("Error connecting to the server.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function resendVerification() {
+    setError("");
+    setNotice("");
+    if (!email.trim()) {
+      setError("Enter your email first.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setNotice(data.message || "If verification is needed, a new link has been sent.");
+        setVerificationUrl(typeof data.verificationUrl === "string" ? data.verificationUrl : "");
+      } else {
+        setError(data.error || "Unable to resend verification email.");
       }
     } catch {
       setError("Error connecting to the server.");
@@ -155,6 +200,52 @@ export default function BuilderLogin() {
             }}
           >
             {error}
+          </div>
+        )}
+
+        {notice && (
+          <div
+            style={{
+              background: "rgba(226, 179, 106, 0.18)",
+              border: "1px solid var(--gold)",
+              borderRadius: "8px",
+              padding: "12px",
+              fontSize: "13px",
+              marginBottom: "20px",
+              color: "#ffe2a8",
+              lineHeight: 1.45,
+            }}
+          >
+            {notice}
+            {needsVerification ? (
+              <>
+                {verificationUrl ? (
+                  <Link
+                    href={verificationUrl}
+                    style={{ display: "block", marginTop: 10, color: "#fff", textDecoration: "underline" }}
+                  >
+                    Open verification link
+                  </Link>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={resendVerification}
+                  disabled={loading}
+                  style={{
+                    display: "block",
+                    marginTop: 10,
+                    padding: "8px 10px",
+                    borderRadius: 6,
+                    border: "1px solid rgba(255,255,255,0.25)",
+                    background: "rgba(255,255,255,0.08)",
+                    color: "#fff",
+                    cursor: loading ? "wait" : "pointer",
+                  }}
+                >
+                  Resend verification email
+                </button>
+              </>
+            ) : null}
           </div>
         )}
 
@@ -323,7 +414,7 @@ export default function BuilderLogin() {
                 marginTop: "8px",
               }}
             >
-              {loading ? "Creating account…" : "Create Account & Sign In"}
+              {loading ? "Creating account…" : "Create Account"}
             </button>
           </form>
         )}

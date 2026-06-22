@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { verifyBuilderLogin } from "../../../../lib/builderStore";
+import { isBuilderEmailVerified, verifyBuilderLogin } from "../../../../lib/builderStore";
 import { authFlagCookie, cookieAttributes, sessionCookie } from "../../../../lib/auth";
 import { clientIp, rateLimit } from "../../../../lib/rateLimit";
 
@@ -34,6 +34,17 @@ export async function POST(request: Request) {
   if (!builder) {
     // Generic message — do not reveal whether the email exists.
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+  }
+
+  if (!(await isBuilderEmailVerified(builder.id))) {
+    return NextResponse.json(
+      {
+        error: "Please verify your email before signing in.",
+        requiresVerification: true,
+        email: builder.email,
+      },
+      { status: 403 },
+    );
   }
 
   const response = NextResponse.json({

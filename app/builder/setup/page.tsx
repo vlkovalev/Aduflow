@@ -83,6 +83,7 @@ export default function BuilderSetup() {
   const [error, setError] = useState("");
   const [builderId, setBuilderId] = useState("");
   const [isOnboarding, setIsOnboarding] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -130,13 +131,37 @@ export default function BuilderSetup() {
   async function deleteModel(id: string) {
     if (!confirm("Archive this model? It will be hidden from new configurator sessions but preserved for old proposals.")) return;
     await fetch(`/api/models/${id}`, { method: "DELETE" });
-    setModels((prev) => prev.filter((m) => m.id !== id));
+    setModels((prev) => prev.map((m) => (m.id === id ? { ...m, is_active: false } : m)));
   }
 
   async function deleteOption(id: string) {
     if (!confirm("Archive this option? It will be hidden from new configurator sessions but preserved for old proposals.")) return;
     await fetch(`/api/options/${id}`, { method: "DELETE" });
-    setOptions((prev) => prev.filter((o) => o.id !== id));
+    setOptions((prev) => prev.map((o) => (o.id === id ? { ...o, is_active: false } : o)));
+  }
+
+  async function reactivateModel(id: string) {
+    const response = await fetch(`/api/models/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isActive: true }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (data.model) {
+      setModels((prev) => prev.map((m) => (m.id === id ? data.model : m)));
+    }
+  }
+
+  async function reactivateOption(id: string) {
+    const response = await fetch(`/api/options/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isActive: true }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (data.option) {
+      setOptions((prev) => prev.map((o) => (o.id === id ? data.option : o)));
+    }
   }
 
   return (
@@ -241,9 +266,9 @@ export default function BuilderSetup() {
           <div className="dataPanel">
             <div className="panelTitle">
               <h2>Your models</h2>
-              <span>{models.length} model{models.length !== 1 ? "s" : ""}</span>
+              <span>{models.filter((m) => m.is_active).length} active</span>
             </div>
-            {models.length > 0 ? (
+            {models.filter((m) => m.is_active).length > 0 ? (
               <table className="setupTable">
                 <thead>
                   <tr>
@@ -255,7 +280,7 @@ export default function BuilderSetup() {
                   </tr>
                 </thead>
                 <tbody>
-                  {models.map((model) => (
+                  {models.filter((m) => m.is_active).map((model) => (
                     <ModelRow
                       key={model.id}
                       model={model}
@@ -271,6 +296,19 @@ export default function BuilderSetup() {
             ) : (
               <p className="setupEmpty">No models yet. Add your first one below.</p>
             )}
+            {models.some((m) => !m.is_active) ? (
+              <ArchiveToggle
+                showArchived={showArchived}
+                count={models.filter((m) => !m.is_active).length}
+                onToggle={() => setShowArchived((value) => !value)}
+              />
+            ) : null}
+            {showArchived && models.some((m) => !m.is_active) ? (
+              <ArchivedModelsTable
+                models={models.filter((m) => !m.is_active)}
+                onReactivate={reactivateModel}
+              />
+            ) : null}
           </div>
 
           <div className="dataPanel">
@@ -287,7 +325,8 @@ export default function BuilderSetup() {
       {!loading && tab === "options" && (
         <div className="setupSection">
           {CATEGORIES.map(({ key, label }) => {
-            const categoryOptions = options.filter((o) => o.option_category === key);
+            const categoryOptions = options.filter((o) => o.option_category === key && o.is_active);
+            const archivedOptions = options.filter((o) => o.option_category === key && !o.is_active);
             return (
               <div className="dataPanel" key={key}>
                 <div className="panelTitle">
@@ -324,9 +363,19 @@ export default function BuilderSetup() {
                   category={key}
                   onAdd={(option) => setOptions((prev) => [...prev, option])}
                 />
+                {archivedOptions.length > 0 && showArchived ? (
+                  <ArchivedOptionsTable options={archivedOptions} onReactivate={reactivateOption} />
+                ) : null}
               </div>
             );
           })}
+          {options.some((o) => !o.is_active) ? (
+            <ArchiveToggle
+              showArchived={showArchived}
+              count={options.filter((o) => !o.is_active).length}
+              onToggle={() => setShowArchived((value) => !value)}
+            />
+          ) : null}
         </div>
       )}
 
@@ -342,6 +391,106 @@ export default function BuilderSetup() {
         </div>
       )}
     </main>
+  );
+}
+
+function ArchiveToggle({
+  showArchived,
+  count,
+  onToggle,
+}: {
+  showArchived: boolean;
+  count: number;
+  onToggle: () => void;
+}) {
+  return (
+    <div style={{ marginTop: 16, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
+      <button className="button secondary" type="button" onClick={onToggle}>
+        {showArchived ? "Hide archived" : `Show archived (${count})`}
+      </button>
+    </div>
+  );
+}
+
+function ArchivedModelsTable({
+  models,
+  onReactivate,
+}: {
+  models: Model[];
+  onReactivate: (id: string) => Promise<void>;
+}) {
+  return (
+    <div style={{ marginTop: 16 }}>
+      <div className="panelTitle compact">
+        <h3>Archived models</h3>
+        <span>Hidden from new quotes</span>
+      </div>
+      <table className="setupTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Sq ft</th>
+            <th>Base price</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {models.map((model) => (
+            <tr key={model.id}>
+              <td><strong>{model.model_name}</strong></td>
+              <td>{model.square_feet} sq ft</td>
+              <td>${Number(model.base_price).toLocaleString()}</td>
+              <td className="setupActions">
+                <button className="button secondary" type="button" onClick={() => onReactivate(model.id)}>
+                  Reactivate
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ArchivedOptionsTable({
+  options,
+  onReactivate,
+}: {
+  options: Option[];
+  onReactivate: (id: string) => Promise<void>;
+}) {
+  return (
+    <div style={{ marginTop: 16 }}>
+      <div className="panelTitle compact">
+        <h3>Archived options</h3>
+        <span>Hidden from new quotes</span>
+      </div>
+      <table className="setupTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Detail</th>
+            <th>Price</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {options.map((option) => (
+            <tr key={option.id}>
+              <td><strong>{option.option_name}</strong></td>
+              <td>{option.option_detail}</td>
+              <td>${Number(option.option_price).toLocaleString()}</td>
+              <td className="setupActions">
+                <button className="button secondary" type="button" onClick={() => onReactivate(option.id)}>
+                  Reactivate
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

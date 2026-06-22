@@ -51,11 +51,25 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ### 3. Apply Database Migration (Supabase)
 
-Copy and run the contents of [database/rls.sql](file:///C:/Users/heliu/Desktop/WebSItes/ADUflow/database/rls.sql) in your Supabase SQL Editor. This enables RLS policies on all tables (including child tables like draws, milestones, and permit checklists) and configures the builder password credentials field.
+Copy and run these SQL files in your Supabase SQL Editor, in order:
+
+1. `database/schema.sql`
+2. `database/rls.sql`
+3. `database/billing.sql`
+4. `database/billing-usage.sql`
+5. `database/email-verification.sql`
+6. `database/seed.sql`
+
+This enables the core tables, RLS policies, builder password credentials, Stripe billing columns, qualified-proposal usage metering, and verified-email gating for new builder accounts.
 
 **Or use the command line:**
 ```bash
+psql $DATABASE_URL < database/schema.sql
 psql $DATABASE_URL < database/rls.sql
+psql $DATABASE_URL < database/billing.sql
+psql $DATABASE_URL < database/billing-usage.sql
+psql $DATABASE_URL < database/email-verification.sql
+psql $DATABASE_URL < database/seed.sql
 ```
 
 ### 4. Redeploy on Vercel
@@ -76,7 +90,8 @@ After verifying your environment variables and database migration:
    - Company name
    - Email
    - Password
-4. After registration, they're automatically logged in
+4. They verify their email from the ADUflow email link
+5. After verification, they sign in and complete setup
 
 ### What Builders Can Do
 

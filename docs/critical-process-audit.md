@@ -318,13 +318,13 @@ The following audit findings have now been implemented in the working tree and v
 | Validate insurance expiration | Complete | `/api/builder` blocks invalid/past insurance dates, and `/builder/setup` shows the error before submitting. |
 | Warn before billing/project transitions | Complete | Lead status selector shows contextual help for `Qualified` and `Won`, plus confirmation prompts before those state changes. |
 | Recover from failed status updates | Complete | Lead status selector now rolls back optimistic UI changes and shows an error if the PATCH request fails. |
+| Verify builder emails before login | Complete | Registration now sends a signed verification link, login blocks unverified accounts, and local demos expose a fallback verification link when email is not configured. |
+| Add builder sandbox/test lead generator | Complete | Builder OS now includes a protected `Create test lead` action that creates a realistic sandbox lead through the same proposal/lender/permit/project pipeline. |
+| Add archived catalog recovery UI | Complete | Builder setup now hides inactive records by default and gives builders a `Show archived` / `Reactivate` recovery flow for models and options. |
 | Production build after fixes | Passed | `next build` completed successfully on June 22, 2026. |
 
 Remaining before broader public launch:
 
 | Remaining Item | Severity | Recommended Next Step |
 | --- | --- | --- |
-| Email verification at registration | Medium | Add a verify-email token flow before allowing builders into billing or public sharing. |
-| Builder sandbox/test lead generator | Medium | Add a one-click demo lead creator so builders can test proposal, lender, permit, and project outputs without fake homeowner submissions. |
-| Soft archive recovery UI | Medium | Add an `Archived` filter and `Reactivate` action for models/options so builders can recover archived catalog records themselves. |
 | Mobile visual QA | Medium | Run browser/mobile screenshots against the live domain and fix any overflow in configurator, lender package, and builder dashboard. |

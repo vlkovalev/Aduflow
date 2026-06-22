@@ -200,6 +200,50 @@ export function decodePasswordResetToken(token: string | undefined | null): { bu
 
 export { passwordHashFingerprint };
 
+// ── Email verification token ────────────────────────────────────────────────
+
+const EMAIL_VERIFY_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
+
+type EmailVerifyPayload = {
+  bid: string;
+  emailHash: string;
+  iat: number;
+  exp: number;
+  purpose: "emailverify";
+};
+
+function emailFingerprint(email: string): string {
+  return createHash("sha256").update(email.trim().toLowerCase()).digest("hex").slice(0, 24);
+}
+
+export function createEmailVerificationToken(builderId: string, email: string): string {
+  const now = Math.floor(Date.now() / 1000);
+  const payload: EmailVerifyPayload = {
+    bid: builderId,
+    emailHash: emailFingerprint(email),
+    iat: now,
+    exp: now + EMAIL_VERIFY_TTL_SECONDS,
+    purpose: "emailverify",
+  };
+  const body = base64url(JSON.stringify(payload));
+  return `${body}.${sign(body)}`;
+}
+
+export function decodeEmailVerificationToken(
+  token: string | undefined | null,
+): { builderId: string; emailHash: string } | null {
+  const payload = verifySignedPayload(token);
+  if (!payload || payload.purpose !== "emailverify") return null;
+  if (!isUuid(payload.bid)) return null;
+  if (typeof payload.exp !== "number" || payload.exp < Math.floor(Date.now() / 1000)) return null;
+  if (typeof payload.emailHash !== "string") return null;
+  return { builderId: payload.bid as string, emailHash: payload.emailHash };
+}
+
+export function matchesEmailVerificationToken(email: string, emailHash: string): boolean {
+  return emailFingerprint(email) === emailHash;
+}
+
 // ── Cookie helpers ──────────────────────────────────────────────────────────
 
 const isProd = process.env.NODE_ENV === "production";

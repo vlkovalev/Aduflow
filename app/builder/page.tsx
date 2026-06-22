@@ -7,6 +7,7 @@ import { TopNav } from "../components/TopNav";
 import { getSupabaseServiceClient } from "../../lib/supabase";
 import { getAuthenticatedBuilderId } from "../../lib/auth";
 import { listModels } from "../../lib/catalogStore";
+import { CreateDemoLeadButton } from "./CreateDemoLeadButton";
 
 const STATUS_LABELS: Record<string, string> = {
   new: "New",
@@ -68,6 +69,7 @@ export default async function BuilderDashboard() {
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
           <Link className="button secondary" href="/builder/setup">Complete builder setup</Link>
           <Link className="button secondary" href="/builder/billing">Billing</Link>
+          <CreateDemoLeadButton />
           <Link className="button primary" href="/configurator">New lead quote</Link>
         </div>
       </section>

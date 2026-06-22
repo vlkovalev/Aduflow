@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { AuthError, registerBuilder } from "../../../../lib/builderStore";
-import { authFlagCookie, cookieAttributes, sessionCookie } from "../../../../lib/auth";
+import { createEmailVerificationToken } from "../../../../lib/auth";
 import { clientIp, rateLimit } from "../../../../lib/rateLimit";
+import { sendEmail } from "../../../../lib/email";
 
 export const runtime = "nodejs";
 
@@ -56,14 +57,28 @@ export async function POST(request: Request) {
     );
   }
 
-  const response = NextResponse.json({
+  const verification = await sendVerificationEmail(builder.id, builder.email, request.url);
+
+  return NextResponse.json({
     builder: { id: builder.id, companyName: builder.companyName, email: builder.email },
+    requiresVerification: true,
+    verificationUrl: verification.sent ? undefined : verification.url,
+    message: "Account created. Check your email to verify your account before signing in.",
   });
+}
 
-  const session = sessionCookie(builder.id);
-  response.cookies.set(session.name, session.value, cookieAttributes(true, session.maxAge));
-  const flag = authFlagCookie();
-  response.cookies.set(flag.name, flag.value, cookieAttributes(false, flag.maxAge));
-
-  return response;
+async function sendVerificationEmail(builderId: string, email: string, requestUrl: string) {
+  const token = createEmailVerificationToken(builderId, email);
+  const origin = new URL(requestUrl).origin;
+  const verifyUrl = `${origin}/builder/verify-email?token=${encodeURIComponent(token)}`;
+  const sent = await sendEmail({
+    to: email,
+    subject: "Verify your ADUflow builder account",
+    html: `
+      <p>Welcome to ADUflow. Verify your builder account to finish setting up your portal.</p>
+      <p><a href="${verifyUrl}">Verify your email</a>. This link expires in 7 days.</p>
+      <p>If you did not create this account, you can ignore this email.</p>
+    `,
+  });
+  return { sent, url: verifyUrl };
 }
