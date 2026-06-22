@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export async function POST(request: Request) {
   // Throttle credential-stuffing / brute force (audit F-05, F-12).
   const ip = clientIp(request);
-  const limit = rateLimit(`login:${ip}`, 5, 60);
+  const limit = await rateLimit(`login:${ip}`, 5, 60);
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Too many login attempts. Please try again shortly." },

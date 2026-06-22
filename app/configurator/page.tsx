@@ -150,6 +150,28 @@ export default function Configurator() {
   return (
     <main className="appShell">
       <TopNav />
+      {!builderId ? (
+        <div style={{
+          background: "var(--paper)",
+          borderLeft: "4px solid var(--gold)",
+          padding: "12px 16px",
+          borderRadius: 6,
+          margin: "20px auto 0",
+          maxWidth: "1200px",
+          width: "calc(100% - 40px)",
+          fontSize: 13,
+          color: "var(--muted)",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          lineHeight: 1.4
+        }}>
+          <span>⚠️</span>
+          <span>
+            <strong>General Catalog View:</strong> This configurator link is missing a builder reference. You can browse models and prices, but lead submission is disabled.
+          </span>
+        </div>
+      ) : null}
       <section className="pageIntro">
         <p className="eyebrow">Zoning and feasibility first</p>
         <h1>Check the lot before configuring the building.</h1>

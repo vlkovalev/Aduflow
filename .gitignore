@@ -13,3 +13,5 @@ tsconfig.tsbuildinfo
 
 # Tool config
 .claude/
+
+.vercel

@@ -81,6 +81,17 @@ export default function BuilderSetup() {
   const [isDbActive, setIsDbActive] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [builderId, setBuilderId] = useState("");
+  const [isOnboarding, setIsOnboarding] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("onboarding") === "true") {
+        setIsOnboarding(true);
+      }
+    }
+  }, []);
 
   async function loadCatalogData() {
     setError("");
@@ -104,6 +115,7 @@ export default function BuilderSetup() {
       setOptions(optionsData.options ?? []);
       setCredentials(builderData.credentials ?? null);
       setIsDbActive(builderData.isDbActive !== false);
+      setBuilderId(builderData.builderId ?? "");
     } catch {
       setError("Failed to load catalog data.");
     } finally {
@@ -116,13 +128,13 @@ export default function BuilderSetup() {
   }, []);
 
   async function deleteModel(id: string) {
-    if (!confirm("Delete this model?")) return;
+    if (!confirm("Archive this model? It will be hidden from new configurator sessions but preserved for old proposals.")) return;
     await fetch(`/api/models/${id}`, { method: "DELETE" });
     setModels((prev) => prev.filter((m) => m.id !== id));
   }
 
   async function deleteOption(id: string) {
-    if (!confirm("Delete this option?")) return;
+    if (!confirm("Archive this option? It will be hidden from new configurator sessions but preserved for old proposals.")) return;
     await fetch(`/api/options/${id}`, { method: "DELETE" });
     setOptions((prev) => prev.filter((o) => o.id !== id));
   }
@@ -191,6 +203,27 @@ export default function BuilderSetup() {
         </div>
       )}
 
+      {!loading && isOnboarding && (
+        <div style={{
+          background: "var(--paper)",
+          borderLeft: "4px solid var(--forest)",
+          padding: "12px 16px",
+          borderRadius: 6,
+          margin: "12px 0 20px",
+          fontSize: 13,
+          color: "var(--muted)",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          lineHeight: 1.4
+        }}>
+          <span>👋</span>
+          <span>
+            <strong>Welcome to ADUflow!</strong> To get started, please add your active building models, pricing options, and credentials. Your dashboard will remain locked and redirect here until you have configured your catalog.
+          </span>
+        </div>
+      )}
+
       {!loading && (
         <SetupChecklist
           models={models}
@@ -226,6 +259,7 @@ export default function BuilderSetup() {
                     <ModelRow
                       key={model.id}
                       model={model}
+                      builderId={builderId}
                       onUpdate={(updated) =>
                         setModels((prev) => prev.map((m) => (m.id === updated.id ? updated : m)))
                       }
@@ -560,6 +594,22 @@ function CredentialsForm() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [expiryWarning, setExpiryWarning] = useState("");
+
+  useEffect(() => {
+    if (insuranceExpiration) {
+      const expDate = new Date(insuranceExpiration);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (expDate < today) {
+        setExpiryWarning("Warning: The insurance policy expiration date is in the past.");
+      } else {
+        setExpiryWarning("");
+      }
+    } else {
+      setExpiryWarning("");
+    }
+  }, [insuranceExpiration]);
 
   useEffect(() => {
     let active = true;
@@ -598,6 +648,17 @@ function CredentialsForm() {
     e.preventDefault();
     setError("");
     setSuccess("");
+
+    if (insuranceExpiration) {
+      const expDate = new Date(insuranceExpiration);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (Number.isNaN(expDate.getTime()) || expDate < today) {
+        setError("Insurance expiration date must be a valid future date.");
+        return;
+      }
+    }
+
     setSaving(true);
 
     try {
@@ -673,6 +734,11 @@ function CredentialsForm() {
         <label>
           Insurance expiration date
           <input className="setupInput" type="date" value={insuranceExpiration} onChange={(e) => setInsuranceExpiration(e.target.value)} required />
+          {expiryWarning && (
+            <span style={{ color: "#b75f38", fontSize: "12px", marginTop: "4px", display: "block", fontWeight: 600 }}>
+              {expiryWarning}
+            </span>
+          )}
         </label>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
           <label>
@@ -706,10 +772,12 @@ function CredentialsForm() {
 
 function ModelRow({
   model,
+  builderId,
   onUpdate,
   onDelete,
 }: {
   model: Model;
+  builderId: string;
   onUpdate: (m: Model) => void;
   onDelete: () => void;
 }) {
@@ -756,23 +824,38 @@ function ModelRow({
       <td>${Number(model.base_price).toLocaleString()}</td>
       <td>{model.is_active ? "Yes" : "No"}</td>
       <td className="setupActions">
-        <Link
-          className="button secondary"
-          href={`/configurator?model=${model.model_code}`}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: 28,
-            padding: "0 10px",
-            fontSize: 11,
-            fontWeight: 700,
-          }}
-        >
-          Preview
-        </Link>
+        {/* audit critical-process-audit.md §4/§14 — this link previously omitted
+            builderId and silently loaded the default catalog instead of this
+            builder's own. It now requires builderId and is disabled until it's
+            loaded, rather than linking to the wrong catalog. */}
+        {builderId ? (
+          <Link
+            className="button secondary"
+            href={`/configurator?model=${model.model_code}&builderId=${builderId}`}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: 28,
+              padding: "0 10px",
+              fontSize: 11,
+              fontWeight: 700,
+            }}
+          >
+            Preview
+          </Link>
+        ) : (
+          <button
+            className="button secondary"
+            type="button"
+            disabled
+            style={{ minHeight: 28, padding: "0 10px", fontSize: 11, fontWeight: 700 }}
+          >
+            Preview
+          </button>
+        )}
         <button className="button secondary" onClick={() => setEditing(true)} type="button">Edit</button>
-        <button className="button danger" onClick={onDelete} type="button">Delete</button>
+        <button className="button danger" onClick={onDelete} type="button">Archive</button>
       </td>
     </tr>
   );
@@ -879,7 +962,7 @@ function OptionRow({
       <td>${Number(option.option_price).toLocaleString()}</td>
       <td className="setupActions">
         <button className="button secondary" onClick={() => setEditing(true)} type="button">Edit</button>
-        <button className="button danger" onClick={onDelete} type="button">Delete</button>
+        <button className="button danger" onClick={onDelete} type="button">Archive</button>
       </td>
     </tr>
   );

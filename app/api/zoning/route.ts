@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   // Public, unauthenticated endpoint that proxies a paid third-party API —
   // throttle to prevent cost-amplification abuse (audit finding).
   const ip = clientIp(request);
-  const limit = rateLimit(`zoning:${ip}`, 20, 60);
+  const limit = await rateLimit(`zoning:${ip}`, 20, 60);
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Too many requests. Please try again shortly." },

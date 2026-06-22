@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { createLead, listLeads, type CreateLeadInput } from "../../../lib/leadStore";
+import { createLead, listLeads, type CreateLeadInput, type LeadRecord } from "../../../lib/leadStore";
 import { requireBuilder } from "../../../lib/apiAuth";
-import { builderExists } from "../../../lib/builderStore";
+import { builderExists, getBuilderById } from "../../../lib/builderStore";
 import { isUuid } from "../../../lib/auth";
 import { clientIp, rateLimit } from "../../../lib/rateLimit";
+import { sendEmail } from "../../../lib/email";
 
 export const runtime = "nodejs";
 
@@ -32,7 +33,7 @@ export async function GET() {
 export async function POST(request: Request) {
   // Public, unauthenticated endpoint — throttle spam/abuse (audit finding).
   const ip = clientIp(request);
-  const limit = rateLimit(`lead:${ip}`, 10, 60);
+  const limit = await rateLimit(`lead:${ip}`, 10, 60);
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Too many submissions. Please try again shortly." },
@@ -73,6 +74,9 @@ export async function POST(request: Request) {
 
   try {
     const lead = await createLead(validated);
+    const origin = new URL(request.url).origin;
+    await notifyBuilderOfNewLead(lead, origin);
+    await sendLeadConfirmationToHomeowner(lead, origin);
     return NextResponse.json({ id: lead.id, proposalUrl: `/proposals/${lead.id}` });
   } catch (error) {
     return NextResponse.json(
@@ -80,6 +84,66 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
+}
+
+/**
+ * Best-effort — homeowners aren't logged in, so this confirmation email is
+ * their only durable record of the share link if they close the tab. Uses
+ * the public /proposals/share/{token} link, never the builder-internal
+ * /proposals/{id} link (which now requires a builder session to view).
+ */
+async function sendLeadConfirmationToHomeowner(lead: LeadRecord, origin: string): Promise<void> {
+  try {
+    await sendEmail({
+      to: lead.email,
+      subject: `Your ADUflow feasibility package — ${lead.modelName}`,
+      html: `
+        <p>Thanks for checking ${escapeHtml(lead.propertyAddress)} on ADUflow. Your feasibility package for the
+        <strong>${escapeHtml(lead.modelName)}</strong> is ready.</p>
+        <p><a href="${origin}/proposals/share/${lead.shareToken}">View your proposal</a></p>
+        <p>This is a pre-construction estimate for builder review — not a final quote, financing approval, or permit
+        approval. The builder you submitted to will follow up with next steps.</p>
+      `,
+    });
+  } catch (e) {
+    console.warn("sendLeadConfirmationToHomeowner failed (non-fatal):", e);
+  }
+}
+
+/** Best-effort — a failed/unconfigured email send must never fail lead creation. */
+async function notifyBuilderOfNewLead(lead: LeadRecord, origin: string): Promise<void> {
+  try {
+    const builder = await getBuilderById(lead.builderId);
+    if (!builder?.email) return;
+    await sendEmail({
+      to: builder.email,
+      subject: `New lead: ${lead.customerName} — ${lead.modelName}`,
+      html: `
+        <p>A new homeowner lead came in through your ADUflow configurator.</p>
+        <ul>
+          <li><strong>Customer:</strong> ${escapeHtml(lead.customerName)}</li>
+          <li><strong>Property:</strong> ${escapeHtml(lead.propertyAddress)}</li>
+          <li><strong>Model:</strong> ${escapeHtml(lead.modelName)}</li>
+          <li><strong>Estimated price:</strong> $${lead.estimatedPrice.toLocaleString()}</li>
+        </ul>
+        <p><a href="${origin}/proposals/${lead.id}">View the full proposal</a></p>
+      `,
+    });
+  } catch {
+    // Already best-effort inside sendEmail(); this guards any unexpected throw.
+  }
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => {
+    switch (char) {
+      case "&": return "&amp;";
+      case "<": return "&lt;";
+      case ">": return "&gt;";
+      case '"': return "&quot;";
+      default: return "&#39;";
+    }
+  });
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

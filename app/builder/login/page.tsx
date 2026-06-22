@@ -250,6 +250,14 @@ export default function BuilderLogin() {
             >
               {loading ? "Signing in…" : "Enter Builder OS"}
             </button>
+            <div style={{ textAlign: "center" }}>
+              <Link
+                href="/builder/forgot-password"
+                style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", textDecoration: "underline" }}
+              >
+                Forgot password?
+              </Link>
+            </div>
           </form>
         ) : (
           <form onSubmit={handleRegister} style={{ display: "grid", gap: "16px" }}>

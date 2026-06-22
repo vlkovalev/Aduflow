@@ -1,4 +1,5 @@
 import {
+  createHash,
   createHmac,
   randomBytes,
   scryptSync,
@@ -80,6 +81,7 @@ type SessionPayload = {
   bid: string; // builder id
   iat: number; // issued-at (seconds)
   exp: number; // expiry (seconds)
+  purpose: "session";
 };
 
 function base64url(input: Buffer | string): string {
@@ -101,13 +103,13 @@ function sign(data: string): string {
 
 export function createSessionToken(builderId: string, ttlSeconds = SESSION_TTL_SECONDS): string {
   const now = Math.floor(Date.now() / 1000);
-  const payload: SessionPayload = { bid: builderId, iat: now, exp: now + ttlSeconds };
+  const payload: SessionPayload = { bid: builderId, iat: now, exp: now + ttlSeconds, purpose: "session" };
   const body = base64url(JSON.stringify(payload));
   return `${body}.${sign(body)}`;
 }
 
-/** Verify a session token and return the builder id, or null if invalid/expired. */
-export function verifySessionToken(token: string | undefined | null): string | null {
+/** Decode and signature-verify any signed token produced by this module. Internal use only. */
+function verifySignedPayload(token: string | undefined | null): Record<string, unknown> | null {
   if (!token || typeof token !== "string") return null;
   const dot = token.lastIndexOf(".");
   if (dot <= 0) return null;
@@ -123,16 +125,80 @@ export function verifySessionToken(token: string | undefined | null): string | n
   }
 
   try {
-    const payload = JSON.parse(fromBase64url(body).toString("utf8")) as SessionPayload;
-    if (!isUuid(payload.bid)) return null;
-    if (typeof payload.exp !== "number" || payload.exp < Math.floor(Date.now() / 1000)) {
-      return null;
-    }
-    return payload.bid;
+    return JSON.parse(fromBase64url(body).toString("utf8")) as Record<string, unknown>;
   } catch {
     return null;
   }
 }
+
+/** Verify a session token and return the builder id, or null if invalid/expired. */
+export function verifySessionToken(token: string | undefined | null): string | null {
+  const payload = verifySignedPayload(token);
+  if (!payload || payload.purpose !== "session") return null;
+  if (!isUuid(payload.bid)) return null;
+  if (typeof payload.exp !== "number" || payload.exp < Math.floor(Date.now() / 1000)) {
+    return null;
+  }
+  return payload.bid as string;
+}
+
+// ── Password reset token ────────────────────────────────────────────────────
+
+const RESET_TTL_SECONDS = 60 * 60; // 1 hour
+
+type ResetPayload = {
+  bid: string; // builder id
+  pwfp: string; // fingerprint of the password hash at issuance time
+  iat: number;
+  exp: number;
+  purpose: "pwreset";
+};
+
+/** Short, non-secret fingerprint of a password hash — changes whenever the password changes. */
+function passwordHashFingerprint(passwordHash: string): string {
+  return createHash("sha256").update(passwordHash).digest("hex").slice(0, 16);
+}
+
+/**
+ * Create a password-reset token tied to the builder's *current* password
+ * hash. Because the fingerprint is embedded in the signed payload, a token
+ * automatically stops working the moment the password actually changes —
+ * including via the reset itself — without needing a server-side revocation
+ * list. It does not, however, prevent reuse of an unused token within its
+ * 1-hour window if it leaks before being used.
+ */
+export function createPasswordResetToken(builderId: string, currentPasswordHash: string): string {
+  const now = Math.floor(Date.now() / 1000);
+  const payload: ResetPayload = {
+    bid: builderId,
+    pwfp: passwordHashFingerprint(currentPasswordHash),
+    iat: now,
+    exp: now + RESET_TTL_SECONDS,
+    purpose: "pwreset",
+  };
+  const body = base64url(JSON.stringify(payload));
+  return `${body}.${sign(body)}`;
+}
+
+/**
+ * Verify a password-reset token's signature/expiry/purpose and return the
+ * builder id it was issued for, plus the fingerprint it was issued against.
+ * Callers must separately fetch that builder's *current* password hash and
+ * compare it with passwordHashFingerprint() — this function can't do that
+ * itself because the builder id is only known after decoding the token.
+ */
+export function decodePasswordResetToken(token: string | undefined | null): { builderId: string; fingerprint: string } | null {
+  const payload = verifySignedPayload(token);
+  if (!payload || payload.purpose !== "pwreset") return null;
+  if (!isUuid(payload.bid)) return null;
+  if (typeof payload.exp !== "number" || payload.exp < Math.floor(Date.now() / 1000)) {
+    return null;
+  }
+  if (typeof payload.pwfp !== "string") return null;
+  return { builderId: payload.bid as string, fingerprint: payload.pwfp };
+}
+
+export { passwordHashFingerprint };
 
 // ── Cookie helpers ──────────────────────────────────────────────────────────
 

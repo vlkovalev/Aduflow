@@ -5,6 +5,11 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { getLocalStorePath } from "../../../../lib/localStoreHelper";
 import { requireBuilder } from "../../../../lib/apiAuth";
+import { recordQualifiedProposalUsage } from "../../../../lib/usageStore";
+import { getBuilderBillingInfo, getBuilderById } from "../../../../lib/builderStore";
+import { reportQualifiedProposalUsage } from "../../../../lib/stripe";
+import { sendEmail } from "../../../../lib/email";
+import type { LeadRecord } from "../../../../lib/leadStore";
 
 export const runtime = "nodejs";
 
@@ -68,6 +73,11 @@ export async function PATCH(
       updates.notes = String(body.notes);
     }
 
+    // Billing usage unit (docs/pricing-strategy.md): a lead counts toward a
+    // builder's metered plan the moment they mark it "qualified" — not when
+    // it was first created. Fires after the status write succeeds, below.
+    const becameQualified = body.status === "qualified";
+
     const supabase = getSupabaseServiceClient();
 
     if (supabase) {
@@ -83,6 +93,12 @@ export async function PATCH(
           console.warn("Supabase update lead error, disabling Supabase:", error);
           markSupabaseUnhealthy();
         } else if (data) {
+          if (becameQualified) {
+            await recordUsageAndReportToStripe(auth.builderId, id);
+          }
+          if (body.status !== undefined) {
+            await notifyBuilderOfStatusChange(auth.builderId, existingLead, body.status as LeadStatus);
+          }
           return NextResponse.json({ id: data.id, status: data.status, proposalStatus: data.proposal_status });
         }
       } catch (e) {
@@ -108,8 +124,49 @@ export async function PATCH(
     await mkdir(path.dirname(localStorePath), { recursive: true });
     await writeFile(localStorePath, JSON.stringify(records, null, 2));
 
+    if (becameQualified) {
+      await recordUsageAndReportToStripe(auth.builderId, id);
+    }
+    if (body.status !== undefined) {
+      await notifyBuilderOfStatusChange(auth.builderId, existingLead, body.status as LeadStatus);
+    }
+
     return NextResponse.json({ id, status: records[index].status });
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+}
+
+/**
+ * Record qualified-proposal usage (idempotent per lead) and, only if this is
+ * the first time this lead was qualified, best-effort report it to Stripe so
+ * metered overage billing on the builder's plan stays in sync. Never throws —
+ * a metering hiccup must not block the builder's lead-status update.
+ */
+async function recordUsageAndReportToStripe(builderId: string, leadId: string): Promise<void> {
+  try {
+    const isNewUsage = await recordQualifiedProposalUsage(builderId, leadId);
+    if (!isNewUsage) return;
+    const billing = await getBuilderBillingInfo(builderId);
+    if (billing.stripeCustomerId) {
+      await reportQualifiedProposalUsage(billing.stripeCustomerId);
+    }
+  } catch (e) {
+    console.warn("recordUsageAndReportToStripe failed (non-fatal):", e);
+  }
+}
+
+/** Best-effort — a failed/unconfigured email send must never block a status update. */
+async function notifyBuilderOfStatusChange(builderId: string, lead: LeadRecord, newStatus: LeadStatus): Promise<void> {
+  try {
+    const builder = await getBuilderById(builderId);
+    if (!builder?.email) return;
+    await sendEmail({
+      to: builder.email,
+      subject: `Lead status updated: ${lead.customerName} → ${newStatus}`,
+      html: `<p>${lead.customerName} (${lead.modelName} — ${lead.propertyAddress}) is now marked <strong>${newStatus}</strong>.</p>`,
+    });
+  } catch (e) {
+    console.warn("notifyBuilderOfStatusChange failed (non-fatal):", e);
   }
 }

@@ -10,7 +10,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export async function POST(request: Request) {
   // Throttle automated sign-up abuse (audit F-05, F-12).
   const ip = clientIp(request);
-  const limit = rateLimit(`register:${ip}`, 5, 60 * 60);
+  const limit = await rateLimit(`register:${ip}`, 5, 60 * 60);
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Too many sign-up attempts. Please try again later." },

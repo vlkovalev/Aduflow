@@ -1,8 +1,9 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getLead } from "../../../../lib/leadStore";
 import { formatCurrency, formatZoningSource } from "../../../../lib/proposalBuilder";
 import { PrintButton } from "../../share/[token]/PrintButton";
 import { getBuilderCredentials } from "../../../../lib/builderStore";
+import { getAuthenticatedBuilderId } from "../../../../lib/auth";
 
 export default async function LenderPackagePage({
   params,
@@ -13,6 +14,17 @@ export default async function LenderPackagePage({
   const lead = await getLead(id);
 
   if (!lead) notFound();
+
+  // audit critical-process-audit.md §4/§14 — this page exposes builder
+  // license/insurance/bond data and must be gated like /permit and /projects.
+  const builderId = await getAuthenticatedBuilderId();
+  if (!builderId) {
+    redirect("/builder/login");
+  }
+
+  if (lead.builderId !== builderId) {
+    notFound();
+  }
 
   const credentials = await getBuilderCredentials(lead.builderId);
 

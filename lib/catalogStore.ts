@@ -235,7 +235,11 @@ export async function importModels(
   if (supabase) {
     try {
       if (duplicateCodes.length) {
-        await supabase.from("models").delete().eq("builder_id", builderId).in("model_code", duplicateCodes);
+        await supabase
+          .from("models")
+          .update({ is_active: false })
+          .eq("builder_id", builderId)
+          .in("model_code", duplicateCodes);
       }
       const { data, error } = await supabase.from("models").insert(records).select();
       if (!error && data) return data as ModelRow[];
@@ -245,12 +249,14 @@ export async function importModels(
   }
 
   const local = await readLocalModels();
-  const filtered = local.filter(
-    (row) =>
-      (row.builder_id || "00000000-0000-0000-0000-000000000001") !== builderId ||
-      !duplicateCodes.includes(row.model_code ?? ""),
-  );
-  const next = [...filtered, ...records];
+  const archived = local.map((row) => {
+    const rowBuilderId = row.builder_id || "00000000-0000-0000-0000-000000000001";
+    if (rowBuilderId === builderId && duplicateCodes.includes(row.model_code ?? "")) {
+      return { ...row, is_active: false };
+    }
+    return row;
+  });
+  const next = [...archived, ...records];
   await writeLocalModels(next);
   return records;
 }
@@ -303,10 +309,10 @@ export async function deleteModel(id: string, builderId?: string): Promise<boole
 
   if (supabase) {
     try {
-      let query = supabase.from("models").delete().eq("id", id);
+      let query = supabase.from("models").update({ is_active: false }).eq("id", id);
       if (builderId) query = query.eq("builder_id", builderId);
-      const { error } = await query;
-      if (!error) return true;
+      const { data, error } = await query.select("id").maybeSingle();
+      if (!error) return Boolean(data);
     } catch (e) {
       console.warn("Supabase deleteModel error, fallback to local:", e);
     }
@@ -317,10 +323,12 @@ export async function deleteModel(id: string, builderId?: string): Promise<boole
     (m) => m.id === id && (!builderId || (m.builder_id || "00000000-0000-0000-0000-000000000001") === builderId),
   );
   if (!exists) return false;
-  const filtered = local.filter(
-    (m) => !(m.id === id && (!builderId || (m.builder_id || "00000000-0000-0000-0000-000000000001") === builderId)),
+  const next = local.map((m) =>
+    m.id === id && (!builderId || (m.builder_id || "00000000-0000-0000-0000-000000000001") === builderId)
+      ? { ...m, is_active: false }
+      : m,
   );
-  await writeLocalModels(filtered);
+  await writeLocalModels(next);
   return true;
 }
 
@@ -420,7 +428,7 @@ export async function importOptions(
         .filter(Boolean) as string[];
 
       if (idsToDelete.length) {
-        await supabase.from("options").delete().eq("builder_id", builderId).in("id", idsToDelete);
+        await supabase.from("options").update({ is_active: false }).eq("builder_id", builderId).in("id", idsToDelete);
       }
       const { data, error } = await supabase.from("options").insert(records).select();
       if (!error && data) return data as OptionRow[];
@@ -430,12 +438,15 @@ export async function importOptions(
   }
 
   const local = await readLocalOptions();
-  const filtered = local.filter((row) => {
+  const archived = local.map((row) => {
     const rowBuilderId = row.builder_id || "00000000-0000-0000-0000-000000000001";
     const key = `${normalizeCategory(row.option_category ?? "")}:${row.option_value}`;
-    return rowBuilderId !== builderId || !duplicateKeys.has(key);
+    if (rowBuilderId === builderId && duplicateKeys.has(key)) {
+      return { ...row, is_active: false };
+    }
+    return row;
   });
-  const next = [...filtered, ...records];
+  const next = [...archived, ...records];
   await writeLocalOptions(next);
   return records;
 }
@@ -487,10 +498,10 @@ export async function deleteOption(id: string, builderId?: string): Promise<bool
 
   if (supabase) {
     try {
-      let query = supabase.from("options").delete().eq("id", id);
+      let query = supabase.from("options").update({ is_active: false }).eq("id", id);
       if (builderId) query = query.eq("builder_id", builderId);
-      const { error } = await query;
-      if (!error) return true;
+      const { data, error } = await query.select("id").maybeSingle();
+      if (!error) return Boolean(data);
     } catch (e) {
       console.warn("Supabase deleteOption error, fallback to local:", e);
     }
@@ -501,10 +512,12 @@ export async function deleteOption(id: string, builderId?: string): Promise<bool
     (o) => o.id === id && (!builderId || (o.builder_id || "00000000-0000-0000-0000-000000000001") === builderId),
   );
   if (!exists) return false;
-  const filtered = local.filter(
-    (o) => !(o.id === id && (!builderId || (o.builder_id || "00000000-0000-0000-0000-000000000001") === builderId)),
+  const next = local.map((o) =>
+    o.id === id && (!builderId || (o.builder_id || "00000000-0000-0000-0000-000000000001") === builderId)
+      ? { ...o, is_active: false }
+      : o,
   );
-  await writeLocalOptions(filtered);
+  await writeLocalOptions(next);
   return true;
 }
 

@@ -2,13 +2,18 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
- * Global security middleware (audit findings F-06, F-07, F-08, F-04).
+ * Global security proxy (audit findings F-06, F-07, F-08, F-04).
  *
  * 1. Applies hardening response headers to every response (CSP, anti-clickjacking,
  *    MIME sniffing protection, referrer policy, permissions policy, HSTS in prod).
- * 2. Gates builder/project/permit pages behind the presence of a session cookie.
- *    The cookie signature is fully verified inside the routes/server components;
- *    this is a cheap first-line redirect for unauthenticated users.
+ * 2. Gates builder/project/permit/proposal pages behind the presence of a
+ *    session cookie. The cookie signature is fully verified inside the
+ *    routes/server components; this is a cheap first-line redirect for
+ *    unauthenticated users.
+ *
+ * Renamed from middleware.ts to proxy.ts per Next.js's middleware-to-proxy
+ * migration (https://nextjs.org/docs/messages/middleware-to-proxy) — file and
+ * exported function renamed, behavior unchanged.
  */
 
 const SESSION_COOKIE = "aduflow_session";
@@ -28,8 +33,14 @@ const CSP = [
   "font-src 'self' data:",
 ].join("; ");
 
-const PROTECTED_PREFIXES = ["/builder", "/projects", "/permit"];
-const PUBLIC_PATHS = ["/builder/login"];
+// audit critical-process-audit.md §4/§14 — /proposals previously had no global
+// gate, which let /proposals/[id] and /proposals/[id]/lender be reached by
+// anyone with a lead UUID. It is now protected like /builder, /projects, and
+// /permit. The /proposals/share/[token] route is intentionally public (it's
+// the homeowner-facing shared-link page) and is carved out via PUBLIC_PREFIXES.
+const PROTECTED_PREFIXES = ["/builder", "/projects", "/permit", "/proposals"];
+const PUBLIC_PATHS = ["/builder/login", "/builder/forgot-password", "/builder/reset-password"];
+const PUBLIC_PREFIXES = ["/proposals/share"];
 
 function applySecurityHeaders(response: NextResponse) {
   response.headers.set("Content-Security-Policy", CSP);
@@ -49,12 +60,13 @@ function applySecurityHeaders(response: NextResponse) {
   return response;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isProtected =
     PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`)) &&
-    !PUBLIC_PATHS.includes(pathname);
+    !PUBLIC_PATHS.includes(pathname) &&
+    !PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   if (isProtected) {
     const hasSession = Boolean(request.cookies.get(SESSION_COOKIE)?.value);

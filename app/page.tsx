@@ -78,6 +78,7 @@ export default function Home() {
           <div className="navLinks">
             <Link href="/configurator">Configurator</Link>
             <Link href="/builder">Builder OS</Link>
+            <Link href="/pricing">Pricing</Link>
           </div>
         </nav>
 

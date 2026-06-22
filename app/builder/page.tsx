@@ -6,6 +6,7 @@ import { LeadStatusSelect } from "./LeadStatusSelect";
 import { TopNav } from "../components/TopNav";
 import { getSupabaseServiceClient } from "../../lib/supabase";
 import { getAuthenticatedBuilderId } from "../../lib/auth";
+import { listModels } from "../../lib/catalogStore";
 
 const STATUS_LABELS: Record<string, string> = {
   new: "New",
@@ -19,6 +20,11 @@ export default async function BuilderDashboard() {
   const builderId = await getAuthenticatedBuilderId();
   if (!builderId) {
     redirect("/builder/login");
+  }
+
+  const models = await listModels(builderId);
+  if (models.length === 0) {
+    redirect("/builder/setup?onboarding=true");
   }
 
   const leads = await listLeads(builderId);
@@ -61,6 +67,7 @@ export default async function BuilderDashboard() {
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
           <Link className="button secondary" href="/builder/setup">Complete builder setup</Link>
+          <Link className="button secondary" href="/builder/billing">Billing</Link>
           <Link className="button primary" href="/configurator">New lead quote</Link>
         </div>
       </section>

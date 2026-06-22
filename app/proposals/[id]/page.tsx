@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { buildNextSteps, buildProposalSections, formatCurrency } from "../../../lib/proposalBuilder";
 import { getLead } from "../../../lib/leadStore";
 import { PrintButton } from "../share/[token]/PrintButton";
@@ -8,6 +8,7 @@ import { ManufacturerMatch } from "../../configurator/ManufacturerMatch";
 import { TopNav } from "../../components/TopNav";
 import { FloorPlanPreview } from "../../configurator/FloorPlanPreview";
 import { readEnv } from "../../../lib/env";
+import { getAuthenticatedBuilderId } from "../../../lib/auth";
 
 export default async function ProposalPage({
   params,
@@ -18,6 +19,18 @@ export default async function ProposalPage({
   const lead = await getLead(id);
 
   if (!lead) {
+    notFound();
+  }
+
+  // audit critical-process-audit.md §4/§14 — this page exposes the homeowner's
+  // contact info and full proposal; it must be gated the same way /permit and
+  // /projects already are.
+  const builderId = await getAuthenticatedBuilderId();
+  if (!builderId) {
+    redirect("/builder/login");
+  }
+
+  if (lead.builderId !== builderId) {
     notFound();
   }
 

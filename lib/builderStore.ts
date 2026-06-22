@@ -26,6 +26,23 @@ export type BuilderProfile = {
   phone: string;
 };
 
+export type BuilderBillingInfo = {
+  stripeCustomerId: string | null;
+  subscriptionStatus: string;
+  subscriptionPlan: string | null;
+  currentPeriodEnd: string | null;
+  /** Pricing-tier id from lib/billingPlans.ts — "pilot" until a builder subscribes. */
+  planId: string;
+};
+
+const BLANK_BILLING: BuilderBillingInfo = {
+  stripeCustomerId: null,
+  subscriptionStatus: "trialing",
+  subscriptionPlan: null,
+  currentPeriodEnd: null,
+  planId: "pilot",
+};
+
 /**
  * Blank credential template. New builders start with EMPTY regulated fields
  * (license, insurance, bond, warranty) so they can never unknowingly persist
@@ -57,6 +74,11 @@ type LocalBuilderAccount = {
   email: string;
   phone: string;
   passwordHash: string;
+  stripeCustomerId?: string | null;
+  subscriptionStatus?: string;
+  subscriptionPlan?: string | null;
+  currentPeriodEnd?: string | null;
+  planId?: string | null;
 };
 
 const accountsPath = getLocalStorePath("builder-accounts.json");
@@ -319,4 +341,182 @@ export async function verifyBuilderLogin(emailRaw: string, password: string): Pr
     return { id: account.id, companyName: account.companyName, email: account.email, phone: account.phone };
   }
   return null;
+}
+
+// ── Password reset ───────────────────────────────────────────────────────────
+
+/** Looked up by email for the forgot-password flow. Returns the password hash for token fingerprinting. */
+export async function getBuilderAuthByEmail(
+  emailRaw: string,
+): Promise<{ id: string; email: string; passwordHash: string } | null> {
+  const email = emailRaw.trim().toLowerCase();
+
+  const supabase = getSupabaseServiceClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("builders")
+        .select("id, email, password_hash")
+        .eq("email", email)
+        .maybeSingle();
+      if (!error && data && data.password_hash) {
+        return { id: data.id, email: data.email ?? email, passwordHash: data.password_hash };
+      }
+      if (!error) return null;
+    } catch {
+      // Fall through to local accounts.
+    }
+  }
+
+  const accounts = await readLocalAccounts();
+  const account = accounts.find((a) => a.email.toLowerCase() === email);
+  return account ? { id: account.id, email: account.email, passwordHash: account.passwordHash } : null;
+}
+
+export async function getBuilderPasswordHashById(builderId: string): Promise<string | null> {
+  const supabase = getSupabaseServiceClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("builders")
+        .select("password_hash")
+        .eq("id", builderId)
+        .maybeSingle();
+      if (!error && data) return data.password_hash ?? null;
+      if (!error) return null;
+    } catch {
+      // Fall through to local accounts.
+    }
+  }
+
+  const accounts = await readLocalAccounts();
+  const account = accounts.find((a) => a.id === builderId);
+  return account?.passwordHash ?? null;
+}
+
+export async function updateBuilderPassword(builderId: string, newPasswordHash: string): Promise<void> {
+  const supabase = getSupabaseServiceClient();
+  if (supabase) {
+    try {
+      const { error } = await supabase
+        .from("builders")
+        .update({ password_hash: newPasswordHash })
+        .eq("id", builderId);
+      if (!error) return;
+    } catch {
+      // Fall through to local accounts.
+    }
+  }
+
+  const accounts = await readLocalAccounts();
+  const index = accounts.findIndex((a) => a.id === builderId);
+  if (index !== -1) {
+    accounts[index].passwordHash = newPasswordHash;
+    await writeLocalAccounts(accounts);
+  }
+}
+
+// ── Billing (Stripe) ─────────────────────────────────────────────────────────
+
+export async function getBuilderBillingInfo(builderId: string): Promise<BuilderBillingInfo> {
+  const supabase = getSupabaseServiceClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("builders")
+        .select("stripe_customer_id, subscription_status, subscription_plan, current_period_end, plan_id")
+        .eq("id", builderId)
+        .maybeSingle();
+      if (!error && data) {
+        return {
+          stripeCustomerId: data.stripe_customer_id ?? null,
+          subscriptionStatus: data.subscription_status ?? "trialing",
+          subscriptionPlan: data.subscription_plan ?? null,
+          currentPeriodEnd: data.current_period_end ?? null,
+          planId: data.plan_id ?? "pilot",
+        };
+      }
+    } catch {
+      // Fall through to local accounts.
+    }
+  }
+
+  const accounts = await readLocalAccounts();
+  const account = accounts.find((a) => a.id === builderId);
+  if (!account) return BLANK_BILLING;
+  return {
+    stripeCustomerId: account.stripeCustomerId ?? null,
+    subscriptionStatus: account.subscriptionStatus ?? "trialing",
+    subscriptionPlan: account.subscriptionPlan ?? null,
+    currentPeriodEnd: account.currentPeriodEnd ?? null,
+    planId: account.planId ?? "pilot",
+  };
+}
+
+/** Persist the Stripe customer id the first time a builder starts checkout. */
+export async function setBuilderStripeCustomerId(builderId: string, stripeCustomerId: string): Promise<void> {
+  const supabase = getSupabaseServiceClient();
+  if (supabase) {
+    try {
+      const { error } = await supabase
+        .from("builders")
+        .update({ stripe_customer_id: stripeCustomerId })
+        .eq("id", builderId);
+      if (!error) return;
+    } catch {
+      // Fall through to local accounts.
+    }
+  }
+
+  const accounts = await readLocalAccounts();
+  const index = accounts.findIndex((a) => a.id === builderId);
+  if (index !== -1) {
+    accounts[index].stripeCustomerId = stripeCustomerId;
+    await writeLocalAccounts(accounts);
+  }
+}
+
+/**
+ * Update subscription state from a Stripe webhook event. Looked up by Stripe
+ * customer id (the webhook payload has no ADUflow builder id).
+ */
+export async function updateBuilderSubscriptionByStripeCustomerId(
+  stripeCustomerId: string,
+  updates: {
+    subscriptionStatus: string;
+    subscriptionPlan?: string | null;
+    currentPeriodEnd?: string | null;
+    /** lib/billingPlans.ts plan id, when resolvable from the Stripe event. */
+    planId?: string | null;
+  },
+): Promise<void> {
+  const supabase = getSupabaseServiceClient();
+  if (supabase) {
+    try {
+      const updatePayload: Record<string, unknown> = {
+        subscription_status: updates.subscriptionStatus,
+        subscription_plan: updates.subscriptionPlan ?? null,
+        current_period_end: updates.currentPeriodEnd ?? null,
+      };
+      if (updates.planId) updatePayload.plan_id = updates.planId;
+
+      const { error } = await supabase
+        .from("builders")
+        .update(updatePayload)
+        .eq("stripe_customer_id", stripeCustomerId);
+      if (!error) return;
+    } catch {
+      // Fall through to local accounts.
+    }
+  }
+
+  const accounts = await readLocalAccounts();
+  const index = accounts.findIndex((a) => a.stripeCustomerId === stripeCustomerId);
+  if (index !== -1) {
+    accounts[index].subscriptionStatus = updates.subscriptionStatus;
+    accounts[index].subscriptionPlan = updates.subscriptionPlan ?? null;
+    accounts[index].currentPeriodEnd = updates.currentPeriodEnd ?? null;
+    if (updates.planId) accounts[index].planId = updates.planId;
+    await writeLocalAccounts(accounts);
+  }
 }

@@ -51,6 +51,12 @@ export function TopNav() {
         >
           Builder OS
         </Link>
+        <Link
+          href="/pricing"
+          className={pathname === "/pricing" ? "navLink active" : "navLink"}
+        >
+          Pricing
+        </Link>
         {isLoggedIn && (
           <button
             onClick={handleSignOut}
