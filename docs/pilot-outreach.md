@@ -22,6 +22,20 @@ ADUflow is no longer just a configurator. It is an address-first pre-constructio
 Important wording:
 Use "first-pass zoning screen" or "municipal fallback estimate" unless a live zoning API result is available. Do not imply permit approval.
 
+Current zoning demo coverage for this outreach list:
+
+| Builder market | Demo wording |
+|---|---|
+| Surrey, BC | Live City of Surrey zoning district plus curated ADU assumptions |
+| Courtenay / Comox Valley, BC | Live City of Courtenay zoning district inside city limits; fallback elsewhere on Vancouver Island |
+| Toronto, ON | Live City of Toronto zoning district |
+| Seattle, WA | Live City of Seattle zoning district |
+| Portland, OR | Live City of Portland zoning district |
+| Leduc, AB | City-specific municipal fallback estimate; no live polygon source |
+| Edmonton / Calgary, AB | Live municipal zoning district |
+| California | State and major-city fallback estimate; no statewide parcel zoning source |
+| Other Ontario municipalities | Provincial or city fallback unless a live adapter is listed |
+
 ---
 
 ## General Template

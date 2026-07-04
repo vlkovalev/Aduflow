@@ -36,7 +36,16 @@ export async function GET(request: Request) {
     return NextResponse.json({
       result: null,
       configured: Boolean(process.env.ZONEOMICS_API_KEY),
-      municipalCoverage: ["Edmonton, AB", "Calgary, AB", "Vancouver, BC"],
+      municipalCoverage: [
+        "Edmonton, AB",
+        "Calgary, AB",
+        "Vancouver, BC",
+        "Surrey, BC",
+        "Courtenay, BC",
+        "Toronto, ON",
+        "Seattle, WA",
+        "Portland, OR",
+      ],
     });
   }
 

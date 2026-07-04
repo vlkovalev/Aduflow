@@ -100,6 +100,14 @@ const MUNICIPAL_RULES: MunicipalRule[] = [
     parkingRequired: null, overlayRisks: [],
     aduPermitted: true, reviewRisk: "Low", permitPath: "Development permit — City of Kelowna",
   },
+  {
+    match: ["courtenay, bc", "courtenay, british columbia", "comox valley, bc"],
+    zoneCode: "Residential district", zoneDescription: "Courtenay residential zone - secondary residence eligibility requires district review",
+    maxAduSqFt: 968, maxStories: 2, maxHeightFt: null,
+    frontSetback: null, sideSetback: "Confirm with City of Courtenay", rearSetback: "Confirm with City of Courtenay",
+    parkingRequired: "Confirm with City of Courtenay", overlayRisks: ["Confirm parcel-specific zoning requirements"],
+    aduPermitted: null, reviewRisk: "Medium", permitPath: "Zoning and building permit review - City of Courtenay",
+  },
   // Alberta
   {
     match: ["calgary, ab", "calgary, alberta"],
@@ -116,6 +124,14 @@ const MUNICIPAL_RULES: MunicipalRule[] = [
     frontSetback: null, sideSetback: "3.9 ft", rearSetback: "6.6 ft",
     parkingRequired: null, overlayRisks: [],
     aduPermitted: true, reviewRisk: "Low", permitPath: "Development permit — City of Edmonton",
+  },
+  {
+    match: ["leduc, ab", "leduc, alberta"],
+    zoneCode: "Residential district", zoneDescription: "Leduc residential zoning - secondary suite eligibility requires district review",
+    maxAduSqFt: 968, maxStories: 2, maxHeightFt: null,
+    frontSetback: null, sideSetback: "Confirm with City of Leduc", rearSetback: "Confirm with City of Leduc",
+    parkingRequired: "Confirm with City of Leduc", overlayRisks: ["No live municipal polygon source configured"],
+    aduPermitted: null, reviewRisk: "Medium", permitPath: "Development permit review - City of Leduc",
   },
   // Ontario
   {
