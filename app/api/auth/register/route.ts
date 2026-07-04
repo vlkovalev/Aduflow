@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { AuthError, registerBuilder } from "../../../../lib/builderStore";
 import { createEmailVerificationToken } from "../../../../lib/auth";
 import { clientIp, rateLimit } from "../../../../lib/rateLimit";
-import { sendEmail } from "../../../../lib/email";
+import { isEmailConfigured, sendEmail } from "../../../../lib/email";
 
 export const runtime = "nodejs";
 
@@ -44,6 +44,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: errors.join(" ") }, { status: 400 });
   }
 
+  if (process.env.NODE_ENV === "production" && !isEmailConfigured()) {
+    return NextResponse.json(
+      { error: "Account registration is temporarily unavailable. Please contact ADUflow support." },
+      { status: 503 },
+    );
+  }
+
   let builder;
   try {
     builder = await registerBuilder({ companyName, email, phone, password });
@@ -62,7 +69,8 @@ export async function POST(request: Request) {
   return NextResponse.json({
     builder: { id: builder.id, companyName: builder.companyName, email: builder.email },
     requiresVerification: true,
-    verificationUrl: verification.sent ? undefined : verification.url,
+    verificationUrl:
+      process.env.NODE_ENV !== "production" && !verification.sent ? verification.url : undefined,
     message: "Account created. Check your email to verify your account before signing in.",
   });
 }

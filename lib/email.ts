@@ -3,6 +3,10 @@ import { readEnv } from "./env";
 
 let emailClient: Resend | null = null;
 
+export function isEmailConfigured(): boolean {
+  return Boolean(readEnv("RESEND_API_KEY") && readEnv("EMAIL_FROM"));
+}
+
 /** Returns null when RESEND_API_KEY is unset — callers should treat email as best-effort. */
 function getEmailClient(): Resend | null {
   const apiKey = readEnv("RESEND_API_KEY");

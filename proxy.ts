@@ -39,7 +39,12 @@ const CSP = [
 // /permit. The /proposals/share/[token] route is intentionally public (it's
 // the homeowner-facing shared-link page) and is carved out via PUBLIC_PREFIXES.
 const PROTECTED_PREFIXES = ["/builder", "/projects", "/permit", "/proposals"];
-const PUBLIC_PATHS = ["/builder/login", "/builder/forgot-password", "/builder/reset-password"];
+const PUBLIC_PATHS = [
+  "/builder/login",
+  "/builder/forgot-password",
+  "/builder/reset-password",
+  "/builder/verify-email",
+];
 const PUBLIC_PREFIXES = ["/proposals/share"];
 
 function applySecurityHeaders(response: NextResponse) {

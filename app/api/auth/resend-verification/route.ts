@@ -5,7 +5,7 @@ import {
   isBuilderEmailVerified,
   setBuilderEmailVerification,
 } from "../../../../lib/builderStore";
-import { sendEmail } from "../../../../lib/email";
+import { isEmailConfigured, sendEmail } from "../../../../lib/email";
 import { clientIp, rateLimit } from "../../../../lib/rateLimit";
 
 export const runtime = "nodejs";
@@ -36,6 +36,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Email is required." }, { status: 400 });
   }
 
+  if (process.env.NODE_ENV === "production" && !isEmailConfigured()) {
+    return NextResponse.json(
+      { error: "Email verification is temporarily unavailable. Please contact ADUflow support." },
+      { status: 503 },
+    );
+  }
+
   const account = await getBuilderAuthByEmail(email);
   let verificationUrl: string | undefined;
   if (account && !(await isBuilderEmailVerified(account.id))) {
@@ -51,7 +58,7 @@ export async function POST(request: Request) {
         <p><a href="${verifyUrl}">Verify your email</a>. This link expires in 7 days.</p>
       `,
     });
-    if (!sent) verificationUrl = verifyUrl;
+    if (!sent && process.env.NODE_ENV !== "production") verificationUrl = verifyUrl;
   }
 
   return NextResponse.json({ ...GENERIC_RESPONSE, verificationUrl });
