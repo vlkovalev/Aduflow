@@ -33,7 +33,11 @@ export async function GET(request: Request) {
   const result = await lookupZoning(address.trim());
 
   if (!result) {
-    return NextResponse.json({ result: null, configured: Boolean(process.env.ZONEOMICS_API_KEY) });
+    return NextResponse.json({
+      result: null,
+      configured: Boolean(process.env.ZONEOMICS_API_KEY),
+      municipalCoverage: ["Edmonton, AB", "Calgary, AB", "Vancouver, BC"],
+    });
   }
 
   return NextResponse.json({ result });

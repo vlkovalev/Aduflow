@@ -1245,9 +1245,14 @@ input {
 }
 
 .zoningNote.muted {
-  color: var(--muted);
+  color: rgba(255,255,255,0.72);
   background: none;
   margin-top: 8px;
+}
+
+.zoningNote.muted a {
+  color: #fff;
+  font-weight: 700;
 }
 
 .formFinePrint {

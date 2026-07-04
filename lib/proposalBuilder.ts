@@ -87,6 +87,7 @@ export function formatCurrency(value: number) {
 }
 
 export function formatZoningSource(source: string) {
+  if (source === "municipal_open_data") return "Live municipal open-data result";
   if (source === "zoneomics") return "Live zoning provider result";
   if (source === "municipal_fallback") return "Municipal fallback estimate";
   if (source === "manual") return "Manual assumption";

@@ -207,6 +207,13 @@ export default function Configurator() {
               {zoningStatus === "loading" ? "Looking up..." : "Check zoning"}
             </button>
           </div>
+          <p className="zoningNote" style={{ color: "rgba(255,255,255,0.72)", marginTop: 8 }}>
+            Address lookup may use{" "}
+            <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">
+              OpenStreetMap
+            </a>{" "}
+            geocoding and official municipal open-data services.
+          </p>
           {zoningStatus === "found" && zoningResult && (
             <div>
               {!isEditingZoning ? (
@@ -218,6 +225,16 @@ export default function Configurator() {
                   <p className="zoningNote">
                     Source: <strong>{formatZoningSource(zoningResult.source)}</strong>. This is a first-pass feasibility screen, not a permit approval.
                   </p>
+                  {zoningResult.sourceUrl ? (
+                    <p className="zoningNote muted">
+                      <a href={zoningResult.sourceUrl} target="_blank" rel="noreferrer">
+                        View official municipal source
+                      </a>
+                      {zoningResult.dataUpdatedAt
+                        ? ` - data dated ${formatSourceDate(zoningResult.dataUpdatedAt)}`
+                        : " - retrieved from the current municipal dataset"}
+                    </p>
+                  ) : null}
                   <div className="zoningDetails" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
                     <div>
                       <span style={{ display: "block", fontSize: 11, color: "var(--muted)" }}>Max ADU Size</span>
@@ -243,7 +260,9 @@ export default function Configurator() {
                     </div>
                     <div>
                       <span style={{ display: "block", fontSize: 11, color: "var(--muted)" }}>Zoning Source</span>
-                      <strong style={{ fontSize: 13, color: "var(--muted)" }}>{zoningResult.source}</strong>
+                      <strong style={{ fontSize: 13, color: "rgba(255,255,255,0.72)" }}>
+                        {formatZoningSource(zoningResult.source)}
+                      </strong>
                     </div>
                   </div>
                   <div style={{ marginTop: 14 }}>
@@ -769,8 +788,14 @@ function safeCurrent(current: string, values: string[]) {
 }
 
 function formatZoningSource(source: string) {
+  if (source === "municipal_open_data") return "Live municipal open-data result";
   if (source === "zoneomics") return "Live zoning provider result";
   if (source === "municipal_fallback") return "Municipal fallback estimate";
   if (source === "manual") return "Manual assumption";
   return source || "Not available";
+}
+
+function formatSourceDate(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString("en-CA");
 }

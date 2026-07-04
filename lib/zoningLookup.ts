@@ -1,19 +1,20 @@
+import {
+  lookupMunicipalOpenData,
+  type MunicipalOpenDataMatch,
+} from "./municipalZoningProviders";
+
 /**
  * Address-based zoning lookup.
  *
- * Primary: Zoneomics API — covers US and major Canadian cities (Vancouver, Calgary, Toronto).
- *          Requires ZONEOMICS_API_KEY env var.
- *          Docs: https://www.zoneomics.com/product/api
- *
- * Fallback: Smart municipality database covering major ADU markets across North America.
- *           Works without any API key. Covers 20+ cities + province/state fallbacks.
- *           All fallback results are clearly labelled source: "municipal_fallback".
+ * Primary: official municipal open-data polygons for supported Canadian cities.
+ * Optional: Zoneomics for addresses without a municipal adapter when its key is configured.
+ * Fallback: curated city and regional assumptions, always labelled municipal_fallback.
  */
 
 // ── Canonical normalized schema ───────────────────────────────────────────
 
 export type ZoningResult = {
-  source: "zoneomics" | "regrid" | "lightbox" | "municipal_fallback" | "manual";
+  source: "municipal_open_data" | "zoneomics" | "regrid" | "lightbox" | "municipal_fallback" | "manual";
   jurisdiction: string;
   zoneCode: string;
   zoneDescription: string;
@@ -30,6 +31,8 @@ export type ZoningResult = {
   overlayRisks: string[];
   confidence: number;        // 0–1
   checkedAt: string;         // ISO timestamp
+  sourceUrl?: string;
+  dataUpdatedAt?: string;
   rawData: unknown;
   // Computed backward-compat fields — derived from confidence + overlayRisks
   reviewRisk: "Low" | "Medium" | "High";
@@ -379,11 +382,14 @@ function lookupZoningMock(address: string): ZoningResult | null {
 export async function lookupZoning(address: string): Promise<ZoningResult | null> {
   const apiKey = process.env.ZONEOMICS_API_KEY;
 
-  if (!apiKey) {
-    return lookupZoningMock(address);
+  try {
+    const municipalMatch = await lookupMunicipalOpenData(address);
+    if (municipalMatch) return mergeMunicipalOpenData(address, municipalMatch);
+  } catch {
+    // Continue to the optional commercial provider or curated fallback.
   }
 
-  try {
+  if (apiKey) try {
     const encoded = encodeURIComponent(address);
     const response = await fetch(
       `https://app.zoneomics.com/api/v2/properties/?address=${encoded}`,
@@ -401,10 +407,52 @@ export async function lookupZoning(address: string): Promise<ZoningResult | null
     }
 
     const data = (await response.json()) as Record<string, unknown>;
-    return parseZoneomicsResponse(address, data);
+    return parseZoneomicsResponse(address, data) ?? lookupZoningMock(address);
   } catch {
-    return lookupZoningMock(address);
+    // Continue to the curated fallback.
   }
+
+  return lookupZoningMock(address);
+}
+
+function mergeMunicipalOpenData(
+  address: string,
+  match: MunicipalOpenDataMatch,
+): ZoningResult {
+  const fallback = lookupZoningMock(address);
+  const residential = /residential|small scale|housing|rowhouse|r[- ]?[a-z0-9]/i.test(
+    `${match.zoneCode} ${match.zoneDescription}`,
+  );
+  const overlayRisks = [...(fallback?.overlayRisks ?? [])];
+  if (!residential) overlayRisks.push("Confirm ADU eligibility for this zoning district");
+
+  return {
+    source: "municipal_open_data",
+    jurisdiction: match.jurisdiction,
+    zoneCode: match.zoneCode,
+    zoneDescription: match.zoneDescription,
+    aduPermitted: residential ? fallback?.aduPermitted ?? null : null,
+    maxAduSqFt: fallback?.maxAduSqFt ?? null,
+    maxStories: fallback?.maxStories ?? null,
+    maxHeightFt: fallback?.maxHeightFt ?? null,
+    frontSetback: fallback?.frontSetback ?? null,
+    sideSetback: fallback?.sideSetback ?? null,
+    rearSetback: fallback?.rearSetback ?? null,
+    parkingRequired: fallback?.parkingRequired ?? null,
+    overlayRisks,
+    confidence: residential ? 0.78 : 0.68,
+    checkedAt: new Date().toISOString(),
+    sourceUrl: match.sourceUrl,
+    dataUpdatedAt: match.dataUpdatedAt,
+    rawData: {
+      provider: match.provider,
+      geocodedAddress: match.geocodedAddress,
+      zoningRecord: match.rawData,
+      ruleBasis: "Municipal zoning polygon plus curated city-level ADU assumptions",
+    },
+    reviewRisk: residential ? fallback?.reviewRisk ?? "Medium" : "Medium",
+    permitPath: fallback?.permitPath ?? `Municipal zoning review - ${match.jurisdiction}`,
+  };
 }
 
 // ── Zoneomics response parser ─────────────────────────────────────────────
