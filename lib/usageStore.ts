@@ -10,7 +10,7 @@ import { getLocalStorePath } from "./localStoreHelper";
  *
  * Deliberately NOT metered on raw lead creation. A lead only counts once a
  * builder has reviewed it and marked it "qualified" — the fix for the
- * Angi/HomeAdvisor pattern of billing contractors for low-quality or
+ * traditional lead marketplace pattern of billing contractors for low-quality or
  * duplicate contacts they never controlled.
  */
 

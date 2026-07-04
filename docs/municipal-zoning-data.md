@@ -2,11 +2,12 @@
 
 ADUflow can identify the live zoning district for addresses in the following builder-outreach markets without a Zoneomics key:
 
-- Edmonton and Calgary, Alberta
-- Vancouver, Surrey, and Courtenay, British Columbia
-- Toronto, Ontario
-- Seattle, Washington
-- Portland, Oregon
+- Edmonton, Calgary, St. Albert, and Airdrie, Alberta
+- Vancouver, Surrey, Richmond, Coquitlam, Delta, Langley, Abbotsford, and Courtenay, British Columbia
+- Toronto, Mississauga, Ottawa, Brampton, Vaughan, Markham, and Hamilton, Ontario
+- Seattle, Tacoma, Everett, and Olympia, Washington
+- Portland, Beaverton, Eugene, and Salem, Oregon
+- California major cities (Los Angeles, San Francisco, San Diego, San Jose, Sacramento, Oakland, Berkeley, Pasadena, Long Beach)
 
 Leduc, Alberta has a city-specific fallback profile because a suitable public parcel zoning API was not available during implementation. California outreach remains covered by state and major-city fallback rules; it cannot be represented accurately by one statewide zoning polygon source.
 

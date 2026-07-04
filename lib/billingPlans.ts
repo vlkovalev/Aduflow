@@ -10,7 +10,7 @@ import { readEnv } from "./env";
  * base fee plus metered overage on QUALIFIED proposals — a lead the builder
  * has actually reviewed and marked "qualified" (see lib/usageStore.ts) —
  * never on raw inbound form-fills. This is the deliberate fix for the
- * Angi/HomeAdvisor "billed for garbage leads" failure mode documented in
+ * traditional lead marketplace "billed for garbage leads" failure mode documented in
  * the pricing strategy.
  *
  * Phase 2 (success fee) is not yet implemented here — it requires the

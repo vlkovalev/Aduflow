@@ -262,7 +262,7 @@ Determine whether a builder can sign up, establish credentials, import a catalog
 
 * **Airtable Interfaces**: Offers record lock states and changes audit logs. ADUflow lacks history logs for lead updates.
 * **Softr**: SURFACES custom user preview states. ADUflow now correctly implements this with the model preview.
-* **Angi / HomeAdvisor**: Charge contractors for unverified lead imports. ADUflow's "qualified proposal" model remains a superior, user-friendly choice.
+* **Traditional lead marketplaces**: Charge contractors for unverified lead imports. ADUflow's "qualified proposal" model remains a superior, user-friendly choice.
 
 ---
 

@@ -51,9 +51,8 @@ export default function PricingPage() {
           <p className="eyebrow">Why a qualified proposal, not a lead</p>
           <h2>You only pay for proposals you decided are worth pursuing.</h2>
           <p>
-            Lead marketplaces like Angi and HomeAdvisor bill contractors for raw, often shared or low-quality
-            contacts — a pattern that has drawn FTC scrutiny and widespread complaints. ADUflow meters usage on the
-            opposite signal: a lead only counts toward your plan the moment you, the builder, mark it
+            Traditional lead marketplaces bill contractors for raw, often shared or low-quality
+            contacts. ADUflow meters usage on the opposite signal: a lead only counts toward your plan the moment you, the builder, mark it
             &ldquo;Qualified&rdquo; in your dashboard. Every proposal is exclusive to you — never resold to
             competitors.
           </p>

@@ -49,7 +49,47 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 2. Add `APP_SECRET` with the generated value
 3. Redeploy
 
-### 3. Apply Database Migration (Supabase)
+### 3. Configure Stripe Billing
+
+ADUflow features plan-based subscription billing (Starter and Growth plans) with metered overage pricing on Qualified Proposals. Follow these steps to configure Stripe:
+
+#### Option A: Automatic Setup (Recommended)
+You can automatically create the required billing meter, products, and prices in Stripe and write the keys directly to your `.env.local` file by running our setup script:
+
+```bash
+node scripts/setup-stripe.js <YOUR_STRIPE_SECRET_KEY>
+```
+*(Use a test mode secret key `sk_test_...` from your Stripe dashboard for local testing.)*
+
+#### Option B: Manual Setup
+If you prefer to configure Stripe manually:
+1. **Create Billing Meter**: Go to Billing → Meters → Create meter.
+   - Display name: `Qualified Proposals`
+   - Event name: `qualified_proposal`
+   - Aggregation formula: `Sum`
+2. **Create Products & Prices**:
+   - **ADUflow Starter**: Base price $149/mo (Standard recurring). Metered Price: Graduated pricing linked to the `Qualified Proposals` meter (First 5 free, then $35/unit).
+   - **ADUflow Growth**: Base price $249/mo (Standard recurring). Metered Price: Graduated pricing linked to the `Qualified Proposals` meter (First 10 free, then $30/unit).
+3. **Write to `.env.local`**:
+   ```
+   STRIPE_SECRET_KEY=sk_test_...
+   STRIPE_PRICE_STARTER_BASE=price_...
+   STRIPE_PRICE_STARTER_METERED=price_...
+   STRIPE_PRICE_GROWTH_BASE=price_...
+   STRIPE_PRICE_GROWTH_METERED=price_...
+   ```
+
+#### Webhooks Configuration
+The application handles subscription updates at `/api/webhooks/stripe`.
+1. Go to Developers → Webhooks → Add endpoint.
+2. Endpoint URL: `https://YOUR-PRODUCTION-DOMAIN/api/webhooks/stripe` (or use Stripe CLI for local forwarding: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`).
+3. Events to listen to: `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`.
+4. Reveal the signing secret and add it to your environment:
+   ```
+   STRIPE_WEBHOOK_SECRET=whsec_...
+   ```
+
+### 4. Apply Database Migration (Supabase)
 
 Copy and run these SQL files in your Supabase SQL Editor, in order:
 
@@ -84,7 +124,7 @@ After verifying your environment variables and database migration:
 
 ### Builder Registration Flow
 
-1. **Send builders to:** `https://aduflow-oz9r.vercel.app/builder/login`
+1. **Send builders to:** `https://aduflow.ca/builder/login`
 2. They click **"Create Account"**
 3. Fill in:
    - Company name
@@ -108,7 +148,7 @@ After verifying your environment variables and database migration:
 
 ### Homeowner Flow (Lead Generation)
 
-1. Visit: `https://aduflow-oz9r.vercel.app/`
+1. Visit: `https://aduflow.ca/`
 2. Enter property address
 3. Configure ADU (model, finishes, foundation)
 4. Submit contact info
@@ -178,9 +218,9 @@ You can confidently tell builders:
 >
 > I'd love to show you ADUflow - a configurator that lets your customers design and price ADUs instantly on your website.
 >
-> **Try it here:** https://aduflow-oz9r.vercel.app
+> **Try it here:** https://aduflow.ca
 >
-> 1. Register as a builder: https://aduflow-oz9r.vercel.app/builder/login
+> 1. Register as a builder: https://aduflow.ca/builder/login
 > 2. Test the customer configurator as a homeowner
 > 3. See the lead appear in your dashboard
 >
