@@ -54,12 +54,19 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ADUflow features plan-based subscription billing (Starter and Growth plans) with metered overage pricing on Qualified Proposals. Follow these steps to configure Stripe:
 
 #### Option A: Automatic Setup (Recommended)
-You can automatically create the required billing meter, products, and prices in Stripe and write the keys directly to your `.env.local` file by running our setup script:
+You can automatically create or reuse the required billing meter, products, and prices in Stripe and write the identifiers to your `.env.local` file. First add your test secret key to `.env.local`:
+
+```env
+STRIPE_SECRET_KEY=sk_test_...
+```
+
+Then run:
 
 ```bash
-node scripts/setup-stripe.js <YOUR_STRIPE_SECRET_KEY>
+node scripts/setup-stripe.js
 ```
-*(Use a test mode secret key `sk_test_...` from your Stripe dashboard for local testing.)*
+
+Use a test mode key for local testing. Live-mode resource creation requires the explicit `node scripts/setup-stripe.js --live` command. Never pass a secret key as a command-line argument because it can be retained in shell history.
 
 #### Option B: Manual Setup
 If you prefer to configure Stripe manually:
@@ -83,7 +90,7 @@ If you prefer to configure Stripe manually:
 The application handles subscription updates at `/api/webhooks/stripe`.
 1. Go to Developers → Webhooks → Add endpoint.
 2. Endpoint URL: `https://YOUR-PRODUCTION-DOMAIN/api/webhooks/stripe` (or use Stripe CLI for local forwarding: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`).
-3. Events to listen to: `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`.
+3. Events to listen to: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`.
 4. Reveal the signing secret and add it to your environment:
    ```
    STRIPE_WEBHOOK_SECRET=whsec_...

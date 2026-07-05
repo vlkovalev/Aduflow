@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireBuilder } from "../../../../lib/apiAuth";
 import { getBuilderBillingInfo, getBuilderById, setBuilderStripeCustomerId } from "../../../../lib/builderStore";
 import { getStripeClient, getStripePriceId } from "../../../../lib/stripe";
-import { getStripePriceIdsForPlan, isPlanId, type PlanId } from "../../../../lib/billingPlans";
+import { getPlan, getStripePriceIdsForPlan, isPlanId, type PlanId } from "../../../../lib/billingPlans";
 
 export const runtime = "nodejs";
 
@@ -21,7 +21,12 @@ export async function POST(request: Request) {
   let requestedPlan: PlanId | null = null;
   try {
     const body = await request.json();
-    if (isPlanId(body?.planId)) requestedPlan = body.planId;
+    if (body?.planId !== undefined) {
+      if (!isPlanId(body.planId) || !getPlan(body.planId).isPubliclyPurchasable) {
+        return NextResponse.json({ error: "That billing plan is not available for checkout." }, { status: 400 });
+      }
+      requestedPlan = body.planId;
+    }
   } catch {
     // No JSON body — legacy single-plan checkout.
   }

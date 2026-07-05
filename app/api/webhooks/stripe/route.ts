@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripeClient, getStripeWebhookSecret } from "../../../../lib/stripe";
 import { updateBuilderSubscriptionByStripeCustomerId } from "../../../../lib/builderStore";
-import { getPlanIdForStripePriceId, isPlanId } from "../../../../lib/billingPlans";
+import {
+  getPlanIdForStripePriceId,
+  getStripePriceIdsForPlan,
+  isPlanId,
+} from "../../../../lib/billingPlans";
 
 export const runtime = "nodejs";
 
@@ -39,6 +43,7 @@ export async function POST(request: Request) {
         }
         break;
       }
+      case "customer.subscription.created":
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
@@ -59,14 +64,20 @@ export async function POST(request: Request) {
 }
 
 async function syncSubscription(stripeCustomerId: string, subscription: Stripe.Subscription) {
-  const periodEnd = subscription.items.data[0]?.current_period_end;
-  const basePriceId = subscription.items.data[0]?.price.id ?? null;
-
-  // Prefer the planId set explicitly at checkout (subscription metadata —
-  // see app/api/billing/checkout/route.ts); fall back to resolving it from
-  // the base price id for subscriptions created/edited outside that flow.
+  // Prefer explicit checkout metadata. Otherwise inspect every item because
+  // a mixed fixed-and-metered subscription has no dependable item ordering.
   const metadataPlanId = subscription.metadata?.planId;
-  const planId = isPlanId(metadataPlanId) ? metadataPlanId : getPlanIdForStripePriceId(basePriceId);
+  const configuredPlanId = isPlanId(metadataPlanId) ? metadataPlanId : null;
+  const configuredBasePriceId = configuredPlanId
+    ? getStripePriceIdsForPlan(configuredPlanId).basePriceId
+    : null;
+  const matchedBaseItem = configuredBasePriceId
+    ? subscription.items.data.find((item) => item.price.id === configuredBasePriceId)
+    : subscription.items.data.find((item) => getPlanIdForStripePriceId(item.price.id));
+  const basePriceId = matchedBaseItem?.price.id ?? configuredBasePriceId ?? null;
+  const planId = configuredPlanId ?? getPlanIdForStripePriceId(basePriceId);
+  const periodEnd = matchedBaseItem?.current_period_end
+    ?? subscription.items.data[0]?.current_period_end;
 
   await updateBuilderSubscriptionByStripeCustomerId(stripeCustomerId, {
     subscriptionStatus: subscription.status,

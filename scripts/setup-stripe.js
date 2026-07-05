@@ -1,195 +1,145 @@
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
+const fs = require("node:fs");
+const path = require("node:path");
+const Stripe = require("stripe");
+
+const ENV_KEYS = [
+  "STRIPE_SECRET_KEY",
+  "STRIPE_PRICE_STARTER_BASE",
+  "STRIPE_PRICE_STARTER_METERED",
+  "STRIPE_PRICE_GROWTH_BASE",
+  "STRIPE_PRICE_GROWTH_METERED",
+];
+
+const PLANS = [
+  { id: "starter", name: "ADUflow Starter", baseAmount: 14900, included: 5, overageAmount: 3500 },
+  { id: "growth", name: "ADUflow Growth", baseAmount: 24900, included: 10, overageAmount: 3000 },
+];
 
 async function main() {
-  const envLocalPath = path.join(__dirname, '..', '.env.local');
-  let envSecretKey = '';
-  if (fs.existsSync(envLocalPath)) {
-    const envContent = fs.readFileSync(envLocalPath, 'utf8');
-    const match = envContent.match(/^STRIPE_SECRET_KEY=(.*)$/m);
-    if (match && match[1]) {
-      envSecretKey = match[1].trim();
-    }
-  }
+  const envLocalPath = path.join(__dirname, "..", ".env.local");
+  const envContent = fs.existsSync(envLocalPath) ? fs.readFileSync(envLocalPath, "utf8") : "";
+  const secretKey = process.env.STRIPE_SECRET_KEY || readEnvValue(envContent, "STRIPE_SECRET_KEY");
+  const allowLive = process.argv.includes("--live");
 
-  const secretKey = process.argv[2] || envSecretKey || process.env.STRIPE_SECRET_KEY;
   if (!secretKey) {
-    console.error('Error: Please provide your Stripe Secret Key.');
-    console.error('Usage: node scripts/setup-stripe.js [STRIPE_SECRET_KEY]');
-    console.error('Alternatively, set STRIPE_SECRET_KEY in your .env.local file.');
+    console.error("Set STRIPE_SECRET_KEY in .env.local or the current process environment, then run this script again.");
+    process.exit(1);
+  }
+  if (secretKey.startsWith("sk_live_") && !allowLive) {
+    console.error("Refusing to create live Stripe resources without the explicit --live flag.");
     process.exit(1);
   }
 
-  console.log('Initializing Stripe...');
-  const Stripe = require('stripe');
   const stripe = new Stripe(secretKey);
+  const meter = await findOrCreateMeter(stripe);
+  const generated = { STRIPE_SECRET_KEY: secretKey };
 
-  try {
-    // 1. Create the billing meter
-    console.log('Creating billing meter "Qualified Proposals"...');
-    let meter;
-    try {
-      meter = await stripe.billing.meters.create({
-        display_name: 'Qualified Proposals',
-        event_name: 'qualified_proposal',
-        customer_mapping: {
-          event_payload_key: 'stripe_customer_id',
-          type: 'by_id',
-        },
-        default_aggregation: {
-          formula: 'sum',
-        },
-      });
-      console.log(`Meter created: ${meter.id}`);
-    } catch (e) {
-      if (e.message && e.message.includes('already exists')) {
-        // Meter might already exist, let's list to find it
-        console.log('Meter already exists. Listing meters to locate it...');
-        const meters = await stripe.billing.meters.list();
-        meter = meters.data.find(m => m.event_name === 'qualified_proposal');
-        if (!meter) {
-          throw new Error('Meter with event_name "qualified_proposal" already exists but could not be located.');
-        }
-        console.log(`Found existing meter: ${meter.id}`);
-      } else {
-        throw e;
-      }
-    }
-
-    // 2. Create ADUflow Starter Product
-    console.log('Creating product "ADUflow Starter"...');
-    const starterProduct = await stripe.products.create({
-      name: 'ADUflow Starter',
-      description: 'ADUflow Starter plan — flat base plus metered qualified proposal usage',
-    });
-    console.log(`Product created: ${starterProduct.id}`);
-
-    // 3. Create ADUflow Starter Base Price ($149.00/mo)
-    console.log('Creating base price $149/mo for Starter...');
-    const starterBasePrice = await stripe.prices.create({
-      product: starterProduct.id,
-      currency: 'usd',
-      recurring: {
-        interval: 'month',
-      },
-      unit_amount: 14900, // $149.00 in cents
-    });
-    console.log(`Base price created: ${starterBasePrice.id}`);
-
-    // 4. Create ADUflow Starter Metered Graduated Price
-    console.log('Creating metered price ($0 for first 5, then $35/ea) for Starter...');
-    const starterMeteredPrice = await stripe.prices.create({
-      product: starterProduct.id,
-      currency: 'usd',
-      recurring: {
-        interval: 'month',
-        usage_type: 'metered',
-        meter: meter.id,
-      },
-      billing_scheme: 'tiered',
-      tiers_mode: 'graduated',
-      tiers: [
-        { up_to: 5, unit_amount: 0 },
-        { up_to: 'inf', unit_amount: 3500 }, // $35.00 in cents
-      ],
-    });
-    console.log(`Metered price created: ${starterMeteredPrice.id}`);
-
-    // 5. Create ADUflow Growth Product
-    console.log('Creating product "ADUflow Growth"...');
-    const growthProduct = await stripe.products.create({
-      name: 'ADUflow Growth',
-      description: 'ADUflow Growth plan — flat base plus metered qualified proposal usage',
-    });
-    console.log(`Product created: ${growthProduct.id}`);
-
-    // 6. Create ADUflow Growth Base Price ($249.00/mo)
-    console.log('Creating base price $249/mo for Growth...');
-    const growthBasePrice = await stripe.prices.create({
-      product: growthProduct.id,
-      currency: 'usd',
-      recurring: {
-        interval: 'month',
-      },
-      unit_amount: 24900, // $249.00 in cents
-    });
-    console.log(`Base price created: ${growthBasePrice.id}`);
-
-    // 7. Create ADUflow Growth Metered Graduated Price
-    console.log('Creating metered price ($0 for first 10, then $30/ea) for Growth...');
-    const growthMeteredPrice = await stripe.prices.create({
-      product: growthProduct.id,
-      currency: 'usd',
-      recurring: {
-        interval: 'month',
-        usage_type: 'metered',
-        meter: meter.id,
-      },
-      billing_scheme: 'tiered',
-      tiers_mode: 'graduated',
-      tiers: [
-        { up_to: 10, unit_amount: 0 },
-        { up_to: 'inf', unit_amount: 3000 }, // $30.00 in cents
-      ],
-    });
-    console.log(`Metered price created: ${growthMeteredPrice.id}`);
-
-    // 8. Generate env file entries
-    console.log('\nStripe resources created successfully!');
-    const envLines = [
-      '',
-      '# ── Stripe Setup ──────────────────────────────────────────',
-      `STRIPE_SECRET_KEY=${secretKey}`,
-      `STRIPE_PRICE_STARTER_BASE=${starterBasePrice.id}`,
-      `STRIPE_PRICE_STARTER_METERED=${starterMeteredPrice.id}`,
-      `STRIPE_PRICE_GROWTH_BASE=${growthBasePrice.id}`,
-      `STRIPE_PRICE_GROWTH_METERED=${growthMeteredPrice.id}`,
-    ];
-
-    // Read existing .env.local and append
-    const envLocalPath = path.join(__dirname, '..', '.env.local');
-    let envContent = '';
-    if (fs.existsSync(envLocalPath)) {
-      envContent = fs.readFileSync(envLocalPath, 'utf8');
-    }
-
-    // Clean existing stripe vars if they exist
-    const filteredLines = envContent.split('\n').filter(line => {
-      const trimmed = line.trim();
-      return !(
-        trimmed.startsWith('STRIPE_SECRET_KEY=') ||
-        trimmed.startsWith('STRIPE_PRICE_STARTER_BASE=') ||
-        trimmed.startsWith('STRIPE_PRICE_STARTER_METERED=') ||
-        trimmed.startsWith('STRIPE_PRICE_GROWTH_BASE=') ||
-        trimmed.startsWith('STRIPE_PRICE_GROWTH_METERED=')
-      );
-    });
-
-    // Check if APP_SECRET is set, if not, generate one
-    const hasAppSecret = filteredLines.some(line => line.trim().startsWith('APP_SECRET='));
-    if (!hasAppSecret) {
-      const appSecret = crypto.randomBytes(32).toString('hex');
-      filteredLines.push(`APP_SECRET=${appSecret}`);
-      console.log(`Generated a secure APP_SECRET.`);
-    }
-
-    fs.writeFileSync(envLocalPath, [...filteredLines, ...envLines, ''].join('\n').trim() + '\n');
-    console.log(`Updated ${envLocalPath} with new price keys and secrets.`);
-
-    console.log('\nNext Steps:');
-    console.log('1. Set your public production domain in .env.local:');
-    console.log('   NEXT_PUBLIC_SITE_URL=https://yourdomain.com');
-    console.log('2. Create your webhook endpoint in Stripe:');
-    console.log('   Endpoint URL: https://yourdomain.com/api/webhooks/stripe');
-    console.log('   Events: customer.subscription.created, customer.subscription.updated, customer.subscription.deleted');
-    console.log('3. Reveal the Webhook Signing Secret and add to .env.local:');
-    console.log('   STRIPE_WEBHOOK_SECRET=whsec_...');
-    console.log('4. Restart your Next.js server to apply variables.');
-  } catch (err) {
-    console.error('Setup failed:', err);
-    process.exit(1);
+  for (const plan of PLANS) {
+    const product = await findOrCreateProduct(stripe, plan);
+    const basePrice = await findOrCreateBasePrice(stripe, product.id, plan);
+    const meteredPrice = await findOrCreateMeteredPrice(stripe, product.id, meter.id, plan);
+    const prefix = `STRIPE_PRICE_${plan.id.toUpperCase()}`;
+    generated[`${prefix}_BASE`] = basePrice.id;
+    generated[`${prefix}_METERED`] = meteredPrice.id;
   }
+
+  writeEnvValues(envLocalPath, envContent, generated);
+  console.log(`Stripe resources are ready. Updated ${envLocalPath}.`);
+  console.log("Next: configure /api/webhooks/stripe for checkout.session.completed and subscription events.");
+  console.log("Add STRIPE_WEBHOOK_SECRET to local and Vercel environments after creating the endpoint.");
 }
 
-main();
+async function findOrCreateMeter(stripe) {
+  const meters = await stripe.billing.meters.list({ limit: 100 });
+  const existing = meters.data.find((meter) => meter.event_name === "qualified_proposal");
+  if (existing) {
+    console.log(`Using existing qualified-proposal meter: ${existing.id}`);
+    return existing;
+  }
+  const meter = await stripe.billing.meters.create({
+    display_name: "Qualified Proposals",
+    event_name: "qualified_proposal",
+    customer_mapping: { event_payload_key: "stripe_customer_id", type: "by_id" },
+    default_aggregation: { formula: "sum" },
+  });
+  console.log(`Created qualified-proposal meter: ${meter.id}`);
+  return meter;
+}
+
+async function findOrCreateProduct(stripe, plan) {
+  const products = await stripe.products.list({ active: true, limit: 100 });
+  const existing = products.data.find(
+    (product) => product.metadata?.aduflow_plan === plan.id || product.name === plan.name,
+  );
+  if (existing) {
+    console.log(`Using existing ${plan.name} product: ${existing.id}`);
+    return existing;
+  }
+  return stripe.products.create({
+    name: plan.name,
+    description: `${plan.name} plan - flat base plus metered qualified proposal usage`,
+    metadata: { aduflow_plan: plan.id },
+  });
+}
+
+async function findOrCreateBasePrice(stripe, productId, plan) {
+  const prices = await stripe.prices.list({ product: productId, active: true, limit: 100 });
+  const existing = prices.data.find(
+    (price) =>
+      price.metadata?.aduflow_component === "base" ||
+      (price.recurring?.usage_type !== "metered" && price.unit_amount === plan.baseAmount),
+  );
+  if (existing) return existing;
+  return stripe.prices.create({
+    product: productId,
+    currency: "usd",
+    recurring: { interval: "month" },
+    unit_amount: plan.baseAmount,
+    metadata: { aduflow_plan: plan.id, aduflow_component: "base" },
+  });
+}
+
+async function findOrCreateMeteredPrice(stripe, productId, meterId, plan) {
+  const prices = await stripe.prices.list({ product: productId, active: true, limit: 100 });
+  const existing = prices.data.find(
+    (price) =>
+      price.metadata?.aduflow_component === "metered" ||
+      (price.recurring?.usage_type === "metered" &&
+        price.recurring?.meter === meterId &&
+        price.billing_scheme === "tiered"),
+  );
+  if (existing) return existing;
+  return stripe.prices.create({
+    product: productId,
+    currency: "usd",
+    recurring: { interval: "month", usage_type: "metered", meter: meterId },
+    billing_scheme: "tiered",
+    tiers_mode: "graduated",
+    tiers: [
+      { up_to: plan.included, unit_amount: 0 },
+      { up_to: "inf", unit_amount: plan.overageAmount },
+    ],
+    metadata: { aduflow_plan: plan.id, aduflow_component: "metered" },
+  });
+}
+
+function readEnvValue(content, key) {
+  const line = content.split(/\r?\n/).find((entry) => entry.trim().startsWith(`${key}=`));
+  return line ? line.slice(line.indexOf("=") + 1).trim() : "";
+}
+
+function writeEnvValues(filePath, currentContent, values) {
+  const filtered = currentContent
+    .split(/\r?\n/)
+    .filter((line) => !ENV_KEYS.some((key) => line.trim().startsWith(`${key}=`)));
+  const stripeLines = ["", "# Stripe billing", ...ENV_KEYS.map((key) => `${key}=${values[key] || ""}`)];
+  fs.writeFileSync(filePath, [...filtered, ...stripeLines, ""].join("\n").trim() + "\n", {
+    encoding: "utf8",
+    mode: 0o600,
+  });
+}
+
+main().catch((error) => {
+  console.error("Stripe setup failed:", error instanceof Error ? error.message : error);
+  process.exit(1);
+});
