@@ -3,6 +3,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { assertLocalFallbackAllowed, getLocalStorePath } from "./localStoreHelper";
 import { getSupabaseServiceClient, markSupabaseUnhealthy } from "./supabase";
+import { isUuid } from "./auth";
 import {
   DEFAULT_DRAW_MILESTONES,
   DEFAULT_PROJECT_MILESTONES,
@@ -48,7 +49,7 @@ export async function getProjectMilestones(leadId: string) {
 export async function saveProjectMilestones(leadId: string, milestones: ProjectMilestoneRecord[]) {
   const normalized = milestones.map((milestone, index) => ({
     ...milestone,
-    id: milestone.id || randomUUID(),
+    id: isUuid(milestone.id) ? milestone.id : randomUUID(),
     sortOrder: index + 1,
   }));
 
@@ -111,7 +112,7 @@ export async function getDrawMilestones(leadId: string) {
 export async function saveDrawMilestones(leadId: string, draws: DrawMilestoneRecord[]) {
   const normalized = draws.map((draw, index) => ({
     ...draw,
-    id: draw.id || randomUUID(),
+    id: isUuid(draw.id) ? draw.id : randomUUID(),
     sortOrder: index + 1,
   }));
 

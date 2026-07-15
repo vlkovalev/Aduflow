@@ -53,6 +53,8 @@ test("empty durable project stores return safe defaults instead of production lo
   const permitStore = await readFile(new URL("../lib/permitStore.ts", import.meta.url), "utf8");
   assert.match(projectStore, /!error[\s\S]*DEFAULT_PROJECT_MILESTONES/);
   assert.match(projectStore, /!error[\s\S]*DEFAULT_DRAW_MILESTONES/);
+  assert.match(projectStore, /isUuid\(milestone\.id\)\s*\?\s*milestone\.id\s*:\s*randomUUID\(\)/);
+  assert.match(projectStore, /isUuid\(draw\.id\)\s*\?\s*draw\.id\s*:\s*randomUUID\(\)/);
   assert.match(permitStore, /else\s*\{\s*return null;\s*\}/);
 });
 
