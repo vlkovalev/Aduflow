@@ -30,8 +30,8 @@ export async function getProjectMilestones(leadId: string) {
         .eq("lead_id", leadId)
         .order("sort_order", { ascending: true });
 
-      if (!error && data?.length) {
-        return data.map(mapProjectMilestoneRow);
+      if (!error) {
+        return data?.length ? data.map(mapProjectMilestoneRow) : DEFAULT_PROJECT_MILESTONES;
       }
       if (error) {
         markSupabaseUnhealthy();
@@ -93,8 +93,8 @@ export async function getDrawMilestones(leadId: string) {
         .eq("lead_id", leadId)
         .order("sort_order", { ascending: true });
 
-      if (!error && data?.length) {
-        return data.map(mapDrawMilestoneRow);
+      if (!error) {
+        return data?.length ? data.map(mapDrawMilestoneRow) : DEFAULT_DRAW_MILESTONES;
       }
       if (error) {
         markSupabaseUnhealthy();

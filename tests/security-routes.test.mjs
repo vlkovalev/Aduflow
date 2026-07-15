@@ -48,6 +48,14 @@ test("production cannot use ephemeral local business storage", () => {
   assert.match(localStoreSource, /local fallback is disabled in production/);
 });
 
+test("empty durable project stores return safe defaults instead of production local fallback", async () => {
+  const projectStore = await readFile(new URL("../lib/projectStore.ts", import.meta.url), "utf8");
+  const permitStore = await readFile(new URL("../lib/permitStore.ts", import.meta.url), "utf8");
+  assert.match(projectStore, /!error[\s\S]*DEFAULT_PROJECT_MILESTONES/);
+  assert.match(projectStore, /!error[\s\S]*DEFAULT_DRAW_MILESTONES/);
+  assert.match(permitStore, /else\s*\{\s*return null;\s*\}/);
+});
+
 test("public data collection links to privacy and terms", async () => {
   const configurator = await readFile(new URL("../app/configurator/page.tsx", import.meta.url), "utf8");
   await readFile(new URL("../app/privacy/page.tsx", import.meta.url), "utf8");

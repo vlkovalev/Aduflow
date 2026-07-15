@@ -131,6 +131,8 @@ export async function getPermitPackageByLeadId(leadId: string) {
         }));
 
         return mapSupabasePackage(data as Record<string, unknown>, tasks, documents);
+      } else {
+        return null;
       }
     } catch (e) {
       console.warn("Supabase getPermitPackageByLeadId exception, disabling Supabase:", e);
