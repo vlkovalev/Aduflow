@@ -84,6 +84,9 @@ export default function PricingPage() {
             See the configurator
           </Link>
         </div>
+        <p className="formFinePrint">
+          Paid plans renew monthly until canceled. Qualified-proposal overages apply as shown above. See the <Link href="/terms">billing terms</Link> and <Link href="/privacy">privacy policy</Link>.
+        </p>
       </section>
     </main>
   );

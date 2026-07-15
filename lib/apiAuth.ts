@@ -10,7 +10,7 @@ import { getBuilderBillingInfo } from "./builderStore";
  *   if (auth.response) return auth.response;
  *   const builderId = auth.builderId; // narrowed to `string` by the guard above
  */
-export async function requireBuilder(): Promise<
+export async function requireBuilderSession(): Promise<
   | { builderId: string; response: null }
   | { builderId: null; response: NextResponse }
 > {
@@ -25,6 +25,11 @@ export async function requireBuilder(): Promise<
 }
 
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set(["trialing", "active"]);
+
+export async function builderHasProductAccess(builderId: string): Promise<boolean> {
+  const billing = await getBuilderBillingInfo(builderId);
+  return billing.planId === "pilot" || ACTIVE_SUBSCRIPTION_STATUSES.has(billing.subscriptionStatus);
+}
 
 /**
  * Require an authenticated builder whose subscription is in good standing.
@@ -41,11 +46,11 @@ export async function requireActiveSubscription(): Promise<
   | { builderId: string; response: null }
   | { builderId: null; response: NextResponse }
 > {
-  const auth = await requireBuilder();
+  const auth = await requireBuilderSession();
   if (auth.response) return auth;
 
   const billing = await getBuilderBillingInfo(auth.builderId);
-  if (!ACTIVE_SUBSCRIPTION_STATUSES.has(billing.subscriptionStatus)) {
+  if (!(await builderHasProductAccess(auth.builderId))) {
     return {
       builderId: null,
       response: NextResponse.json(
@@ -56,3 +61,9 @@ export async function requireActiveSubscription(): Promise<
   }
   return { builderId: auth.builderId, response: null };
 }
+
+/** Pilot accounts remain entitled; paid plans must be trialing or active. */
+export const requireBuilderAccess = requireActiveSubscription;
+
+/** Default product-route gate: authenticated and commercially entitled. */
+export const requireBuilder = requireBuilderAccess;

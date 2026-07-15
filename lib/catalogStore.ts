@@ -3,7 +3,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { defaultCatalog, type Model, type OptionChoice, type PricingCatalog } from "./pricingEngine";
 import { getSupabaseServiceClient } from "./supabase";
-import { getLocalStorePath } from "./localStoreHelper";
+import { assertLocalFallbackAllowed, getLocalStorePath } from "./localStoreHelper";
 
 export type ModelRow = {
   id?: string;
@@ -34,6 +34,7 @@ const localOptionsPath = getLocalStorePath("options.json");
 // -- Local File Helpers --
 
 async function readLocalModels(): Promise<ModelRow[]> {
+  assertLocalFallbackAllowed();
   try {
     const raw = await readFile(localModelsPath, "utf8");
     return JSON.parse(raw) as ModelRow[];
@@ -53,11 +54,13 @@ async function readLocalModels(): Promise<ModelRow[]> {
 }
 
 async function writeLocalModels(data: ModelRow[]) {
+  assertLocalFallbackAllowed();
   await mkdir(path.dirname(localModelsPath), { recursive: true });
   await writeFile(localModelsPath, JSON.stringify(data, null, 2));
 }
 
 async function readLocalOptions(): Promise<OptionRow[]> {
+  assertLocalFallbackAllowed();
   try {
     const raw = await readFile(localOptionsPath, "utf8");
     return JSON.parse(raw) as OptionRow[];
@@ -84,6 +87,7 @@ async function readLocalOptions(): Promise<OptionRow[]> {
 }
 
 async function writeLocalOptions(data: OptionRow[]) {
+  assertLocalFallbackAllowed();
   await mkdir(path.dirname(localOptionsPath), { recursive: true });
   await writeFile(localOptionsPath, JSON.stringify(data, null, 2));
 }

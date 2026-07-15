@@ -3,13 +3,15 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import { readEnv } from "../lib/env";
 
-const siteUrl = readEnv("NEXT_PUBLIC_SITE_URL") ?? "https://aduflow.vercel.app";
+const siteUrl = readEnv("NEXT_PUBLIC_SITE_URL") ?? "https://aduflow.ca";
 
 export const metadata: Metadata = {
   title: "ADUflow - ADU Pre-Construction OS",
   description:
     "Turn any parcel into an instant feasibility check, budget range, and permit-ready proposal. Built for modular ADU and garden suite builders across North America.",
   metadataBase: new URL(siteUrl),
+  alternates: { canonical: "/" },
+  robots: { index: true, follow: true },
   openGraph: {
     type: "website",
     url: siteUrl,

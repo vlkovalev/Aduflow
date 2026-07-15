@@ -10,7 +10,7 @@ import {
 } from "./permitChecklist";
 import { getLead } from "./leadStore";
 import { getSupabaseServiceClient, markSupabaseUnhealthy } from "./supabase";
-import { getLocalStorePath } from "./localStoreHelper";
+import { assertLocalFallbackAllowed, getLocalStorePath } from "./localStoreHelper";
 
 export type PermitPackage = {
   id: string;
@@ -286,6 +286,7 @@ export async function updatePermitPackage(
 }
 
 async function readLocalPackages() {
+  assertLocalFallbackAllowed();
   try {
     const raw = await readFile(localStorePath, "utf8");
     return JSON.parse(raw) as PermitPackage[];
@@ -295,6 +296,7 @@ async function readLocalPackages() {
 }
 
 async function writeLocalPackages(packages: PermitPackage[]) {
+  assertLocalFallbackAllowed();
   await mkdir(path.dirname(localStorePath), { recursive: true });
   await writeFile(localStorePath, JSON.stringify(packages, null, 2));
 }

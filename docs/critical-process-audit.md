@@ -163,7 +163,7 @@ All downstream project tracking relies entirely on the JSON configuration payloa
 
 * **Broken Object-Level Authorization (IDOR) - Fixed**: The critical exposure where anyone with a lead UUID could access `/proposals/[id]` and `/proposals/[id]/lender` has been resolved. The server now validates session credentials against lead records on the server before rendering the view.
 * **Supabase Row-Level Security**: The migration script `database/rls.sql` enforces that builder-specific tables (`leads`, `models`, `options`) are gated by `auth.uid() = builder_id`. This ensures multi-tenant separation.
-* **Plaintext Secrets - Fixed**: No plaintext secrets exist in the git history or configuration files. The `APP_SECRET` environment variable defaults safely in dev mode and warns in production.
+* **Plaintext Secrets - Partially fixed**: A real `APP_SECRET` value was committed in plaintext in `DEPLOYMENT_GUIDE.md` (commit `cf6fbe3`, 2026-06-16) and is still recoverable via `git log -p` — it was never purged from history, only replaced in the current file content by a later commit (`8633bae`, same day). The `.env.local` value now differs from the leaked one, so local dev is rotated, but **production must be independently verified**: confirm the Vercel `APP_SECRET` env var is not `87780472d8f8329b11c23fafc737d517c08e576c3061694c166479c65a726175`. The `APP_SECRET` environment variable defaults safely in dev mode and warns in production.
 
 ---
 

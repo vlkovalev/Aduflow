@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { getSupabaseServiceClient, markSupabaseUnhealthy } from "./supabase";
-import { getLocalStorePath } from "./localStoreHelper";
+import { assertLocalFallbackAllowed, getLocalStorePath } from "./localStoreHelper";
 
 /**
  * Usage metering for the "qualified proposal" billing unit — see
@@ -90,6 +90,7 @@ export async function getQualifiedProposalUsage(
 }
 
 async function readLocalEvents(): Promise<UsageEvent[]> {
+  assertLocalFallbackAllowed();
   try {
     const raw = await readFile(localStorePath, "utf8");
     return JSON.parse(raw) as UsageEvent[];
@@ -99,6 +100,7 @@ async function readLocalEvents(): Promise<UsageEvent[]> {
 }
 
 async function writeLocalEvents(events: UsageEvent[]): Promise<void> {
+  assertLocalFallbackAllowed();
   await mkdir(path.dirname(localStorePath), { recursive: true });
   await writeFile(localStorePath, JSON.stringify(events, null, 2));
 }

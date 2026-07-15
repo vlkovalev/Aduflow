@@ -42,10 +42,7 @@ function getSecret(): string {
   // Dev/sandbox fallback so the app runs without configuration. This is NOT
   // secure for production — set APP_SECRET to a long random value there.
   if (process.env.NODE_ENV === "production") {
-    console.warn(
-      "[auth] APP_SECRET is not set (or too short). Falling back to an insecure default. " +
-        "Set APP_SECRET to a long random string in production.",
-    );
+    throw new Error("APP_SECRET must be set to a random value of at least 16 characters in production.");
   }
   return "aduflow-insecure-dev-secret-change-me";
 }

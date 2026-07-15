@@ -16,3 +16,6 @@ tsconfig.tsbuildinfo
 
 .vercel
 scripts/dist/
+
+.vercel
+.env*

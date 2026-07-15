@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { getSupabaseServiceClient, markSupabaseUnhealthy } from "./supabase";
-import { getLocalStorePath } from "./localStoreHelper";
+import { assertLocalFallbackAllowed, getLocalStorePath } from "./localStoreHelper";
 
 export type LeadRecord = {
   id: string;
@@ -310,6 +310,7 @@ function mapLeadRow(data: Record<string, unknown>) {
 }
 
 async function readLocalLeads() {
+  assertLocalFallbackAllowed();
   try {
     const raw = await readFile(localStorePath, "utf8");
     return (JSON.parse(raw) as Partial<LeadRecord>[]).map(normalizeLocalLead);
@@ -319,6 +320,7 @@ async function readLocalLeads() {
 }
 
 async function writeLocalLeads(records: LeadRecord[]) {
+  assertLocalFallbackAllowed();
   await mkdir(path.dirname(localStorePath), { recursive: true });
   await writeFile(localStorePath, JSON.stringify(records, null, 2));
 }

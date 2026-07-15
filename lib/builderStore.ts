@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { getSupabaseServiceClient } from "./supabase";
-import { getLocalStorePath } from "./localStoreHelper";
+import { assertLocalFallbackAllowed, getLocalStorePath } from "./localStoreHelper";
 import { hashPassword, verifyPassword } from "./auth";
 
 export type BuilderCredentials = {
@@ -86,6 +86,7 @@ type LocalBuilderAccount = {
 const accountsPath = getLocalStorePath("builder-accounts.json");
 
 async function readLocalAccounts(): Promise<LocalBuilderAccount[]> {
+  assertLocalFallbackAllowed();
   try {
     const raw = await readFile(accountsPath, "utf8");
     return JSON.parse(raw) as LocalBuilderAccount[];
@@ -95,6 +96,7 @@ async function readLocalAccounts(): Promise<LocalBuilderAccount[]> {
 }
 
 async function writeLocalAccounts(accounts: LocalBuilderAccount[]) {
+  assertLocalFallbackAllowed();
   await mkdir(path.dirname(accountsPath), { recursive: true });
   await writeFile(accountsPath, JSON.stringify(accounts, null, 2));
 }

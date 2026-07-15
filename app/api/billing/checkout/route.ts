@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireBuilder } from "../../../../lib/apiAuth";
+import { requireBuilderSession } from "../../../../lib/apiAuth";
 import { getBuilderBillingInfo, getBuilderById, setBuilderStripeCustomerId } from "../../../../lib/builderStore";
 import { getStripeClient, getStripePriceId } from "../../../../lib/stripe";
 import { getPlan, getStripePriceIdsForPlan, isPlanId, type PlanId } from "../../../../lib/billingPlans";
@@ -7,7 +7,7 @@ import { getPlan, getStripePriceIdsForPlan, isPlanId, type PlanId } from "../../
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const auth = await requireBuilder();
+  const auth = await requireBuilderSession();
   if (auth.response) return auth.response;
 
   const stripe = getStripeClient();

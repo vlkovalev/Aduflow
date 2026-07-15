@@ -39,6 +39,16 @@ export default function Configurator() {
   const [zoningSetbackRear, setZoningSetbackRear] = useState<string>("");
   const [zoningReviewRisk, setZoningReviewRisk] = useState<"Low" | "Medium" | "High">("Low");
   const [isEditingZoning, setIsEditingZoning] = useState(false);
+  const [zoningOverrideReason, setZoningOverrideReason] = useState<string>("");
+
+  const isZoningOverridden = Boolean(
+    zoningResult &&
+      (zoningMaxSqFt !== zoningResult.maxAduSqFt ||
+        zoningMaxStories !== zoningResult.maxStories ||
+        zoningSetbackSide !== (zoningResult.sideSetback || "") ||
+        zoningSetbackRear !== (zoningResult.rearSetback || "") ||
+        zoningReviewRisk !== (zoningResult.reviewRisk || "Low")),
+  );
 
   async function lookupAddress() {
     if (!addressInput.trim()) return;
@@ -59,6 +69,7 @@ export default function Configurator() {
         setZoningSetbackSide(result.sideSetback || "");
         setZoningSetbackRear(result.rearSetback || "");
         setZoningReviewRisk(result.reviewRisk || "Low");
+        setZoningOverrideReason("");
 
         // Auto-select best matching parcel scenario
         const risk = result.reviewRisk;
@@ -265,6 +276,11 @@ export default function Configurator() {
                       </strong>
                     </div>
                   </div>
+                  {isZoningOverridden && zoningOverrideReason ? (
+                    <p className="zoningNote muted" style={{ marginTop: 10 }}>
+                      <strong>Override reason:</strong> {zoningOverrideReason}
+                    </p>
+                  ) : null}
                   <div style={{ marginTop: 14 }}>
                     <button
                       className="button secondary"
@@ -330,15 +346,32 @@ export default function Configurator() {
                       </select>
                     </label>
                   </div>
+                  {isZoningOverridden ? (
+                    <label style={{ fontSize: 11, display: "grid", gap: 4, marginTop: 12 }}>
+                      Reason for override (required)
+                      <textarea
+                        style={{ padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 4, width: "100%", minHeight: 56 }}
+                        value={zoningOverrideReason}
+                        onChange={(e) => setZoningOverrideReason(e.target.value)}
+                        placeholder="e.g. Homeowner confirmed a variance was already granted for this lot."
+                      />
+                    </label>
+                  ) : null}
                   <div style={{ marginTop: 14 }}>
                     <button
                       className="button primary"
                       type="button"
+                      disabled={isZoningOverridden && !zoningOverrideReason.trim()}
                       style={{ minHeight: 32, padding: "0 12px", fontSize: 12, fontWeight: 700 }}
                       onClick={() => setIsEditingZoning(false)}
                     >
                       Apply overrides
                     </button>
+                    {isZoningOverridden && !zoningOverrideReason.trim() ? (
+                      <p className="zoningNote muted" style={{ marginTop: 6 }}>
+                        A reason is required before you can apply changed lot constraints.
+                      </p>
+                    ) : null}
                   </div>
                 </div>
               )}
@@ -597,6 +630,8 @@ export default function Configurator() {
                   zoningSetbackSide,
                   zoningSetbackRear,
                   zoningReviewRisk,
+                  zoningOverridden: isZoningOverridden,
+                  zoningOverrideReason: isZoningOverridden ? zoningOverrideReason.trim() : "",
                 },
               }),
             });
@@ -680,7 +715,7 @@ export default function Configurator() {
             {isSubmitting ? "Sending…" : "Send feasibility package"}
           </button>
           <p className="formFinePrint">
-            This request creates a pre-construction estimate for builder review. It is not a final quote, financing approval, or permit approval. Your contact and property details will be shared with the ADUflow pilot builder or administrator for follow-up.
+            This request creates a pre-construction estimate for builder review. It is not a final quote, financing approval, or permit approval. Your contact and property details will be shared with the ADUflow pilot builder or administrator for follow-up. By submitting, you agree to the <Link href="/terms">Terms</Link> and acknowledge the <Link href="/privacy">Privacy Policy</Link>.
           </p>
 
           {leadSubmitted ? (

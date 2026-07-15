@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPricingCatalog } from "../../../lib/catalogStore";
 import { isUuid } from "../../../lib/auth";
+import { builderHasProductAccess } from "../../../lib/apiAuth";
 
 export const runtime = "nodejs";
 
@@ -19,6 +20,9 @@ export async function GET(request: Request) {
       { error: "A valid builderId query parameter is required." },
       { status: 400 },
     );
+  }
+  if (!(await builderHasProductAccess(builderId))) {
+    return NextResponse.json({ error: "This builder catalog is not currently available." }, { status: 402 });
   }
 
   const catalog = await getPricingCatalog(builderId);

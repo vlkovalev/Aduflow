@@ -57,6 +57,12 @@ export function TopNav() {
         >
           Pricing
         </Link>
+        <Link href="/privacy" className={pathname === "/privacy" ? "navLink active" : "navLink"}>
+          Privacy
+        </Link>
+        <Link href="/terms" className={pathname === "/terms" ? "navLink active" : "navLink"}>
+          Terms
+        </Link>
         {isLoggedIn && (
           <button
             onClick={handleSignOut}

@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireBuilder } from "../../../../lib/apiAuth";
+import { requireBuilderSession } from "../../../../lib/apiAuth";
 import { getBuilderBillingInfo } from "../../../../lib/builderStore";
 import { getStripeClient } from "../../../../lib/stripe";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const auth = await requireBuilder();
+  const auth = await requireBuilderSession();
   if (auth.response) return auth.response;
 
   const stripe = getStripeClient();

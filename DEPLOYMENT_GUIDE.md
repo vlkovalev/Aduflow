@@ -284,7 +284,7 @@ These are **non-critical** and can be addressed iteratively:
 - Inspect Network tab for 401/403 errors
 
 ### "Security headers missing"
-- Ensure `middleware.ts` is deployed
+- Ensure `proxy.ts` is deployed (renamed from `middleware.ts` per Next.js's middleware-to-proxy migration; same behavior)
 - Check Vercel build logs
 - Clear CDN cache
 

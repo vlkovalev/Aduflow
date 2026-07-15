@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { getLocalStorePath } from "./localStoreHelper";
+import { assertLocalFallbackAllowed, getLocalStorePath } from "./localStoreHelper";
 import { getSupabaseServiceClient, markSupabaseUnhealthy } from "./supabase";
 import {
   DEFAULT_DRAW_MILESTONES,
@@ -179,6 +179,7 @@ function normalizeDrawStatus(value: string): DrawMilestoneRecord["status"] {
 }
 
 async function readLocalProjectStore(): Promise<LocalProjectStore> {
+  assertLocalFallbackAllowed();
   try {
     const raw = await readFile(projectStorePath, "utf8");
     return JSON.parse(raw) as LocalProjectStore;
@@ -188,6 +189,7 @@ async function readLocalProjectStore(): Promise<LocalProjectStore> {
 }
 
 async function writeLocalProjectStore(store: LocalProjectStore) {
+  assertLocalFallbackAllowed();
   await mkdir(path.dirname(projectStorePath), { recursive: true });
   await writeFile(projectStorePath, JSON.stringify(store, null, 2));
 }

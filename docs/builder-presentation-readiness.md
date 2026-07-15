@@ -4,7 +4,7 @@ Date: June 13, 2026
 
 ## Current Verdict
 
-ADUflow is ready for guided 1:1 builder presentations. It is not ready for self-serve public onboarding.
+ADUflow is ready for guided 1:1 builder presentations and a controlled private beta. Broad self-serve publishing still requires the external verification checklist below.
 
 ## What Is Ready
 
@@ -36,7 +36,9 @@ ADUflow is ready for guided 1:1 builder presentations. It is not ready for self-
 
 | Item | Why |
 | --- | --- |
-| Live Vercel env vars | Requires Vercel dashboard access or deployment logs. |
+| Production secret rotation | Confirm the deployed `APP_SECRET` is not the value previously exposed in git history. |
+| Stripe end-to-end flow | Complete test-mode checkout, webhook delivery, entitlement update, cancellation, and portal verification. |
+| Transactional email delivery | Verify account verification, password reset, builder notification, and homeowner confirmation reach real inboxes. |
 | Live Supabase writes from Vercel | Requires deployed site test. |
 | Mobile visual QA | Requires browser screenshot pass. |
 | Real guide screenshots | Need stable deployed or local browser session. |
@@ -65,14 +67,14 @@ ADUflow is ready for guided 1:1 builder presentations. It is not ready for self-
 
 - It is not permit approval.
 - It is not bank approval.
-- It is not a finished public SaaS.
+- Broad public onboarding remains gated on production payment, email, and deletion-request verification.
 - Fallback zoning is an estimate.
-- Production auth is still a required hardening step before broad onboarding.
+- ~~Production auth is still a required hardening step before broad onboarding.~~ Resolved: HMAC-signed sessions and email verification shipped (see `docs/critical-process-audit.md` §10, §23).
 
 ## Next Best Engineering Work
 
-1. Production auth provider.
-2. CSV import for builder models/options.
-3. Browser/mobile screenshot QA.
+1. Complete the production Stripe and Resend end-to-end checks.
+2. Browser/mobile screenshot and accessibility QA.
+3. Confirm the published privacy/terms contacts are monitored and obtain legal review.
 4. Screenshot-based builder guide.
 5. Broker/lender review of lender package.

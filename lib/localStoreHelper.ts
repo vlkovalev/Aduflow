@@ -1,6 +1,12 @@
 import path from "node:path";
 import os from "node:os";
 
+export function assertLocalFallbackAllowed(): void {
+  if (process.env.VERCEL_ENV === "production" || (process.env.NODE_ENV === "production" && process.env.VERCEL)) {
+    throw new Error("Durable Supabase storage is unavailable; local fallback is disabled in production.");
+  }
+}
+
 /**
  * Resolves a JSON storage file's path.
  * In serverless environments (like Vercel), it returns a path in the writeable /tmp directory.

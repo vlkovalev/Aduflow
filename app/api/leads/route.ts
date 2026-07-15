@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createLead, listLeads, type CreateLeadInput, type LeadRecord } from "../../../lib/leadStore";
 import { requireBuilder } from "../../../lib/apiAuth";
+import { builderHasProductAccess } from "../../../lib/apiAuth";
 import { builderExists, getBuilderById } from "../../../lib/builderStore";
 import { isUuid } from "../../../lib/auth";
 import { clientIp, rateLimit } from "../../../lib/rateLimit";
@@ -60,6 +61,9 @@ export async function POST(request: Request) {
   }
   if (!(await builderExists(builderId))) {
     return NextResponse.json({ error: "Unknown builder." }, { status: 404 });
+  }
+  if (!(await builderHasProductAccess(builderId))) {
+    return NextResponse.json({ error: "This builder is not currently accepting submissions." }, { status: 402 });
   }
 
   let validated: CreateLeadInput;
@@ -225,6 +229,11 @@ function validateLead(body: Partial<CreateLeadInput>, builderId: string): Create
 
   if (body.configuration === undefined || body.configuration === null || typeof body.configuration !== "object") {
     errors.push("Configuration is required.");
+  } else {
+    const config = body.configuration as Record<string, unknown>;
+    if (config.zoningOverridden === true && !String(config.zoningOverrideReason ?? "").trim()) {
+      errors.push("A reason is required when overriding the zoning lot constraints.");
+    }
   }
 
   if (errors.length > 0) {
