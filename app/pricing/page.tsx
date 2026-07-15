@@ -10,7 +10,7 @@ export default function PricingPage() {
       <section className="band">
         <div className="sectionHeader">
           <p className="eyebrow">Pricing</p>
-          <h2>Free during the pilot. Predictable after that.</h2>
+          <h1>Free during the pilot. Predictable after that.</h1>
           <p>
             ADUflow is free for every builder in the current guided pilot — no credit card, no time limit. When you
             move to general availability, pricing is a low flat base fee plus a metered charge only on proposals you

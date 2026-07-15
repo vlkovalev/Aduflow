@@ -204,6 +204,7 @@ export default function Configurator() {
           <div className="addressRow">
             <input
               className="addressInput"
+              aria-label="Property address for zoning lookup"
               value={addressInput}
               onChange={(e) => setAddressInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && lookupAddress()}

@@ -1613,6 +1613,13 @@ input {
     flex-direction: column;
   }
 
+  .navLinks {
+    width: 100%;
+    flex-wrap: wrap;
+    column-gap: 18px;
+    row-gap: 10px;
+  }
+
   .choiceGrid,
   .proposalSummary,
   .dashboardStats,
