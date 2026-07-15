@@ -65,3 +65,12 @@ test("public data collection links to privacy and terms", async () => {
   assert.match(configurator, /href=["']\/privacy["']/);
   assert.match(configurator, /href=["']\/terms["']/);
 });
+
+test("public shared proposals retain estimate and approval disclaimers", async () => {
+  const sharedProposal = await readFile(
+    new URL("../app/proposals/share/[token]/page.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(sharedProposal, /not a final quote/);
+  assert.match(sharedProposal, /permit approval/);
+});

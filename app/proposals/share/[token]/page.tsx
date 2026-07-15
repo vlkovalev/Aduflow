@@ -62,6 +62,11 @@ export default async function SharedProposalPage({
             <span>Estimated package</span>
             <strong>{formatCurrency(lead.estimatedPrice)}</strong>
           </div>
+          <p className="formFinePrint">
+            This preliminary package is for planning and builder review. It is not a final quote,
+            financing approval, engineering opinion, or permit approval. Verify zoning, site
+            conditions, specifications, and pricing before signing a construction contract.
+          </p>
           <div className="costSplit">
             <h2>Cost split</h2>
             <div>
