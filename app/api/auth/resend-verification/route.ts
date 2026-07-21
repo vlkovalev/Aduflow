@@ -6,6 +6,7 @@ import {
   setBuilderEmailVerification,
 } from "../../../../lib/builderStore";
 import { isEmailConfigured, sendEmail } from "../../../../lib/email";
+import { readEnv } from "../../../../lib/env";
 import { clientIp, rateLimit } from "../../../../lib/rateLimit";
 
 export const runtime = "nodejs";
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
   if (account && !(await isBuilderEmailVerified(account.id))) {
     await setBuilderEmailVerification(account.id, false);
     const token = createEmailVerificationToken(account.id, account.email);
-    const origin = new URL(request.url).origin;
+    const origin = readEnv("NEXT_PUBLIC_SITE_URL") || new URL(request.url).origin;
     const verifyUrl = `${origin}/builder/verify-email?token=${encodeURIComponent(token)}`;
     const sent = await sendEmail({
       to: account.email,

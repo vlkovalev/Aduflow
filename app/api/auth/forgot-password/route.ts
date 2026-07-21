@@ -3,6 +3,7 @@ import { getBuilderAuthByEmail } from "../../../../lib/builderStore";
 import { createPasswordResetToken } from "../../../../lib/auth";
 import { clientIp, rateLimit } from "../../../../lib/rateLimit";
 import { sendEmail } from "../../../../lib/email";
+import { readEnv } from "../../../../lib/env";
 
 export const runtime = "nodejs";
 
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
   const account = await getBuilderAuthByEmail(email);
   if (account) {
     const token = createPasswordResetToken(account.id, account.passwordHash);
-    const origin = new URL(request.url).origin;
+    const origin = readEnv("NEXT_PUBLIC_SITE_URL") || new URL(request.url).origin;
     const resetUrl = `${origin}/builder/reset-password?token=${encodeURIComponent(token)}`;
     await sendEmail({
       to: account.email,

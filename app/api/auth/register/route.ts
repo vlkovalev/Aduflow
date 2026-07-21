@@ -3,6 +3,7 @@ import { AuthError, registerBuilder } from "../../../../lib/builderStore";
 import { createEmailVerificationToken } from "../../../../lib/auth";
 import { clientIp, rateLimit } from "../../../../lib/rateLimit";
 import { isEmailConfigured, sendEmail } from "../../../../lib/email";
+import { readEnv } from "../../../../lib/env";
 
 export const runtime = "nodejs";
 
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
 
 async function sendVerificationEmail(builderId: string, email: string, requestUrl: string) {
   const token = createEmailVerificationToken(builderId, email);
-  const origin = new URL(requestUrl).origin;
+  const origin = readEnv("NEXT_PUBLIC_SITE_URL") || new URL(requestUrl).origin;
   const verifyUrl = `${origin}/builder/verify-email?token=${encodeURIComponent(token)}`;
   const sent = await sendEmail({
     to: email,
