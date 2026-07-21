@@ -4,6 +4,7 @@ import { requireBuilder } from "../../../lib/apiAuth";
 import { builderHasProductAccess } from "../../../lib/apiAuth";
 import { builderExists, getBuilderById } from "../../../lib/builderStore";
 import { isUuid } from "../../../lib/auth";
+import { formatCurrency, isCurrencyCode } from "../../../lib/currency";
 import { clientIp, rateLimit } from "../../../lib/rateLimit";
 import { sendEmail } from "../../../lib/email";
 
@@ -128,7 +129,7 @@ async function notifyBuilderOfNewLead(lead: LeadRecord, origin: string): Promise
           <li><strong>Customer:</strong> ${escapeHtml(lead.customerName)}</li>
           <li><strong>Property:</strong> ${escapeHtml(lead.propertyAddress)}</li>
           <li><strong>Model:</strong> ${escapeHtml(lead.modelName)}</li>
-          <li><strong>Estimated price:</strong> $${lead.estimatedPrice.toLocaleString()}</li>
+          <li><strong>Estimated price:</strong> ${formatCurrency(lead.estimatedPrice, lead.currency)}</li>
         </ul>
         <p><a href="${origin}/proposals/${lead.id}">View the full proposal</a></p>
       `,
@@ -265,6 +266,7 @@ function validateLead(body: Partial<CreateLeadInput>, builderId: string): Create
     estimateHigh,
     factoryCost,
     siteCost,
+    currency: isCurrencyCode(body.currency) ? body.currency : "CAD",
     modelCode,
     modelName,
     squareFeet,

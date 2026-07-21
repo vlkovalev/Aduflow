@@ -4,7 +4,15 @@ import { useEffect, useState } from "react";
 import { DEFAULT_DRAW_MILESTONES, type DrawMilestoneRecord } from "../../../lib/projectDefaults";
 import { formatCurrency } from "../../../lib/proposalBuilder";
 
-export function DrawReleaseLog({ leadId, totalPrice }: { leadId: string; totalPrice: number }) {
+export function DrawReleaseLog({
+  leadId,
+  totalPrice,
+  currency = "CAD",
+}: {
+  leadId: string;
+  totalPrice: number;
+  currency?: "CAD" | "USD";
+}) {
   const [draws, setDraws] = useState<DrawMilestoneRecord[]>(DEFAULT_DRAW_MILESTONES);
   const [activeDrawIndex, setActiveDrawIndex] = useState<number | null>(null);
   const [evidenceInput, setEvidenceInput] = useState("");
@@ -123,7 +131,7 @@ export function DrawReleaseLog({ leadId, totalPrice }: { leadId: string; totalPr
                     {d.stage} ({d.percent}%)
                   </h3>
                   <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--muted)" }}>
-                    Payout value: <strong>{formatCurrency(drawAmount)}</strong>
+                    Payout value: <strong>{formatCurrency(drawAmount, currency)}</strong>
                   </p>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

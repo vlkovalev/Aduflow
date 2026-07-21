@@ -60,7 +60,7 @@ export default async function SharedProposalPage({
 
           <div className="estimateHeader">
             <span>Estimated package</span>
-            <strong>{formatCurrency(lead.estimatedPrice)}</strong>
+            <strong>{formatCurrency(lead.estimatedPrice, lead.currency)}</strong>
           </div>
           <p className="formFinePrint">
             This preliminary package is for planning and builder review. It is not a final quote,
@@ -71,11 +71,11 @@ export default async function SharedProposalPage({
             <h2>Cost split</h2>
             <div>
               <span>Factory</span>
-              <strong>{formatCurrency(lead.factoryCost)}</strong>
+              <strong>{formatCurrency(lead.factoryCost, lead.currency)}</strong>
             </div>
             <div>
               <span>Site</span>
-              <strong>{formatCurrency(lead.siteCost)}</strong>
+              <strong>{formatCurrency(lead.siteCost, lead.currency)}</strong>
             </div>
           </div>
           <div className="checklist">

@@ -3,6 +3,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { getSupabaseServiceClient, markSupabaseUnhealthy } from "./supabase";
 import { assertLocalFallbackAllowed, getLocalStorePath } from "./localStoreHelper";
+import type { CurrencyCode } from "./currency";
 
 export type LeadRecord = {
   id: string;
@@ -35,6 +36,8 @@ export type LeadRecord = {
   estimateHigh: number;
   factoryCost: number;
   siteCost: number;
+  /** Currency this quote was actually priced in — builder default unless the property's jurisdiction overrode it. */
+  currency: CurrencyCode;
   modelCode: string;
   modelName: string;
   squareFeet: number;
@@ -109,6 +112,7 @@ export async function createLead(input: CreateLeadInput) {
           estimate_high: record.estimateHigh,
           factory_cost: record.factoryCost,
           site_cost: record.siteCost,
+          currency: record.currency,
           model_code: record.modelCode,
           model_name: record.modelName,
           square_feet: record.squareFeet,
@@ -186,6 +190,7 @@ export async function getLead(id: string) {
           estimateHigh: Number(data.estimate_high ?? 0),
           factoryCost: Number(data.factory_cost ?? 0),
           siteCost: Number(data.site_cost ?? 0),
+          currency: data.currency === "USD" ? "USD" : "CAD",
           modelCode: data.model_code ?? "",
           modelName: data.model_name ?? "",
           squareFeet: Number(data.square_feet ?? 0),
@@ -296,6 +301,7 @@ function mapLeadRow(data: Record<string, unknown>) {
     estimateHigh: Number(data.estimate_high ?? 0),
     factoryCost: Number(data.factory_cost ?? 0),
     siteCost: Number(data.site_cost ?? 0),
+    currency: data.currency === "USD" ? "USD" : "CAD",
     modelCode: String(data.model_code ?? ""),
     modelName: String(data.model_name ?? ""),
     squareFeet: Number(data.square_feet ?? 0),
@@ -329,6 +335,7 @@ function normalizeLocalLead(record: Partial<LeadRecord>) {
   return {
     ...record,
     builderId: record.builderId || defaultBuilderId,
+    currency: record.currency === "USD" ? "USD" : "CAD",
     zoningSource: record.zoningSource ?? "",
     zoningZone: record.zoningZone ?? "",
     zoningDescription: record.zoningDescription ?? "",

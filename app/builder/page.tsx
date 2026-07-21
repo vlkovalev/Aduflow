@@ -7,6 +7,7 @@ import { TopNav } from "../components/TopNav";
 import { getSupabaseServiceClient } from "../../lib/supabase";
 import { getAuthenticatedBuilderId } from "../../lib/auth";
 import { listModels } from "../../lib/catalogStore";
+import { getBuilderCredentials } from "../../lib/builderStore";
 import { CreateDemoLeadButton } from "./CreateDemoLeadButton";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -33,7 +34,11 @@ export default async function BuilderDashboard() {
   const analytics = getAnalytics(leads);
   const drawQueue = getDrawQueue(leads);
   const wonLeads = leads.filter((l) => l.status === "won");
-  
+  // Aggregate totals below can mix leads priced in different currencies when
+  // an address override applied to some quotes — shown in the builder's own
+  // default currency as an approximation rather than a true multi-currency sum.
+  const { currency: builderCurrency } = await getBuilderCredentials(builderId);
+
   const isDbActive = getSupabaseServiceClient() !== null;
 
   return (
@@ -77,8 +82,8 @@ export default async function BuilderDashboard() {
       {/* ── KPI stats ── */}
       <section className="dashboardStats">
         <Stat label="Total leads" value={String(leads.length)} />
-        <Stat label="Pipeline value" value={formatCurrency(stats.totalValue)} />
-        <Stat label="Contracted revenue" value={formatCurrency(stats.wonValue)} />
+        <Stat label="Pipeline value" value={formatCurrency(stats.totalValue, builderCurrency)} />
+        <Stat label="Contracted revenue" value={formatCurrency(stats.wonValue, builderCurrency)} />
         <Stat label="Win rate" value={`${analytics.conversionRate}%`} />
       </section>
 
@@ -107,7 +112,7 @@ export default async function BuilderDashboard() {
                 <div key={name} className="analyticsRow">
                   <span style={{ flex: 1 }}>{name}</span>
                   <span style={{ color: "var(--muted)", fontSize: 13 }}>{count} leads</span>
-                  <strong>{formatCurrency(value)}</strong>
+                  <strong>{formatCurrency(value, builderCurrency)}</strong>
                 </div>
               ))}
             </div>
@@ -115,9 +120,9 @@ export default async function BuilderDashboard() {
           <div className="dataPanel">
             <div className="panelTitle"><h2>Avg deal size</h2><span>By status</span></div>
             <dl className="summaryList">
-              <div><dt>All leads</dt><dd>{formatCurrency(analytics.avgDealSize)}</dd></div>
-              <div><dt>Qualified only</dt><dd>{formatCurrency(analytics.avgQualifiedSize)}</dd></div>
-              <div><dt>Won</dt><dd>{formatCurrency(analytics.avgWonSize)}</dd></div>
+              <div><dt>All leads</dt><dd>{formatCurrency(analytics.avgDealSize, builderCurrency)}</dd></div>
+              <div><dt>Qualified only</dt><dd>{formatCurrency(analytics.avgQualifiedSize, builderCurrency)}</dd></div>
+              <div><dt>Won</dt><dd>{formatCurrency(analytics.avgWonSize, builderCurrency)}</dd></div>
               <div><dt>Feasibility rate</dt><dd>{analytics.feasibilityRate}%</dd></div>
             </dl>
           </div>
@@ -138,7 +143,7 @@ export default async function BuilderDashboard() {
                   </Link>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
                     <div style={{ textAlign: "right" }}>
-                      <strong style={{ display: "block" }}>{formatCurrency(lead.estimatedPrice)}</strong>
+                      <strong style={{ display: "block" }}>{formatCurrency(lead.estimatedPrice, lead.currency)}</strong>
                       <span style={{ fontSize: 13, color: "var(--muted)" }}>{lead.feasibilityResult}</span>
                     </div>
                     <LeadStatusSelect leadId={lead.id} initialStatus={lead.status} />

@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { getSupabaseServiceClient } from "./supabase";
 import { assertLocalFallbackAllowed, getLocalStorePath } from "./localStoreHelper";
 import { hashPassword, verifyPassword } from "./auth";
+import { type CurrencyCode, isCurrencyCode } from "./currency";
 
 export type BuilderCredentials = {
   companyName: string;
@@ -17,6 +18,8 @@ export type BuilderCredentials = {
   bondAmount: number;
   warrantyInfo: string;
   serviceRegion: string;
+  /** Account-level default; a quote's actual currency can be overridden per-lead by property address. */
+  currency: CurrencyCode;
 };
 
 export type BuilderProfile = {
@@ -60,6 +63,7 @@ const BLANK_CREDENTIALS: BuilderCredentials = {
   bondAmount: 0,
   warrantyInfo: "",
   serviceRegion: "",
+  currency: "CAD",
 };
 
 function credentialsFilePath(builderId: string) {
@@ -104,7 +108,7 @@ async function writeLocalAccounts(accounts: LocalBuilderAccount[]) {
 // ── Credential read/write (per-tenant, no shared defaults) ──────────────────
 
 const CREDENTIALS_COLUMNS =
-  "company_name, email, phone, license_number, insurance_carrier, insurance_limit, insurance_expiration, bond_provider, bond_amount, warranty_info, service_region";
+  "company_name, email, phone, license_number, insurance_carrier, insurance_limit, insurance_expiration, bond_provider, bond_amount, warranty_info, service_region, currency";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function credentialsFromRow(data: any): BuilderCredentials {
@@ -120,6 +124,7 @@ function credentialsFromRow(data: any): BuilderCredentials {
     bondAmount: Number(data.bond_amount) || 0,
     warrantyInfo: data.warranty_info || "",
     serviceRegion: data.service_region || "",
+    currency: isCurrencyCode(data.currency) ? data.currency : "CAD",
   };
 }
 
@@ -163,7 +168,11 @@ export async function updateBuilderCredentials(
   builderId: string,
 ): Promise<BuilderCredentials> {
   const current = await getBuilderCredentials(builderId);
-  const updated: BuilderCredentials = { ...current, ...input };
+  const updated: BuilderCredentials = {
+    ...current,
+    ...input,
+    currency: isCurrencyCode(input.currency) ? input.currency : current.currency,
+  };
 
   const supabase = getSupabaseServiceClient();
   if (supabase) {
@@ -189,6 +198,7 @@ export async function updateBuilderCredentials(
             bond_amount: updated.bondAmount,
             warranty_info: updated.warrantyInfo,
             service_region: updated.serviceRegion,
+            currency: updated.currency,
           })
           .eq("id", builderId);
 

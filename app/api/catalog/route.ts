@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getPricingCatalog } from "../../../lib/catalogStore";
 import { isUuid } from "../../../lib/auth";
 import { builderHasProductAccess } from "../../../lib/apiAuth";
+import { getBuilderCredentials } from "../../../lib/builderStore";
 
 export const runtime = "nodejs";
 
@@ -26,6 +27,9 @@ export async function GET(request: Request) {
   }
 
   const catalog = await getPricingCatalog(builderId);
-  return NextResponse.json({ catalog });
+  // Only the currency default is exposed here — this is a public,
+  // unauthenticated endpoint, so no other credential fields are returned.
+  const { currency } = await getBuilderCredentials(builderId);
+  return NextResponse.json({ catalog, currency });
 }
 

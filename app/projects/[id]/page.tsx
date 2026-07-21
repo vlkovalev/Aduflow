@@ -64,18 +64,19 @@ export default async function ProjectPage({
           <DrawReleaseLog
             leadId={lead.id}
             totalPrice={lead.estimatedPrice}
+            currency={lead.currency}
           />
         </div>
 
         <aside className="estimatePanel">
           <div className="estimateHeader">
             <span>Project value</span>
-            <strong>{formatCurrency(lead.estimatedPrice)}</strong>
+            <strong>{formatCurrency(lead.estimatedPrice, lead.currency)}</strong>
           </div>
           <div className="costSplit">
             <h2>Cost split</h2>
-            <div><span>Factory</span><strong>{formatCurrency(lead.factoryCost)}</strong></div>
-            <div><span>Site</span><strong>{formatCurrency(lead.siteCost)}</strong></div>
+            <div><span>Factory</span><strong>{formatCurrency(lead.factoryCost, lead.currency)}</strong></div>
+            <div><span>Site</span><strong>{formatCurrency(lead.siteCost, lead.currency)}</strong></div>
           </div>
           <div className="drawPlan" style={{ marginTop: 24 }}>
             <h2>Draw schedule</h2>
@@ -88,7 +89,7 @@ export default async function ProjectPage({
             ].map((m) => (
               <div key={m.stage}>
                 <span>{m.percent}%</span>
-                <p style={{ margin: 0 }}>{m.stage} - {formatCurrency(Math.round(lead.estimatedPrice * m.percent / 100))}</p>
+                <p style={{ margin: 0 }}>{m.stage} - {formatCurrency(Math.round(lead.estimatedPrice * m.percent / 100), lead.currency)}</p>
               </div>
             ))}
           </div>

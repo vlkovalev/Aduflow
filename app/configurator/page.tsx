@@ -12,6 +12,7 @@ import { type ZoningResult } from "../../lib/zoningLookup";
 import { ManufacturerMatch } from "./ManufacturerMatch";
 import { TopNav } from "../components/TopNav";
 import { FloorPlanPreview } from "./FloorPlanPreview";
+import { detectCurrencyFromJurisdiction, formatCurrency, isCurrencyCode, type CurrencyCode } from "../../lib/currency";
 
 export default function Configurator() {
   const [catalog, setCatalog] = useState<PricingCatalog>(defaultCatalog);
@@ -31,6 +32,11 @@ export default function Configurator() {
   const [addressInput, setAddressInput] = useState("");
   const [zoningResult, setZoningResult] = useState<ZoningResult | null>(null);
   const [zoningStatus, setZoningStatus] = useState<"idle" | "loading" | "found" | "not_found">("idle");
+  // Builder's account-level default (see Builder OS -> Credentials). A
+  // property whose zoning jurisdiction resolves to the other country
+  // overrides this for the current quote — e.g. a CAD-default builder
+  // quoting a Portland, OR property shows USD, not a mislabeled "$" CAD figure.
+  const [builderCurrency, setBuilderCurrency] = useState<CurrencyCode>("CAD");
 
   // Zoning overrides
   const [zoningMaxSqFt, setZoningMaxSqFt] = useState<number | null>(null);
@@ -115,7 +121,13 @@ export default function Configurator() {
         const result = await response.json();
         const nextCatalog = result.catalog as PricingCatalog;
 
-        if (!active || !nextCatalog?.models?.length) {
+        if (!active) {
+          return;
+        }
+        if (isCurrencyCode(result.currency)) {
+          setBuilderCurrency(result.currency);
+        }
+        if (!nextCatalog?.models?.length) {
           return;
         }
 
@@ -157,6 +169,14 @@ export default function Configurator() {
     zoningSetbackRear,
     zoningReviewRisk,
   }, catalog);
+
+  // Property jurisdiction wins when it's confidently detected (e.g. a
+  // Portland, OR lookup) and differs from the builder's own default —
+  // otherwise the builder's account-level setting is used as-is.
+  const detectedCurrency = detectCurrencyFromJurisdiction(zoningResult?.jurisdiction);
+  const effectiveCurrency = detectedCurrency ?? builderCurrency;
+  const currencyOverridden = detectedCurrency !== null && detectedCurrency !== builderCurrency;
+  const money = (value: number) => formatCurrency(value, effectiveCurrency);
 
   return (
     <main className="appShell">
@@ -237,6 +257,11 @@ export default function Configurator() {
                   <p className="zoningNote">
                     Source: <strong>{formatZoningSource(zoningResult.source)}</strong>. This is a first-pass feasibility screen, not a permit approval.
                   </p>
+                  {currencyOverridden ? (
+                    <p className="zoningNote" style={{ color: "rgba(255,255,255,0.72)" }}>
+                      This property is in the {effectiveCurrency === "USD" ? "United States" : "Canada"} — pricing below is shown in {effectiveCurrency}, not your account default ({builderCurrency}).
+                    </p>
+                  ) : null}
                   {zoningResult.sourceUrl ? (
                     <p className="zoningNote muted">
                       <a href={zoningResult.sourceUrl} target="_blank" rel="noreferrer">
@@ -412,7 +437,7 @@ export default function Configurator() {
             options={catalog.models.map((model) => ({
               value: model.code,
               label: model.name,
-              detail: `${model.squareFeet} sq ft - ${formatCurrency(model.basePrice)}`,
+              detail: `${model.squareFeet} sq ft - ${money(model.basePrice)}`,
             }))}
             onChange={setModelCode}
           />
@@ -457,11 +482,11 @@ export default function Configurator() {
 
           <div className="estimateHeader">
             <span>Estimated package</span>
-            <strong>{formatCurrency(estimate.total)}</strong>
+            <strong>{money(estimate.total)}</strong>
           </div>
           <div className="estimateRange">
-            <span>{formatCurrency(estimate.low)}</span>
-            <span>{formatCurrency(estimate.high)}</span>
+            <span>{money(estimate.low)}</span>
+            <span>{money(estimate.high)}</span>
           </div>
           <div className="bar">
             <span style={{ width: "72%" }} />
@@ -500,11 +525,11 @@ export default function Configurator() {
             <h2>Prefab cost split</h2>
             <div>
               <span>Factory cost</span>
-              <strong>{formatCurrency(estimate.factoryCost)}</strong>
+              <strong>{money(estimate.factoryCost)}</strong>
             </div>
             <div>
               <span>Site cost</span>
-              <strong>{formatCurrency(estimate.siteCost)}</strong>
+              <strong>{money(estimate.siteCost)}</strong>
             </div>
           </div>
 
@@ -585,6 +610,7 @@ export default function Configurator() {
               },
               body: JSON.stringify({
                 builderId,
+                currency: effectiveCurrency,
                 customerName: formData.get("name"),
                 email: formData.get("email"),
                 phone: formData.get("phone"),
@@ -683,7 +709,7 @@ export default function Configurator() {
             <div>
               <span>Budget range</span>
               <strong>
-                {formatCurrency(estimate.low)} - {formatCurrency(estimate.high)}
+                {money(estimate.low)} - {money(estimate.high)}
               </strong>
             </div>
             <div>
@@ -809,14 +835,6 @@ function SelectGroup({
       {selected ? <em>{selected.detail}</em> : null}
     </label>
   );
-}
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-CA", {
-    style: "currency",
-    currency: "CAD",
-    maximumFractionDigits: 0,
-  }).format(value);
 }
 
 function safeCurrent(current: string, values: string[]) {

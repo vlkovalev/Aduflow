@@ -1,6 +1,15 @@
 import type { LeadRecord } from "./leadStore";
+import { formatCurrency as formatCurrencyWithCode } from "./currency";
+
+// Re-exported so existing call sites (`import { formatCurrency } from
+// "../../lib/proposalBuilder"`) keep working. The real implementation now
+// lives in lib/currency.ts, which also exposes jurisdiction-based USD/CAD
+// detection — this file used to have its own hardcoded en-CA/CAD copy.
+export { formatCurrency } from "./currency";
 
 export function buildProposalSections(lead: LeadRecord) {
+  const currency = lead.currency ?? "CAD";
+  const money = (value: number) => formatCurrencyWithCode(value, currency);
   return [
     {
       title: "Project Snapshot",
@@ -25,10 +34,10 @@ export function buildProposalSections(lead: LeadRecord) {
     {
       title: "Budget",
       items: [
-        ["Estimated package", formatCurrency(lead.estimatedPrice)],
-        ["Budget range", `${formatCurrency(lead.estimateLow)} - ${formatCurrency(lead.estimateHigh)}`],
-        ["Factory cost", formatCurrency(lead.factoryCost)],
-        ["Site cost", formatCurrency(lead.siteCost)],
+        ["Estimated package", money(lead.estimatedPrice)],
+        ["Budget range", `${money(lead.estimateLow)} - ${money(lead.estimateHigh)}`],
+        ["Factory cost", money(lead.factoryCost)],
+        ["Site cost", money(lead.siteCost)],
       ],
     },
     {
@@ -76,14 +85,6 @@ export function buildNextSteps(lead: LeadRecord): string[] {
   steps.push("Proposal moves to signed contract");
 
   return steps.slice(0, 4);
-}
-
-export function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-CA", {
-    style: "currency",
-    currency: "CAD",
-    maximumFractionDigits: 0,
-  }).format(value);
 }
 
 export function formatZoningSource(source: string) {

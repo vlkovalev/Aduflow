@@ -3,6 +3,8 @@ import { requireBuilder } from "../../../../lib/apiAuth";
 import { createLead } from "../../../../lib/leadStore";
 import { calculateProjectPrice, parcelScenarios } from "../../../../lib/pricingEngine";
 import { getPricingCatalog } from "../../../../lib/catalogStore";
+import { getBuilderCredentials } from "../../../../lib/builderStore";
+import { detectCurrencyFromJurisdiction } from "../../../../lib/currency";
 
 export const runtime = "nodejs";
 
@@ -31,8 +33,14 @@ export async function POST() {
   };
   const estimate = calculateProjectPrice(selected, catalog);
 
+  // Sandbox lead is always "100 Demo Lane, Vancouver, BC" — detect from that
+  // jurisdiction, falling back to the builder's own default currency.
+  const { currency: builderCurrency } = await getBuilderCredentials(auth.builderId);
+  const currency = detectCurrencyFromJurisdiction("Vancouver, BC") ?? builderCurrency;
+
   const lead = await createLead({
     builderId: auth.builderId,
+    currency,
     customerName: "Sandbox Homeowner",
     email: "sandbox-homeowner@example.com",
     phone: "(555) 010-0199",

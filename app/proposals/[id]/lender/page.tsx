@@ -35,6 +35,8 @@ export default async function LenderPackagePage({
   });
 
   const totalDraw = lead.estimatedPrice;
+  const currency = lead.currency ?? "CAD";
+  const money = (value: number) => formatCurrency(value, currency);
 
   // Dynamic Itemized Cost Calculation
   const config = (lead.configuration ?? {}) as Record<string, string>;
@@ -105,9 +107,9 @@ export default async function LenderPackagePage({
             <tbody>
               <tr><td>General contractor</td><td><strong>{credentials.companyName}</strong></td></tr>
               <tr><td>License number</td><td>{credentials.licenseNumber}</td></tr>
-              <tr><td>Liability insurance</td><td>{credentials.insuranceCarrier} (Limit: {formatCurrency(credentials.insuranceLimit)})</td></tr>
+              <tr><td>Liability insurance</td><td>{credentials.insuranceCarrier} (Limit: {formatCurrency(credentials.insuranceLimit, credentials.currency)})</td></tr>
               <tr><td>Insurance expiry</td><td>{credentials.insuranceExpiration}</td></tr>
-              <tr><td>Performance bond</td><td>{credentials.bondProvider} (Amount: {formatCurrency(credentials.bondAmount)})</td></tr>
+              <tr><td>Performance bond</td><td>{credentials.bondProvider} (Amount: {formatCurrency(credentials.bondAmount, credentials.currency)})</td></tr>
               <tr><td>Warranty program</td><td>{credentials.warrantyInfo}</td></tr>
               <tr><td>Contact details</td><td>{credentials.phone} &nbsp;|&nbsp; {credentials.email}</td></tr>
             </tbody>
@@ -139,59 +141,59 @@ export default async function LenderPackagePage({
                 <tr>
                   <th>Category</th>
                   <th>Description</th>
-                  <th style={{ textAlign: "right" }}>Cost (CAD)</th>
+                  <th style={{ textAlign: "right" }}>Cost ({currency})</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td>Permits & Engineering</td>
                   <td>Architectural drafting, site surveys, structural reviews, city permit fees</td>
-                  <td style={{ textAlign: "right" }}>{formatCurrency(permitFee)}</td>
+                  <td style={{ textAlign: "right" }}>{money(permitFee)}</td>
                 </tr>
                 <tr>
                   <td>Site Preparation</td>
                   <td>Access planning, soil excavation, minor site grading, and preparation</td>
-                  <td style={{ textAlign: "right" }}>{formatCurrency(siteAccess)}</td>
+                  <td style={{ textAlign: "right" }}>{money(siteAccess)}</td>
                 </tr>
                 <tr>
                   <td>Concrete Foundation</td>
                   <td>Foundation setup: {config.foundation === "slab" ? "Concrete Slab" : config.foundation === "helical" ? "Helical Piles" : "Crawlspace"} option</td>
-                  <td style={{ textAlign: "right" }}>{formatCurrency(foundation)}</td>
+                  <td style={{ textAlign: "right" }}>{money(foundation)}</td>
                 </tr>
                 <tr>
                   <td>Utility Connection</td>
                   <td>Service lines hookup (water, sewer, and electrical panels)</td>
-                  <td style={{ textAlign: "right" }}>{formatCurrency(utilities)}</td>
+                  <td style={{ textAlign: "right" }}>{money(utilities)}</td>
                 </tr>
                 <tr>
                   <td>Factory Modular Shell</td>
                   <td>Prefab structural shell, insulation, exterior cladding, roofing, doors, and windows</td>
-                  <td style={{ textAlign: "right" }}>{formatCurrency(factoryShell)}</td>
+                  <td style={{ textAlign: "right" }}>{money(factoryShell)}</td>
                 </tr>
                 <tr>
                   <td>Interior Finishes</td>
                   <td>Kitchen cabinetry, countertops, plumbing fixtures, bathroom, and flooring ({config.finish || "Essential"})</td>
-                  <td style={{ textAlign: "right" }}>{formatCurrency(finishLevel)}</td>
+                  <td style={{ textAlign: "right" }}>{money(finishLevel)}</td>
                 </tr>
                 <tr>
                   <td>GC Assembly & Margin</td>
                   <td>Modular set assembly, framing tie-ins, site supervision, and contractor margin</td>
-                  <td style={{ textAlign: "right" }}>{formatCurrency(assemblyMargin)}</td>
+                  <td style={{ textAlign: "right" }}>{money(assemblyMargin)}</td>
                 </tr>
                 <tr className="lenderTotal" style={{ fontWeight: 800 }}>
                   <td>Contract Sum (Net)</td>
                   <td>Fixed contract price for the full build package</td>
-                  <td style={{ textAlign: "right" }}>{formatCurrency(totalDraw)}</td>
+                  <td style={{ textAlign: "right" }}>{money(totalDraw)}</td>
                 </tr>
                 <tr>
                   <td>Lender Contingency (10%)</td>
                   <td>Recommended reserve to cover client-driven change orders or site issues</td>
-                  <td style={{ textAlign: "right" }}>{formatCurrency(contingency)}</td>
+                  <td style={{ textAlign: "right" }}>{money(contingency)}</td>
                 </tr>
                 <tr className="lenderTotal" style={{ borderTop: "2px double var(--forest)" }}>
                   <td><strong>Gross Proposed Budget</strong></td>
                   <td><strong>Total budget including reserve</strong></td>
-                  <td style={{ textAlign: "right", fontWeight: 800 }}>{formatCurrency(totalDraw + contingency)}</td>
+                  <td style={{ textAlign: "right", fontWeight: 800 }}>{money(totalDraw + contingency)}</td>
                 </tr>
               </tbody>
             </table>
@@ -224,7 +226,7 @@ export default async function LenderPackagePage({
                     <td>{i + 1}</td>
                     <td>{row.stage}</td>
                     <td>{row.percent}%</td>
-                    <td>{formatCurrency(Math.round(totalDraw * row.percent / 100))}</td>
+                    <td>{money(Math.round(totalDraw * row.percent / 100))}</td>
                     <td className="lenderEvidence">{row.evidence}</td>
                   </tr>
                 ))}

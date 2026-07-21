@@ -37,6 +37,7 @@ type BuilderCredentials = {
   bondAmount?: number;
   warrantyInfo?: string;
   serviceRegion?: string;
+  currency?: "CAD" | "USD";
 };
 
 type ImportKind = "models" | "options";
@@ -316,6 +317,7 @@ export default function BuilderSetup() {
               <h2>Add model</h2>
             </div>
             <AddModelForm
+              currency={credentials?.currency ?? "CAD"}
               onAdd={(model) => setModels((prev) => [...prev, model])}
             />
           </div>
@@ -738,6 +740,7 @@ function CredentialsForm() {
   const [bondAmount, setBondAmount] = useState("");
   const [warrantyInfo, setWarrantyInfo] = useState("");
   const [serviceRegion, setServiceRegion] = useState("");
+  const [currency, setCurrency] = useState<"CAD" | "USD">("CAD");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -780,6 +783,7 @@ function CredentialsForm() {
           setBondAmount(String(c.bondAmount ?? ""));
           setWarrantyInfo(c.warrantyInfo ?? "");
           setServiceRegion(c.serviceRegion ?? "");
+          setCurrency(c.currency === "USD" ? "USD" : "CAD");
         }
       } catch {
         if (active) setError("Failed to load builder credentials.");
@@ -826,6 +830,7 @@ function CredentialsForm() {
           bondAmount: Number(bondAmount) || 0,
           warrantyInfo,
           serviceRegion,
+          currency,
         }),
       });
 
@@ -856,6 +861,16 @@ function CredentialsForm() {
           Company legal name
           <input className="setupInput" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="e.g. Apex Modular Builders Ltd." required />
         </label>
+        <label>
+          Pricing currency
+          <select className="setupInput" value={currency} onChange={(e) => setCurrency(e.target.value === "USD" ? "USD" : "CAD")}>
+            <option value="CAD">CAD — Canadian dollars</option>
+            <option value="USD">USD — US dollars</option>
+          </select>
+          <span style={{ fontSize: 12, color: "var(--muted)", marginTop: 4, display: "block" }}>
+            Default for your models and quotes. A property in the other country automatically overrides this for that one quote.
+          </span>
+        </label>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
           <label>
             Public email
@@ -876,7 +891,7 @@ function CredentialsForm() {
             <input className="setupInput" value={insuranceCarrier} onChange={(e) => setInsuranceCarrier(e.target.value)} placeholder="Pacific Insurance" required />
           </label>
           <label>
-            Liability limit (CAD)
+            Liability limit ({currency})
             <input className="setupInput" type="number" value={insuranceLimit} onChange={(e) => setInsuranceLimit(e.target.value)} placeholder="2000000" required />
           </label>
         </div>
@@ -895,7 +910,7 @@ function CredentialsForm() {
             <input className="setupInput" value={bondProvider} onChange={(e) => setBondProvider(e.target.value)} placeholder="Assurance Corp" required />
           </label>
           <label>
-            Surety bond amount (CAD)
+            Surety bond amount ({currency})
             <input className="setupInput" type="number" value={bondAmount} onChange={(e) => setBondAmount(e.target.value)} placeholder="100000" required />
           </label>
         </div>
@@ -1010,7 +1025,7 @@ function ModelRow({
   );
 }
 
-function AddModelForm({ onAdd }: { onAdd: (m: Model) => void }) {
+function AddModelForm({ currency, onAdd }: { currency: "CAD" | "USD"; onAdd: (m: Model) => void }) {
   const [name, setName] = useState("");
   const [sqft, setSqft] = useState("");
   const [price, setPrice] = useState("");
@@ -1049,7 +1064,7 @@ function AddModelForm({ onAdd }: { onAdd: (m: Model) => void }) {
         <input className="setupInput narrow" value={sqft} onChange={(e) => setSqft(e.target.value)} placeholder="624" type="number" min="1" required />
       </label>
       <label>
-        Base price (CAD)
+        Base price ({currency})
         <input className="setupInput narrow" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="154000" type="number" min="0" required />
       </label>
       {error && <p className="setupNotice error">{error}</p>}

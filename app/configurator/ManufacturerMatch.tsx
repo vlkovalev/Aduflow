@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { formatCurrency } from "../../lib/proposalBuilder";
+import { formatCurrency as formatCurrencyWithCode } from "../../lib/currency";
+
+// These manufacturing partners (Abodu, Cover, Villa Homes, etc.) are all
+// US-based companies, so their list prices are always USD regardless of the
+// viewing builder's own currency setting — unlike the builder's own quote,
+// which follows lib/currency.ts's builder-default/address-override logic.
+const formatCurrency = (value: number) => formatCurrencyWithCode(value, "USD");
 
 export type Partner = {
   name: string;
