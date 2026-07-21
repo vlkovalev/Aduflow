@@ -103,7 +103,51 @@ async function writeLocalAccounts(accounts: LocalBuilderAccount[]) {
 
 // ── Credential read/write (per-tenant, no shared defaults) ──────────────────
 
+const CREDENTIALS_COLUMNS =
+  "company_name, email, phone, license_number, insurance_carrier, insurance_limit, insurance_expiration, bond_provider, bond_amount, warranty_info, service_region";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function credentialsFromRow(data: any): BuilderCredentials {
+  return {
+    companyName: data.company_name || "",
+    email: data.email || "",
+    phone: data.phone || "",
+    licenseNumber: data.license_number || "",
+    insuranceCarrier: data.insurance_carrier || "",
+    insuranceLimit: Number(data.insurance_limit) || 0,
+    insuranceExpiration: data.insurance_expiration || "",
+    bondProvider: data.bond_provider || "",
+    bondAmount: Number(data.bond_amount) || 0,
+    warrantyInfo: data.warranty_info || "",
+    serviceRegion: data.service_region || "",
+  };
+}
+
 export async function getBuilderCredentials(builderId: string): Promise<BuilderCredentials> {
+  // Supabase is the durable source of truth. The extended credential fields
+  // (license, insurance, bond, warranty, service region) previously lived
+  // only in an ephemeral local JSON file, which does not survive across
+  // serverless function invocations in production — data was silently lost
+  // after every save (see docs/qa-findings-2026-07-21.md, bug #1). Requires
+  // database/builder-credentials.sql to have been run.
+  const supabase = getSupabaseServiceClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("builders")
+        .select(CREDENTIALS_COLUMNS)
+        .eq("id", builderId)
+        .maybeSingle();
+
+      if (!error && data) {
+        return credentialsFromRow(data);
+      }
+    } catch {
+      // Fall through to local data (sandbox / Supabase unreachable).
+    }
+  }
+
+  // Local-file fallback: sandbox/dev only when Supabase isn't configured.
   let localData: Partial<BuilderCredentials> | null = null;
   try {
     const raw = await readFile(credentialsFilePath(builderId), "utf8");
@@ -111,30 +155,6 @@ export async function getBuilderCredentials(builderId: string): Promise<BuilderC
   } catch {
     // No per-builder credentials file yet — start from blank, not a seed record.
   }
-
-  const supabase = getSupabaseServiceClient();
-  if (supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("builders")
-        .select("company_name, email, phone")
-        .eq("id", builderId)
-        .maybeSingle();
-
-      if (!error && data) {
-        return {
-          ...BLANK_CREDENTIALS,
-          ...localData,
-          companyName: localData?.companyName || data.company_name || "",
-          email: localData?.email || data.email || "",
-          phone: localData?.phone || data.phone || "",
-        };
-      }
-    } catch {
-      // Fall through to local data.
-    }
-  }
-
   return { ...BLANK_CREDENTIALS, ...localData };
 }
 
@@ -144,10 +164,6 @@ export async function updateBuilderCredentials(
 ): Promise<BuilderCredentials> {
   const current = await getBuilderCredentials(builderId);
   const updated: BuilderCredentials = { ...current, ...input };
-
-  const storePath = credentialsFilePath(builderId);
-  await mkdir(path.dirname(storePath), { recursive: true });
-  await writeFile(storePath, JSON.stringify(updated, null, 2));
 
   const supabase = getSupabaseServiceClient();
   if (supabase) {
@@ -159,19 +175,37 @@ export async function updateBuilderCredentials(
         .maybeSingle();
 
       if (existing) {
-        await supabase
+        const { error } = await supabase
           .from("builders")
           .update({
             company_name: updated.companyName,
             email: updated.email,
             phone: updated.phone,
+            license_number: updated.licenseNumber,
+            insurance_carrier: updated.insuranceCarrier,
+            insurance_limit: updated.insuranceLimit,
+            insurance_expiration: updated.insuranceExpiration || null,
+            bond_provider: updated.bondProvider,
+            bond_amount: updated.bondAmount,
+            warranty_info: updated.warrantyInfo,
+            service_region: updated.serviceRegion,
           })
           .eq("id", builderId);
+
+        if (!error) return updated;
       }
     } catch {
-      // Ignore sync failures; local store remains the source of truth.
+      // Fall through to local fallback (sandbox / Supabase unreachable).
     }
   }
+
+  // No durable Supabase row available — ephemeral local fallback for
+  // sandbox/dev only. Throws in production (assertLocalFallbackAllowed) so
+  // this failure mode is loud instead of silently losing data.
+  assertLocalFallbackAllowed();
+  const storePath = credentialsFilePath(builderId);
+  await mkdir(path.dirname(storePath), { recursive: true });
+  await writeFile(storePath, JSON.stringify(updated, null, 2));
 
   return updated;
 }

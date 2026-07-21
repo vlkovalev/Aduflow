@@ -249,29 +249,29 @@ export default function Configurator() {
                   ) : null}
                   <div className="zoningDetails" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
                     <div>
-                      <span style={{ display: "block", fontSize: 11, color: "var(--muted)" }}>Max ADU Size</span>
+                      <span style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.72)" }}>Max ADU Size</span>
                       <strong style={{ fontSize: 15 }}>{zoningMaxSqFt ? `${zoningMaxSqFt} sq ft` : "N/A"}</strong>
                     </div>
                     <div>
-                      <span style={{ display: "block", fontSize: 11, color: "var(--muted)" }}>Max Stories</span>
+                      <span style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.72)" }}>Max Stories</span>
                       <strong style={{ fontSize: 15 }}>{zoningMaxStories ? `${zoningMaxStories} stories` : "N/A"}</strong>
                     </div>
                     <div>
-                      <span style={{ display: "block", fontSize: 11, color: "var(--muted)" }}>Side Setback</span>
+                      <span style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.72)" }}>Side Setback</span>
                       <strong style={{ fontSize: 15 }}>{zoningSetbackSide || "N/A"}</strong>
                     </div>
                     <div>
-                      <span style={{ display: "block", fontSize: 11, color: "var(--muted)" }}>Rear Setback</span>
+                      <span style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.72)" }}>Rear Setback</span>
                       <strong style={{ fontSize: 15 }}>{zoningSetbackRear || "N/A"}</strong>
                     </div>
                     <div>
-                      <span style={{ display: "block", fontSize: 11, color: "var(--muted)" }}>Review Risk</span>
+                      <span style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.72)" }}>Review Risk</span>
                       <span className={`zoningRisk risk-${zoningReviewRisk.toLowerCase()}`} style={{ display: "inline-block", marginTop: 4 }}>
                         {zoningReviewRisk}
                       </span>
                     </div>
                     <div>
-                      <span style={{ display: "block", fontSize: 11, color: "var(--muted)" }}>Zoning Source</span>
+                      <span style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.72)" }}>Zoning Source</span>
                       <strong style={{ fontSize: 13, color: "rgba(255,255,255,0.72)" }}>
                         {formatZoningSource(zoningResult.source)}
                       </strong>
@@ -712,8 +712,8 @@ export default function Configurator() {
             </p>
           ) : null}
 
-          <button className="button primary" type="submit" disabled={isSubmitting || !builderId}>
-            {isSubmitting ? "Sending…" : "Send feasibility package"}
+          <button className="button primary" type="submit" disabled={isSubmitting || !builderId || leadSubmitted}>
+            {isSubmitting ? "Sending…" : leadSubmitted ? "Package sent" : "Send feasibility package"}
           </button>
           <p className="formFinePrint">
             This request creates a pre-construction estimate for builder review. It is not a final quote, financing approval, or permit approval. Your contact and property details will be shared with the ADUflow pilot builder or administrator for follow-up. By submitting, you agree to the <Link href="/terms">Terms</Link> and acknowledge the <Link href="/privacy">Privacy Policy</Link>.

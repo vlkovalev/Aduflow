@@ -70,7 +70,7 @@ export default async function BuilderDashboard() {
           <Link className="button secondary" href="/builder/setup">Complete builder setup</Link>
           <Link className="button secondary" href="/builder/billing">Billing</Link>
           <CreateDemoLeadButton />
-          <Link className="button primary" href="/configurator">New lead quote</Link>
+          <Link className="button primary" href={`/configurator?builderId=${builderId}`}>New lead quote</Link>
         </div>
       </section>
 
