@@ -5,8 +5,9 @@
 Tone: founder-to-founder, short, specific, no hype.
 
 Before sending:
-- Replace `[your-url]` with the live Vercel URL.
+- Live URL: https://aduflow.ca (verified 2026-07-20; SSL cert provisioned on Netlify, custom domain working).
 - Replace `[Your name]`.
+- Note: bare `/configurator` shows a "General Catalog View — lead submission is disabled" banner. If you want recipients to see the full submit flow, use the demo builder link `/configurator?builderId=00000000-0000-0000-0000-000000000001` and verify it works in a browser first.
 - If possible, test the builder's city in `/configurator` first so the email can mention the zoning lookup.
 
 Core pitch:
@@ -50,14 +51,14 @@ The key difference is that it starts with the property address, not the floor pl
 
 You can try the demo here:
 
-[your-url]/configurator
+https://aduflow.ca/configurator
 
 I'm looking for 3-5 builders to pilot it free. You keep every lead. I get feedback on what makes the workflow useful enough to pay for.
 
 Worth a 20-minute call?
 
 [Your name]  
-ADUflow | [your-url]
+ADUflow | https://aduflow.ca
 
 ---
 
@@ -72,14 +73,14 @@ I came across Lane One Homes while researching prefab and steel-frame ADU builde
 
 ADUflow starts with the homeowner's address, returns a first-pass zoning screen, then turns your model lineup into an instant proposal: budget range, factory vs. site cost split, permit checklist, lender draw schedule, and project tracker.
 
-Try the demo here: [your-url]/configurator
+Try the demo here: https://aduflow.ca/configurator
 
 I'm looking for a small group of BC builders to pilot it free. You keep the leads; I get feedback from a real builder workflow.
 
 Worth a quick call?
 
 [Your name]  
-ADUflow | [your-url]
+ADUflow | https://aduflow.ca
 
 ---
 
@@ -94,14 +95,14 @@ ORCA's pod lineup looks well-positioned for backyard infill, but the hard part i
 
 ADUflow helps with that front-end filter. A homeowner enters an address, selects from your models, and gets a first-pass feasibility screen plus proposal package: factory/site cost split, permit checklist, lender package, and draw milestones.
 
-Live demo: [your-url]/configurator
+Live demo: https://aduflow.ca/configurator
 
 We're piloting with a few builders at no cost. You keep every lead.
 
 Open to a 20-minute walkthrough?
 
 [Your name]  
-ADUflow | [your-url]
+ADUflow | https://aduflow.ca
 
 ---
 
@@ -116,14 +117,14 @@ EpicMod stood out while I was mapping Ontario prefab ADU builders: factory-direc
 
 ADUflow is built for that pre-construction step. It starts with a property address, gives the homeowner a first-pass zoning screen, then creates a proposal with budget range, factory vs. site cost, lender draw schedule, and permit checklist.
 
-Try it here: [your-url]/configurator
+Try it here: https://aduflow.ca/configurator
 
 I'm looking for 3-5 builders to pilot the workflow free this summer. You load your models and pricing; ADUflow handles the customer-facing intake.
 
 Worth a short call?
 
 [Your name]  
-ADUflow | [your-url]
+ADUflow | https://aduflow.ca
 
 ---
 
@@ -138,14 +139,14 @@ Toronto garden suites are a perfect example of why quoting has to start with fea
 
 ADUflow turns that into a workflow: address lookup, first-pass zoning screen, model selection, budget range, permit checklist, lender package, and active project tracker after the proposal is accepted.
 
-Demo: [your-url]/configurator
+Demo: https://aduflow.ca/configurator
 
 I'm piloting with a small group of Ontario builders. No cost during the pilot. You keep every lead generated.
 
 Interested in seeing it?
 
 [Your name]  
-ADUflow | [your-url]
+ADUflow | https://aduflow.ca
 
 ---
 
@@ -160,14 +161,14 @@ Prefab ADU buyers usually need three things before they are worth a builder's ti
 
 ADUflow packages those answers. A homeowner enters an address, gets a first-pass zoning screen, selects a model, and receives a proposal with factory/site cost split, lender draw schedule, permit checklist, and project tracker.
 
-Try the demo: [your-url]/configurator
+Try the demo: https://aduflow.ca/configurator
 
 I'm offering a free pilot to a few ADU builders. You keep the leads; I use the feedback to shape the builder workflow.
 
 Worth 20 minutes?
 
 [Your name]  
-ADUflow | [your-url]
+ADUflow | https://aduflow.ca
 
 ---
 
@@ -182,14 +183,14 @@ California Modulars looks like exactly the kind of builder ADUflow is designed f
 
 ADUflow starts with address-based feasibility, then generates a proposal with model selection, factory vs. site cost split, lender draw schedule, permit checklist, and project tracker.
 
-Try it here: [your-url]/configurator
+Try it here: https://aduflow.ca/configurator
 
 I'm piloting it free with a few builders. You keep every lead and can load your real models into the builder catalog.
 
 Open to a quick walkthrough?
 
 [Your name]  
-ADUflow | [your-url]
+ADUflow | https://aduflow.ca
 
 ---
 
@@ -204,14 +205,14 @@ Seattle DADU leads can eat a lot of time before anyone knows whether the lot, bu
 
 ADUflow is built to filter that earlier. The homeowner enters an address, gets a first-pass zoning screen, configures a model, and receives a proposal package with permit path, budget range, lender draw schedule, and project tracker.
 
-Demo: [your-url]/configurator
+Demo: https://aduflow.ca/configurator
 
 I'm running a free pilot with a small group of PNW builders. No commission, no catch. You keep the leads.
 
 Worth a call?
 
 [Your name]  
-ADUflow | [your-url]
+ADUflow | https://aduflow.ca
 
 ---
 
@@ -226,14 +227,14 @@ Hammer & Hand came up as one of the few serious ADU design-build teams operating
 
 ADUflow turns that front-end work into a repeatable flow: address lookup, zoning screen, model or scope selection, proposal, lender package, permit checklist, and project tracker.
 
-Try the demo here: [your-url]/configurator
+Try the demo here: https://aduflow.ca/configurator
 
 I'm looking for a few builders to pilot it free and pressure-test the workflow.
 
 Interested in a short walkthrough?
 
 [Your name]  
-ADUflow | [your-url]
+ADUflow | https://aduflow.ca
 
 ---
 
@@ -248,14 +249,14 @@ Urban Outbuildings stood out in my Alberta research because of the CSA certifica
 
 ADUflow starts with a property address, screens the likely zoning path, lets the homeowner choose from your models, and produces a proposal with factory/site cost split, lender package, permit checklist, and project tracker.
 
-Try it here: [your-url]/configurator
+Try it here: https://aduflow.ca/configurator
 
 I'm piloting with a few Canadian builders at no cost. You keep the leads; I get real-world feedback.
 
 Would you have 20 minutes?
 
 [Your name]  
-ADUflow | [your-url]
+ADUflow | https://aduflow.ca
 
 ---
 
@@ -270,14 +271,14 @@ Modworks is doing the exact workflow ADUflow is focused on: garden and laneway s
 
 ADUflow lets a homeowner enter an address, get a first-pass zoning screen, pick a model, and receive a proposal with budget range, factory/site cost split, permit checklist, lender package, and project tracker.
 
-Try it here: [your-url]/configurator
+Try it here: https://aduflow.ca/configurator
 
 I'm running a free Alberta pilot and looking for a few builders who can tell me what would make this worth paying for.
 
 Worth a quick call?
 
 [Your name]  
-ADUflow | [your-url]
+ADUflow | https://aduflow.ca
 
 ---
 
