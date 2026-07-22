@@ -145,3 +145,19 @@ CREATE TABLE document_requirements (
  status TEXT DEFAULT 'missing',
  owner_role TEXT
 );
+
+CREATE TABLE site_visits (
+ id UUID PRIMARY KEY,
+ created_at TIMESTAMPTZ DEFAULT NOW(),
+ path TEXT NOT NULL,
+ page_title TEXT,
+ referrer TEXT,
+ session_id TEXT,
+ visitor_hash TEXT,
+ user_agent TEXT,
+ utm_source TEXT,
+ utm_medium TEXT,
+ utm_campaign TEXT,
+ utm_term TEXT,
+ utm_content TEXT
+);

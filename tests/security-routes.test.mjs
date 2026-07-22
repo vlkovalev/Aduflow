@@ -80,6 +80,20 @@ test("customer configurator prevents duplicate lead submit and routes builder qu
   assert.match(builderDashboard, /href=\{`\/configurator\?builderId=\$\{builderId\}`\}/);
 });
 
+test("builder outreach landing page records privacy-light site visits", async () => {
+  const forBuilders = await readFile(new URL("../app/for-builders/page.tsx", import.meta.url), "utf8");
+  const tracker = await readFile(new URL("../app/for-builders/VisitTracker.tsx", import.meta.url), "utf8");
+  const visitRoute = await readFile(new URL("../app/api/site-visits/route.ts", import.meta.url), "utf8");
+  const schema = await readFile(new URL("../database/schema.sql", import.meta.url), "utf8");
+
+  assert.match(forBuilders, /<VisitTracker pageTitle=["']ADUflow for Builders["'] \/>/);
+  assert.match(tracker, /navigator\.sendBeacon/);
+  assert.match(visitRoute, /hashVisitor\(ip/);
+  assert.match(visitRoute, /rateLimit\(`visit:\$\{ip\}`/);
+  assert.match(schema, /CREATE TABLE site_visits/);
+  assert.doesNotMatch(schema, /\bip_address\b/);
+});
+
 test("empty durable project stores return safe defaults instead of production local fallback", async () => {
   const projectStore = await readFile(new URL("../lib/projectStore.ts", import.meta.url), "utf8");
   const permitStore = await readFile(new URL("../lib/permitStore.ts", import.meta.url), "utf8");

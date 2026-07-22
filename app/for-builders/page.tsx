@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TopNav } from "../components/TopNav";
+import { VisitTracker } from "./VisitTracker";
 
 export const metadata: Metadata = {
   title: "ADUflow for Builders | Qualify ADU Leads Before Manual Estimating",
@@ -36,6 +37,7 @@ const pilotIncludes = [
 export default function ForBuildersPage() {
   return (
     <main>
+      <VisitTracker pageTitle="ADUflow for Builders" />
       <TopNav />
       <section className="band">
         <div className="sectionHeader">
