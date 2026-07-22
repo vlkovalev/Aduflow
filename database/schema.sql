@@ -2,7 +2,16 @@ CREATE TABLE builders (
  id UUID PRIMARY KEY,
  company_name TEXT NOT NULL,
  email TEXT,
- phone TEXT
+ phone TEXT,
+ license_number TEXT,
+ insurance_carrier TEXT,
+ insurance_limit NUMERIC,
+ insurance_expiration DATE,
+ bond_provider TEXT,
+ bond_amount NUMERIC,
+ warranty_info TEXT,
+ service_region TEXT,
+ currency TEXT DEFAULT 'CAD'
 );
 
 CREATE TABLE models (

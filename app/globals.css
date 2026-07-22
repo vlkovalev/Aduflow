@@ -1234,6 +1234,22 @@ input {
   font-weight: 700;
 }
 
+.zoningDetails .zoningDetailLabel {
+  display: block;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  color: rgba(255,255,255,0.9);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.zoningDetails .zoningDetailValue {
+  color: #fff;
+}
+
 .zoningRisk.risk-low { background: rgba(58,138,90,0.3); color: #a8f0c6; }
 .zoningRisk.risk-medium { background: rgba(213,169,78,0.3); color: var(--gold); }
 .zoningRisk.risk-high { background: rgba(165,51,42,0.3); color: #f0a8a0; }

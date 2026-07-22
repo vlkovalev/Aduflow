@@ -274,30 +274,30 @@ export default function Configurator() {
                   ) : null}
                   <div className="zoningDetails" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
                     <div>
-                      <span style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.72)" }}>Max ADU Size</span>
-                      <strong style={{ fontSize: 15 }}>{zoningMaxSqFt ? `${zoningMaxSqFt} sq ft` : "N/A"}</strong>
+                      <span className="zoningDetailLabel">Max ADU Size</span>
+                      <strong className="zoningDetailValue" style={{ fontSize: 15 }}>{zoningMaxSqFt ? `${zoningMaxSqFt} sq ft` : "N/A"}</strong>
                     </div>
                     <div>
-                      <span style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.72)" }}>Max Stories</span>
-                      <strong style={{ fontSize: 15 }}>{zoningMaxStories ? `${zoningMaxStories} stories` : "N/A"}</strong>
+                      <span className="zoningDetailLabel">Max Stories</span>
+                      <strong className="zoningDetailValue" style={{ fontSize: 15 }}>{zoningMaxStories ? `${zoningMaxStories} stories` : "N/A"}</strong>
                     </div>
                     <div>
-                      <span style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.72)" }}>Side Setback</span>
-                      <strong style={{ fontSize: 15 }}>{zoningSetbackSide || "N/A"}</strong>
+                      <span className="zoningDetailLabel">Side Setback</span>
+                      <strong className="zoningDetailValue" style={{ fontSize: 15 }}>{zoningSetbackSide || "N/A"}</strong>
                     </div>
                     <div>
-                      <span style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.72)" }}>Rear Setback</span>
-                      <strong style={{ fontSize: 15 }}>{zoningSetbackRear || "N/A"}</strong>
+                      <span className="zoningDetailLabel">Rear Setback</span>
+                      <strong className="zoningDetailValue" style={{ fontSize: 15 }}>{zoningSetbackRear || "N/A"}</strong>
                     </div>
                     <div>
-                      <span style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.72)" }}>Review Risk</span>
+                      <span className="zoningDetailLabel">Review Risk</span>
                       <span className={`zoningRisk risk-${zoningReviewRisk.toLowerCase()}`} style={{ display: "inline-block", marginTop: 4 }}>
                         {zoningReviewRisk}
                       </span>
                     </div>
                     <div>
-                      <span style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.72)" }}>Zoning Source</span>
-                      <strong style={{ fontSize: 13, color: "rgba(255,255,255,0.72)" }}>
+                      <span className="zoningDetailLabel">Zoning Source</span>
+                      <strong className="zoningDetailValue" style={{ fontSize: 13 }}>
                         {formatZoningSource(zoningResult.source)}
                       </strong>
                     </div>

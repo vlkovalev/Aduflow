@@ -45,7 +45,39 @@ test("product routes enforce pilot or active paid entitlement", () => {
 
 test("production cannot use ephemeral local business storage", () => {
   assert.match(localStoreSource, /VERCEL_ENV\s*===\s*["']production["']/);
+  assert.match(localStoreSource, /NETLIFY\s*===\s*["']true["']/);
   assert.match(localStoreSource, /local fallback is disabled in production/);
+});
+
+test("builder credentials are durable in Supabase schema and store code", async () => {
+  const schema = await readFile(new URL("../database/schema.sql", import.meta.url), "utf8");
+  const migration = await readFile(new URL("../database/builder-credentials.sql", import.meta.url), "utf8");
+  const builderStore = await readFile(new URL("../lib/builderStore.ts", import.meta.url), "utf8");
+
+  for (const column of [
+    "license_number",
+    "insurance_carrier",
+    "insurance_limit",
+    "insurance_expiration",
+    "bond_provider",
+    "bond_amount",
+    "warranty_info",
+    "service_region",
+    "currency",
+  ]) {
+    assert.match(schema, new RegExp(column));
+    assert.match(migration, new RegExp(column));
+    assert.match(builderStore, new RegExp(column));
+  }
+});
+
+test("customer configurator prevents duplicate lead submit and routes builder quote links", async () => {
+  const configurator = await readFile(new URL("../app/configurator/page.tsx", import.meta.url), "utf8");
+  const builderDashboard = await readFile(new URL("../app/builder/page.tsx", import.meta.url), "utf8");
+
+  assert.match(configurator, /if\s*\(isSubmitting\)\s*return/);
+  assert.match(configurator, /disabled=\{isSubmitting\s*\|\|\s*!builderId\s*\|\|\s*leadSubmitted\}/);
+  assert.match(builderDashboard, /href=\{`\/configurator\?builderId=\$\{builderId\}`\}/);
 });
 
 test("empty durable project stores return safe defaults instead of production local fallback", async () => {

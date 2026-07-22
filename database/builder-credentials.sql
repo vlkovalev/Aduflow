@@ -15,6 +15,7 @@ ALTER TABLE builders ADD COLUMN IF NOT EXISTS bond_provider TEXT;
 ALTER TABLE builders ADD COLUMN IF NOT EXISTS bond_amount NUMERIC;
 ALTER TABLE builders ADD COLUMN IF NOT EXISTS warranty_info TEXT;
 ALTER TABLE builders ADD COLUMN IF NOT EXISTS service_region TEXT;
+ALTER TABLE builders ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'CAD';
 
 -- Force PostgREST to pick up the new columns immediately instead of waiting
 -- for its schema cache to refresh on its own (same step used for the earlier
