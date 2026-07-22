@@ -61,7 +61,7 @@ export default async function BuilderDashboard() {
         }}>
           <span>Note</span>
           <span>
-            <strong>Sandbox Mode Active:</strong> Supabase database environment variables are not configured. Your custom models, builder credentials, and homeowner leads reside in temporary local serverless files and will reset when Vercel restarts.
+            <strong>Sandbox Mode Active:</strong> Supabase database environment variables are not configured. Your custom models, builder credentials, and homeowner leads reside in temporary local files and may reset when the server restarts.
           </span>
         </div>
       )}

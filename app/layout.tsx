@@ -8,7 +8,7 @@ const siteUrl = readEnv("NEXT_PUBLIC_SITE_URL") ?? "https://aduflow.ca";
 export const metadata: Metadata = {
   title: "ADUflow - ADU Pre-Construction OS",
   description:
-    "Turn any parcel into an instant feasibility check, budget range, and permit-ready proposal. Built for modular ADU and garden suite builders across North America.",
+    "Turn a property address into a preliminary feasibility screen, budget range, and builder-reviewed proposal. Built for modular ADU and garden suite builders across North America.",
   metadataBase: new URL(siteUrl),
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     url: siteUrl,
     title: "ADUflow - ADU Pre-Construction OS",
     description:
-      "Instant feasibility, factory vs. site cost split, permit checklist, and lender draw plan. Built for modular ADU builders.",
+      "Preliminary feasibility, factory vs. site cost split, permit checklist, and lender draw plan for modular ADU builders.",
     siteName: "ADUflow",
     images: [
       {
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "ADUflow - ADU Pre-Construction OS",
     description:
-      "Instant feasibility, budget range, and permit checklist for modular ADU builders.",
+      "Preliminary feasibility, budget range, and permit checklist for modular ADU builders.",
     images: ["/og-image.png"],
   },
 };

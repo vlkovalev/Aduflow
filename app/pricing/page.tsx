@@ -68,20 +68,19 @@ export default function PricingPage() {
       <section className="band">
         <div className="sectionHeader">
           <p className="eyebrow">What&rsquo;s next</p>
-          <h2>A pay-only-when-you-sell option is coming.</h2>
+          <h2>A pay-only-when-you-sell option is being evaluated.</h2>
           <p>
-            Once builder-isolated accounts, persisted project data, and a validated lender package are fully in
-            place, we plan to add an optional success-fee tier: zero base cost, a small percentage of closed
-            contract value. That directly mirrors ADUflow&rsquo;s mission &mdash; helping you sell more buildings,
-            not just collect more inquiries.
+            Builder-isolated accounts and persisted project workflows are now in place. During the pilot, we are
+            testing whether builders prefer the published monthly plans or an optional success-fee model tied to
+            closed work. No success fee applies today.
           </p>
         </div>
         <div className="actions">
           <Link className="button primary" href="/builder/login">
             Join the pilot
           </Link>
-          <Link className="button secondary" href="/configurator">
-            See the configurator
+          <Link className="button secondary" href="/for-builders">
+            See the builder pilot
           </Link>
         </div>
         <p className="formFinePrint">

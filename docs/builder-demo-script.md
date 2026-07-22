@@ -19,8 +19,8 @@ Show one builder that ADUflow can reduce early lead qualification time and creat
    - Point to the pilot boundaries section.
 
 2. Open `/builder/login`.
-   - Select the demo builder.
-   - Say: "This pilot uses builder-scoped login. Production-grade auth is a next step before wide onboarding."
+   - Sign in with the prepared demo account.
+   - Say: "Each verified builder account has its own catalog, leads, proposals, and project records."
 
 3. Open `/builder/setup`.
    - Show the setup checklist.
@@ -74,7 +74,7 @@ Show one builder that ADUflow can reduce early lead qualification time and creat
 | "Zoning is too local." | Correct. ADUflow labels source quality and treats zoning as a first-pass screen. The long-term plan is provider data plus jurisdiction-specific validation. |
 | "Banks will still inspect." | Correct. The current lender package is meant to make financing conversations cleaner, not replace lender approval. |
 | "My pricing is more complex." | The pilot starts with model and option pricing; the next step is builder-specific regional multipliers, margin controls, and imports. |
-| "I do not want competitors seeing my leads." | The app now scopes builder data for the pilot, but production auth must be added before broad multi-builder onboarding. |
+| "I do not want competitors seeing my leads." | Builder accounts, API routes, catalogs, leads, proposals, and project records are builder-scoped. Cross-tenant access was tested in production. |
 | "Customers may think this is final." | The configurator and proposal include disclaimers that outputs are estimates and not permit/financing approval. |
 
 ## Close

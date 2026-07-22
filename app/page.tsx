@@ -64,7 +64,7 @@ const builderProof = [
 const pilotLimits = [
   "Zoning results are first-pass screens, not permit approvals.",
   "Fallback data must be reviewed by the builder before customer commitments.",
-  "Pilot login is builder-scoped for demos; production auth is the next hardening step.",
+  "Every builder account and customer record is isolated behind verified sign-in.",
 ];
 
 export default function Home() {
@@ -96,7 +96,7 @@ export default function Home() {
                 Check an address
               </Link>
               <Link className="button secondary" href="/builder">
-                View builder dashboard
+                Builder sign in
               </Link>
             </div>
           </div>
@@ -144,12 +144,12 @@ export default function Home() {
 
       <section className="band">
         <div className="sectionHeader">
-          <p className="eyebrow">Strategic wedge</p>
-          <h2>North America needs feasibility before configuration.</h2>
+          <p className="eyebrow">Address-first qualification</p>
+          <h2>Start with the property, not a generic floor plan.</h2>
           <p>
-            PZZL begins with product configuration. ADUflow should begin with
-            local rules, parcel constraints, HOA friction, lender evidence, and
-            the prefab supply chain.
+            Give homeowners a structured first pass through local rules, parcel
+            constraints, site costs, and financing information before your team
+            commits hours to estimating.
           </p>
         </div>
         <div className="chipRow">
@@ -180,6 +180,14 @@ export default function Home() {
             address-first feasibility, catalog-based pricing, proposal, lender
             package, permit tracker, and draw log.
           </p>
+          <div className="actions">
+            <Link className="button primary" href="/for-builders">
+              See the builder pilot
+            </Link>
+            <Link className="button secondary" href="/builder/login">
+              Create a builder account
+            </Link>
+          </div>
         </div>
       </section>
 

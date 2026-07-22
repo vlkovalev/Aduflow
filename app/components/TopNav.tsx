@@ -39,6 +39,9 @@ export function TopNav() {
         ADUflow
       </Link>
       <div className="navLinks">
+        <Link href="/for-builders" className={pathname === "/for-builders" ? "navLink active" : "navLink"}>
+          For Builders
+        </Link>
         <Link
           href="/configurator"
           className={isConfiguratorActive ? "navLink active" : "navLink"}
