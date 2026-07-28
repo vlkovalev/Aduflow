@@ -13,6 +13,7 @@ import { ManufacturerMatch } from "./ManufacturerMatch";
 import { TopNav } from "../components/TopNav";
 import { FloorPlanPreview } from "./FloorPlanPreview";
 import { detectCurrencyFromJurisdiction, formatCurrency, isCurrencyCode, type CurrencyCode } from "../../lib/currency";
+import { trackProductEvent } from "../components/ProductEventTracker";
 
 export default function Configurator() {
   const [catalog, setCatalog] = useState<PricingCatalog>(defaultCatalog);
@@ -68,6 +69,7 @@ export default function Configurator() {
         const result = data.result as ZoningResult;
         setZoningResult(result);
         setZoningStatus("found");
+        trackProductEvent("zoning_lookup_completed", { result: "found", source: String(data.result.source || "unknown").slice(0, 80) });
 
         // Initialize override states
         setZoningMaxSqFt(result.maxAduSqFt);
@@ -84,9 +86,11 @@ export default function Configurator() {
         else setParcelType("urban-lane");
       } else {
         setZoningStatus("not_found");
+        trackProductEvent("zoning_lookup_completed", { result: "not_found" });
       }
     } catch {
       setZoningStatus("not_found");
+      trackProductEvent("zoning_lookup_failed");
     }
   }
 
@@ -671,6 +675,7 @@ export default function Configurator() {
 
             setProposalUrl(result.proposalUrl);
             setLeadSubmitted(true);
+            trackProductEvent("lead_created", { has_zoning_result: Boolean(zoningResult), currency: effectiveCurrency });
             } catch {
               setSubmitError("Network error while submitting. Please try again.");
             } finally {
