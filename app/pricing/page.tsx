@@ -12,10 +12,10 @@ export default function PricingPage() {
           <p className="eyebrow">Pricing</p>
           <h1>Free during the pilot. Predictable after that.</h1>
           <p>
-            ADUflow is free for every builder in the current guided pilot — no credit card, no time limit. When you
-            move to general availability, pricing is a low flat base fee plus a metered charge only on proposals you
-            actually mark &ldquo;Qualified,&rdquo; never on raw inbound form submissions. Month-to-month, no annual
-            lock-in, no per-seat fees.
+            ADUflow is free for every builder in the current guided pilot — no credit card, no time limit. We are
+            validating a small founding-builder tier in Canadian dollars before publishing general-availability
+            checkout pricing. There are no charges for raw inbound form submissions, no annual lock-in, and no
+            per-seat fees.
           </p>
         </div>
       </section>
@@ -29,17 +29,26 @@ export default function PricingPage() {
           <p>Unlimited qualified proposals while you&rsquo;re part of the pilot.</p>
         </article>
 
+        <article className="workflowCard">
+          <span>Founding builders</span>
+          <h3>Early access</h3>
+          <p>For the first few Alberta builders who help shape the workflow.</p>
+          <p style={{ fontSize: 28, fontWeight: 900, margin: "12px 0" }}>CA$99/mo</p>
+          <p>Includes 5 qualified proposals, builder-specific onboarding, and no overage charges during the founding period.</p>
+          <p className="formFinePrint">Invitation only while pricing is validated. No credit card required to join the pilot.</p>
+        </article>
+
         {PUBLIC_PLAN_ORDER.map((planId) => {
           const plan = BILLING_PLANS[planId];
           return (
             <article className="workflowCard" key={planId}>
-              <span>{plan.name === "Growth" ? "Most builders" : "Starter"}</span>
+              <span>Planned general availability</span>
               <h3>{plan.name}</h3>
               <p>{plan.tagline}</p>
-              <p style={{ fontSize: 28, fontWeight: 900, margin: "12px 0" }}>${plan.basePricePerMonth}/mo</p>
+              <p style={{ fontSize: 28, fontWeight: 900, margin: "12px 0" }}>Draft pricing</p>
               <p>
-                Includes {plan.includedQualifiedProposals} qualified proposals/mo, then ${plan.overagePricePerProposal}{" "}
-                each.
+                Includes {plan.includedQualifiedProposals} qualified proposals/mo. Final CAD rates and overage pricing
+                will be published after founding-builder interviews.
               </p>
             </article>
           );
@@ -68,11 +77,10 @@ export default function PricingPage() {
       <section className="band">
         <div className="sectionHeader">
           <p className="eyebrow">What&rsquo;s next</p>
-          <h2>A pay-only-when-you-sell option is being evaluated.</h2>
+          <h2>Success-fee pricing comes later.</h2>
           <p>
-            Builder-isolated accounts and persisted project workflows are now in place. During the pilot, we are
-            testing whether builders prefer the published monthly plans or an optional success-fee model tied to
-            closed work. No success fee applies today.
+            A success fee is not part of the pilot or founding tier. It will only be considered after closed-deal
+            reporting and the lender/project evidence workflow are trusted in real builder use.
           </p>
         </div>
         <div className="actions">
