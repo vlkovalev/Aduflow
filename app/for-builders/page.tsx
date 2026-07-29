@@ -34,6 +34,21 @@ const pilotIncludes = [
   "Free guided onboarding during the pilot",
 ];
 
+const conciergeSteps = [
+  {
+    title: "Send your first catalog",
+    copy: "Share your top 2–3 models and major options by spreadsheet or email. We help turn them into the first usable catalog.",
+  },
+  {
+    title: "Run one real lead",
+    copy: "Use one homeowner address to compare ADUflow's first-pass package with the way your team qualifies the lead today.",
+  },
+  {
+    title: "Review and adjust",
+    copy: "We review the assumptions, pricing, and output with you before asking for any paid commitment.",
+  },
+];
+
 export default function ForBuildersPage() {
   return (
     <main>
@@ -76,6 +91,25 @@ export default function ForBuildersPage() {
         </div>
         <div className="chipRow">
           {pilotIncludes.map((item) => <span className="chip" key={item}>{item}</span>)}
+        </div>
+      </section>
+      <section className="band">
+        <div className="sectionHeader">
+          <p className="eyebrow">Pilot concierge</p>
+          <h2>We help you reach the first useful result.</h2>
+          <p>
+            You do not need to prepare a perfect catalog or learn a new system alone. The guided pilot starts with
+            one real builder workflow, one real address, and a review of what should change before wider homeowner use.
+          </p>
+        </div>
+        <div className="workflow">
+          {conciergeSteps.map((step, index) => (
+            <article className="workflowCard" key={step.title}>
+              <span>0{index + 1}</span>
+              <h2>{step.title}</h2>
+              <p>{step.copy}</p>
+            </article>
+          ))}
         </div>
       </section>
       <section className="band">

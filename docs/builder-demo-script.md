@@ -83,6 +83,12 @@ Ask for one pilot commitment:
 
 > "Give us your top 2-3 ADU models, option pricing, and one real homeowner lead. We will run the lead through ADUflow and compare it against your current intake process."
 
+Offer the pilot concierge explicitly:
+
+> "You do not need to configure everything alone. Send us your first catalog, run one real address with us, and we will review the assumptions and output before you decide whether to continue."
+
+The first success event is one useful real lead, not a complete catalog migration or a long product tour.
+
 ## Success Criteria
 
 The presentation succeeds if the builder says at least one of these:
