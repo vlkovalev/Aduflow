@@ -12,6 +12,10 @@ Builder outreach reviewed July 21, 2026.
 - Personalization below was checked against public company information on July 21, 2026. Recheck the company site immediately before sending.
 - Send one follow-up after 4-5 business days and a final close-the-loop note 7-10 business days later. Stop after a reply or opt-out.
 
+## Activation talking points
+
+Before the next round of outreach, review `docs/builder-activation-plan.md` — it prioritizes what makes a builder stick after signup (done-for-you catalog setup, one-real-lead concierge onboarding, branded intake link/homeowner report, builder-controlled guardrails, time-saved dashboard). Use it to answer "what happens after I sign up?" if a prospect asks on a call or reply.
+
 ## Core positioning
 
 ADUflow helps ADU, garden-suite, and prefab builders qualify homeowner inquiries before manual estimating. It turns a property address, selected model, and site assumptions into a preliminary feasibility screen, budget range, proposal, and builder-only lead record. Qualified projects can continue into lender-oriented, permit, milestone, and draw workflows.
@@ -261,8 +265,12 @@ No need to reply if the timing is not right.
 
 ## Pre-send checklist
 
+- Offer the done-for-you catalog import: the builder may send an existing PDF or price sheet and the ADUflow team will prepare the first CSV/XLSX import during onboarding. See `docs/catalog-import-guide.md`.
+- Explain the two-week parallel run: the builder keeps the existing intake process active while testing one real lead through ADUflow; no cutover is required.
+
 - Company and recipient still match the personalization.
 - Landing page and registration both load on desktop and mobile.
 - No placeholders remain.
 - Sender identity, physical mailing address, and unsubscribe/opt-out handling meet the rules for the recipient’s jurisdiction.
 - CRM/spreadsheet records the send date, follow-up date, reply, opt-out, and outcome.
+- Terms of Service (`/terms`) discloses the pilot graduation trigger (3 builders, 2+ closed deals each → advance notice → convert to founding tier unless opt-out). Confirm this is live before scaling outreach past the current 10-builder cohort.

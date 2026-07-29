@@ -32,6 +32,8 @@ const pilotIncludes = [
   "Proposal and lender-oriented package",
   "Permit checklist, project milestones, and draw log",
   "Free guided onboarding during the pilot",
+  "Done-for-you first catalog import from your existing price sheet",
+  "Two-week parallel run alongside your current intake process",
 ];
 
 const conciergeSteps = [
@@ -78,6 +80,17 @@ export default function ForBuildersPage() {
             <p>{outcome.copy}</p>
           </article>
         ))}
+      </section>
+      <section className="band">
+        <div className="sectionHeader">
+          <p className="eyebrow">Exclusive by design</p>
+          <h2>Your qualified proposals stay yours.</h2>
+          <p>
+            Every proposal is exclusive to your builder account — never shared or resold to competitors. Traditional
+            marketplaces can push contractors above $1,400 in acquisition cost for a booked job when the same lead is
+            resold across the market. ADUflow is designed around builder-controlled, qualified opportunities instead.
+          </p>
+        </div>
       </section>
       <section className="band">
         <div className="sectionHeader">
