@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { createLead, listLeads, type CreateLeadInput, type LeadRecord } from "../../../lib/leadStore";
 import { requireBuilder } from "../../../lib/apiAuth";
 import { builderHasProductAccess } from "../../../lib/apiAuth";
-import { builderExists, getBuilderById } from "../../../lib/builderStore";
+import { builderExists, getBuilderById, getBuilderCredentials } from "../../../lib/builderStore";
+import { evaluateGuardrails } from "../../../lib/guardrails";
 import { isUuid } from "../../../lib/auth";
 import { formatCurrency, isCurrencyCode } from "../../../lib/currency";
 import { clientIp, rateLimit } from "../../../lib/rateLimit";
@@ -67,7 +68,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "This builder is not currently accepting submissions." }, { status: 402 });
   }
 
-  let validated: CreateLeadInput;
+  let validated: Omit<CreateLeadInput, "needsReview" | "reviewReasons">;
   try {
     validated = validateLead(body, builderId);
   } catch (error) {
@@ -78,7 +79,15 @@ export async function POST(request: Request) {
   }
 
   try {
-    const lead = await createLead(validated);
+    // Guardrails (docs/builder-activation-plan.md #4) are evaluated here,
+    // server-side, against the builder's own saved settings — never trusted
+    // from the client request — and only ever flag the lead for the
+    // builder's review queue. They never block homeowner submission and
+    // never touch `status`, which is what drives metered billing.
+    const builderGuardrails = await getBuilderCredentials(builderId);
+    const { needsReview, reviewReasons } = evaluateGuardrails(validated, builderGuardrails);
+
+    const lead = await createLead({ ...validated, needsReview, reviewReasons: reviewReasons.join(" ") });
     const origin = new URL(request.url).origin;
     await notifyBuilderOfNewLead(lead, origin);
     await sendLeadConfirmationToHomeowner(lead, origin);
@@ -175,7 +184,10 @@ function nonNegativeNumber(value: unknown, label: string, errors: string[]): num
   return n;
 }
 
-function validateLead(body: Partial<CreateLeadInput>, builderId: string): CreateLeadInput {
+function validateLead(
+  body: Partial<CreateLeadInput>,
+  builderId: string,
+): Omit<CreateLeadInput, "needsReview" | "reviewReasons"> {
   const errors: string[] = [];
 
   const customerName = cleanText(body.customerName, 200);
@@ -276,5 +288,5 @@ function validateLead(body: Partial<CreateLeadInput>, builderId: string): Create
     setbackTarget,
     reviewRisk,
     configuration: body.configuration as Record<string, unknown>,
-  } satisfies CreateLeadInput;
+  } satisfies Omit<CreateLeadInput, "needsReview" | "reviewReasons">;
 }

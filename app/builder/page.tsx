@@ -138,7 +138,25 @@ export default async function BuilderDashboard() {
               leads.slice(0, 8).map((lead) => (
                 <div className="leadRow" key={lead.id}>
                   <Link href={`/proposals/${lead.id}`} style={{ flex: 1, minWidth: 0 }}>
-                    <strong>{lead.customerName}</strong>
+                    <strong>
+                      {lead.customerName}
+                      {lead.needsReview ? (
+                        <span
+                          title={lead.reviewReasons || "Flagged for manual review"}
+                          style={{
+                            marginLeft: 8,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: "#b75f38",
+                            border: "1px solid #b75f38",
+                            borderRadius: 4,
+                            padding: "1px 6px",
+                          }}
+                        >
+                          Needs review
+                        </span>
+                      ) : null}
+                    </strong>
                     <span>{lead.modelName} — {lead.propertyAddress}</span>
                   </Link>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>

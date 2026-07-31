@@ -48,6 +48,14 @@ export type LeadRecord = {
   reviewRisk: string;
   configuration: Record<string, unknown>;
   status: string;
+  /**
+   * Server-computed guardrail flag (docs/builder-activation-plan.md #4) —
+   * informational only. Never set by the client, never touched by
+   * LeadStatusSelect, and independent of `status`/`proposalStatus` (which
+   * drive metered qualified-proposal billing).
+   */
+  needsReview: boolean;
+  reviewReasons: string;
 };
 
 export type CreateLeadInput = Omit<
@@ -122,6 +130,8 @@ export async function createLead(input: CreateLeadInput) {
           setback_target: record.setbackTarget,
           review_risk: record.reviewRisk,
           status: record.status,
+          needs_review: record.needsReview,
+          review_reasons: record.reviewReasons,
         })
         .select()
         .single();
@@ -201,6 +211,8 @@ export async function getLead(id: string) {
           reviewRisk: data.review_risk ?? "",
           configuration: data.configuration_json ?? {},
           status: data.status ?? "new",
+          needsReview: Boolean(data.needs_review),
+          reviewReasons: data.review_reasons ?? "",
         } satisfies LeadRecord;
       }
     } catch (e) {
@@ -312,6 +324,8 @@ function mapLeadRow(data: Record<string, unknown>) {
     reviewRisk: String(data.review_risk ?? ""),
     configuration: (data.configuration_json ?? {}) as Record<string, unknown>,
     status: String(data.status ?? "new"),
+    needsReview: Boolean(data.needs_review),
+    reviewReasons: String(data.review_reasons ?? ""),
   } satisfies LeadRecord;
 }
 
@@ -347,5 +361,7 @@ function normalizeLocalLead(record: Partial<LeadRecord>) {
     setbackSide: record.setbackSide ?? "",
     setbackRear: record.setbackRear ?? "",
     status: record.status || "new",
+    needsReview: record.needsReview ?? false,
+    reviewReasons: record.reviewReasons ?? "",
   } as LeadRecord;
 }

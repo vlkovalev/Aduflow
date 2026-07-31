@@ -38,6 +38,8 @@ type BuilderCredentials = {
   warrantyInfo?: string;
   serviceRegion?: string;
   currency?: "CAD" | "USD";
+  minProjectBudget?: number;
+  excludedMunicipalities?: string;
 };
 
 type ImportKind = "models" | "options";
@@ -741,6 +743,8 @@ function CredentialsForm() {
   const [warrantyInfo, setWarrantyInfo] = useState("");
   const [serviceRegion, setServiceRegion] = useState("");
   const [currency, setCurrency] = useState<"CAD" | "USD">("CAD");
+  const [minProjectBudget, setMinProjectBudget] = useState("");
+  const [excludedMunicipalities, setExcludedMunicipalities] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -784,6 +788,8 @@ function CredentialsForm() {
           setWarrantyInfo(c.warrantyInfo ?? "");
           setServiceRegion(c.serviceRegion ?? "");
           setCurrency(c.currency === "USD" ? "USD" : "CAD");
+          setMinProjectBudget(c.minProjectBudget ? String(c.minProjectBudget) : "");
+          setExcludedMunicipalities(c.excludedMunicipalities ?? "");
         }
       } catch {
         if (active) setError("Failed to load builder credentials.");
@@ -831,6 +837,8 @@ function CredentialsForm() {
           warrantyInfo,
           serviceRegion,
           currency,
+          minProjectBudget: Number(minProjectBudget) || 0,
+          excludedMunicipalities,
         }),
       });
 
@@ -921,6 +929,37 @@ function CredentialsForm() {
         <label>
           Service regions
           <textarea className="setupInput" style={{ minHeight: 60 }} value={serviceRegion} onChange={(e) => setServiceRegion(e.target.value)} placeholder="Metro Vancouver, Southern BC" required />
+        </label>
+
+        <div className="panelTitle" style={{ marginTop: 8 }}>
+          <h2 style={{ fontSize: 16 }}>Lead guardrails</h2>
+          <span>Optional</span>
+        </div>
+        <p style={{ fontSize: 13, color: "var(--muted)", marginTop: -8 }}>
+          Leads that don&apos;t meet these are still created and sent to you — they&apos;re just flagged &quot;Needs review&quot; in your pipeline instead of silently blended in.
+        </p>
+        <label>
+          Minimum project budget ({currency})
+          <input
+            className="setupInput"
+            type="number"
+            value={minProjectBudget}
+            onChange={(e) => setMinProjectBudget(e.target.value)}
+            placeholder="e.g. 150000 — leave blank for no minimum"
+          />
+        </label>
+        <label>
+          Excluded municipalities
+          <textarea
+            className="setupInput"
+            style={{ minHeight: 60 }}
+            value={excludedMunicipalities}
+            onChange={(e) => setExcludedMunicipalities(e.target.value)}
+            placeholder="One per line or comma-separated, e.g. Whistler, Squamish"
+          />
+          <span style={{ fontSize: 12, color: "var(--muted)", marginTop: 4, display: "block" }}>
+            Matched against the property address and zoning description. Leave blank to flag no areas.
+          </span>
         </label>
 
         {error && <p className="setupNotice error">{error}</p>}

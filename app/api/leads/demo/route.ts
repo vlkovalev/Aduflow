@@ -78,6 +78,10 @@ export async function POST() {
       drawMilestones: estimate.drawMilestones,
       sandbox: true,
     },
+    // Sandbox lead is synthetic, not a real submission — guardrails
+    // (docs/builder-activation-plan.md #4) don't apply to it.
+    needsReview: false,
+    reviewReasons: "",
   });
 
   return NextResponse.json({

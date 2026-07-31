@@ -20,6 +20,15 @@ export type BuilderCredentials = {
   serviceRegion: string;
   /** Account-level default; a quote's actual currency can be overridden per-lead by property address. */
   currency: CurrencyCode;
+  /**
+   * Guardrails (docs/builder-activation-plan.md #4) — informational-only
+   * checks applied server-side when a lead is created. They flag a lead for
+   * the builder's own review queue; they never block homeowner submission
+   * and never touch lead `status` (which drives metered billing).
+   */
+  minProjectBudget: number;
+  /** Free-text, comma/newline-separated town names matched case-insensitively against the property address and zoning fields. */
+  excludedMunicipalities: string;
 };
 
 export type BuilderProfile = {
@@ -64,6 +73,8 @@ const BLANK_CREDENTIALS: BuilderCredentials = {
   warrantyInfo: "",
   serviceRegion: "",
   currency: "CAD",
+  minProjectBudget: 0,
+  excludedMunicipalities: "",
 };
 
 function credentialsFilePath(builderId: string) {
@@ -108,7 +119,7 @@ async function writeLocalAccounts(accounts: LocalBuilderAccount[]) {
 // ── Credential read/write (per-tenant, no shared defaults) ──────────────────
 
 const CREDENTIALS_COLUMNS =
-  "company_name, email, phone, license_number, insurance_carrier, insurance_limit, insurance_expiration, bond_provider, bond_amount, warranty_info, service_region, currency";
+  "company_name, email, phone, license_number, insurance_carrier, insurance_limit, insurance_expiration, bond_provider, bond_amount, warranty_info, service_region, currency, min_project_budget, excluded_municipalities";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function credentialsFromRow(data: any): BuilderCredentials {
@@ -125,6 +136,8 @@ function credentialsFromRow(data: any): BuilderCredentials {
     warrantyInfo: data.warranty_info || "",
     serviceRegion: data.service_region || "",
     currency: isCurrencyCode(data.currency) ? data.currency : "CAD",
+    minProjectBudget: Number(data.min_project_budget) || 0,
+    excludedMunicipalities: data.excluded_municipalities || "",
   };
 }
 
@@ -199,6 +212,8 @@ export async function updateBuilderCredentials(
             warranty_info: updated.warrantyInfo,
             service_region: updated.serviceRegion,
             currency: updated.currency,
+            min_project_budget: updated.minProjectBudget || null,
+            excluded_municipalities: updated.excludedMunicipalities,
           })
           .eq("id", builderId);
 

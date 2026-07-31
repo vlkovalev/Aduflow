@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { buildNextSteps, buildProposalSections, formatCurrency } from "../../../lib/proposalBuilder";
+import {
+  buildAssumptions,
+  buildExclusions,
+  buildNextSteps,
+  buildProposalSections,
+  formatCurrency,
+} from "../../../lib/proposalBuilder";
 import { getLead } from "../../../lib/leadStore";
 import { PrintButton } from "../share/[token]/PrintButton";
 import { CopyLinkButton } from "./CopyLinkButton";
@@ -36,6 +42,8 @@ export default async function ProposalPage({
 
   const sections = buildProposalSections(lead);
   const nextSteps = buildNextSteps(lead);
+  const assumptions = buildAssumptions(lead);
+  const exclusions = buildExclusions();
   const shareUrl = `${readEnv("NEXT_PUBLIC_SITE_URL") ?? ""}/proposals/share/${lead.shareToken}`;
 
   return (
@@ -49,6 +57,24 @@ export default async function ProposalPage({
           {lead.proposalNumber} prepared for {lead.customerName} at {lead.propertyAddress}.
         </p>
       </section>
+
+      {lead.needsReview && (
+        <div
+          style={{
+            background: "#fdf1e8",
+            borderLeft: "4px solid #b75f38",
+            padding: "12px 16px",
+            borderRadius: 6,
+            margin: "12px 0 20px",
+            fontSize: 13,
+            color: "#6b3d22",
+            lineHeight: 1.5,
+          }}
+        >
+          <strong>Needs review — flagged by your guardrail settings.</strong>
+          <p style={{ margin: "4px 0 0" }}>{lead.reviewReasons}</p>
+        </div>
+      )}
 
       <section className="proposalDetailGrid">
         <div className="proposalMain">
@@ -68,6 +94,34 @@ export default async function ProposalPage({
               </dl>
             </article>
           ))}
+
+          <article className="dataPanel">
+            <div className="panelTitle">
+              <h2>Assumptions &amp; Exclusions</h2>
+              <span>Review packet</span>
+            </div>
+            <div style={{ display: "grid", gap: 16 }}>
+              <div>
+                <p style={{ fontWeight: 700, fontSize: 13, marginBottom: 6 }}>This estimate assumes</p>
+                <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 6, fontSize: 13, color: "var(--muted)" }}>
+                  {assumptions.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p style={{ fontWeight: 700, fontSize: 13, marginBottom: 6 }}>Not included in this estimate</p>
+                <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 6, fontSize: 13, color: "var(--muted)" }}>
+                  {exclusions.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <p className="formFinePrint" style={{ marginTop: 12 }}>
+              This is exactly what the homeowner sees on the shared version of this proposal.
+            </p>
+          </article>
         </div>
 
         <aside className="estimatePanel">
