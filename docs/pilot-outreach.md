@@ -9,6 +9,7 @@ Builder outreach reviewed July 21, 2026.
 - Keep the first email below 120 words. The goal is a reply, not a complete product tour.
 - Say `preliminary` or `first-pass` for zoning, budgets, lender packages, and permit work. Never imply permit, financing, engineering, or final-price approval.
 - Offer a private walkthrough using a builder-scoped demo. Do not use a guessed or seed `builderId` in outreach.
+- Once a builder account exists, send the branded intake link as `https://aduflow.ca/for-builder/<builderId>` instead of the raw `?builderId=` configurator URL.
 - Personalization below was checked against public company information on July 21, 2026. Recheck the company site immediately before sending.
 - Send one follow-up after 4-5 business days and a final close-the-loop note 7-10 business days later. Stop after a reply or opt-out.
 

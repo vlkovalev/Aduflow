@@ -268,6 +268,24 @@ export async function getBuilderById(builderId: string): Promise<BuilderProfile 
     : null;
 }
 
+export type BuilderPublicProfile = {
+  id: string;
+  companyName: string;
+};
+
+/**
+ * Public-safe subset of a builder's profile — company name only. Used by
+ * unauthenticated surfaces (the branded /for-builder link and the
+ * configurator's "Configuring for {companyName}" header) so a homeowner
+ * or prospect never sees a builder's email/phone/credentials before the
+ * builder account owner has shared them directly.
+ */
+export async function getBuilderPublicProfile(builderId: string): Promise<BuilderPublicProfile | null> {
+  const profile = await getBuilderById(builderId);
+  if (!profile || !profile.companyName) return null;
+  return { id: profile.id, companyName: profile.companyName };
+}
+
 export async function listBuilders(): Promise<BuilderProfile[]> {
   const supabase = getSupabaseServiceClient();
   if (supabase) {

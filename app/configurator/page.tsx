@@ -29,6 +29,7 @@ export default function Configurator() {
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [builderId, setBuilderId] = useState("");
+  const [builderCompanyName, setBuilderCompanyName] = useState<string | null>(null);
   const [redesignAck, setRedesignAck] = useState(false);
   const [addressInput, setAddressInput] = useState("");
   const [zoningResult, setZoningResult] = useState<ZoningResult | null>(null);
@@ -108,6 +109,29 @@ export default function Configurator() {
       }
     }
   }, []);
+
+  // Look up the builder's display name so the configurator reads as the
+  // builder's own tool (e.g. "Configuring for Modworks") instead of a
+  // generic, unbranded dashboard — see docs/builder-activation-plan.md #3.
+  // Uses the public, unauthenticated endpoint (company name only, no PII).
+  useEffect(() => {
+    if (!builderId) {
+      setBuilderCompanyName(null);
+      return;
+    }
+    let active = true;
+    fetch(`/api/builder/public?builderId=${encodeURIComponent(builderId)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (active && data?.companyName) setBuilderCompanyName(data.companyName);
+      })
+      .catch(() => {
+        // Non-critical — configurator still works without the branded label.
+      });
+    return () => {
+      active = false;
+    };
+  }, [builderId]);
 
   useEffect(() => {
     let active = true;
@@ -208,7 +232,9 @@ export default function Configurator() {
         </div>
       ) : null}
       <section className="pageIntro">
-        <p className="eyebrow">Zoning and feasibility first</p>
+        <p className="eyebrow">
+          {builderCompanyName ? `Configuring for ${builderCompanyName}` : "Zoning and feasibility first"}
+        </p>
         <h1>Check the lot before configuring the building.</h1>
         <p>
           North American ADU sales start with parcel reality: setbacks, HOA
