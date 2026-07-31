@@ -4,7 +4,7 @@ Date: July 29, 2026
 
 ## Why This Exists
 
-The pilot's constraint is not more features — it is whether a builder gets real value in their first 30 minutes and comes back for a second lead. Everything below is ordered by how directly it shortens the path from signup to "this saved me time on a real inquiry." Payments, a marketplace, automated permit filing, and a success-fee system are explicitly out of scope until builders are using the qualification workflow repeatedly — adding them now increases complexity before that is proven.
+The pilot's constraint is not more features — it is whether a builder gets real value in their first 30 minutes and comes back for a second lead. Everything below is ordered by how directly it shortens the path from signup to "this saved me time on a real inquiry." Payment infrastructure, a marketplace, automated permit filing, and closed-deal success fees are explicitly out of scope until builders are using the qualification workflow repeatedly — adding them now increases complexity before that is proven. The pricing message can still be success-aligned today: free pilot access, then payment only for builder-accepted qualified opportunities.
 
 ## Priority Order
 
@@ -20,6 +20,8 @@ The pilot's constraint is not more features — it is whether a builder gets rea
 
 **5. Time-saved dashboard.** Track leads screened, estimated hours avoided, qualified proposals, average response time, model demand, and leads rejected before manual estimating. The sales message becomes "ADUflow saved you 6 estimating hours this month," not "ADUflow has 14 features."
 
+**6. Accepted-opportunity pricing bridge.** Define what counts before asking for payment: real homeowner contact, property in service area, ADU intent, non-duplicate inquiry, budget/timeline context, and builder review. Anything raw, spammy, out-of-area, duplicate, or rejected does not count. This gives builders the "only pay for successful leads" assurance without waiting for construction contracts to close.
+
 ## Supporting Ideas (lower lift, still worth doing early)
 
 - **Quantify "no shared leads" against a number.** `docs/pricing-strategy.md` already cites contractors paying $1,400+ per booked job when the same lead is resold to competitors on traditional lead marketplaces. Put that figure next to "every proposal is exclusive to you" on the landing page — a stat lands harder than a claim.
@@ -31,4 +33,4 @@ The pilot's constraint is not more features — it is whether a builder gets rea
 
 ## Explicitly Not Building Yet
 
-Payments, a lead marketplace, automated permit filing, and a success-fee system. Each depends on trust or usage data ADUflow does not yet have (see `docs/pricing-strategy.md`, Phase 2), and building them now would divert effort from proving the qualification workflow gets used repeatedly.
+Payment infrastructure, a lead marketplace, automated permit filing, and a closed-deal success-fee system. Each depends on trust or usage data ADUflow does not yet have (see `docs/pricing-strategy.md`, Phase 2), and building them now would divert effort from proving the qualification workflow gets used repeatedly. The near-term move is policy and outreach language: free pilot, then paid continuation only for builder-accepted qualified opportunities.

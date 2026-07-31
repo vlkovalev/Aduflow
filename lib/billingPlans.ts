@@ -7,14 +7,14 @@ import { readEnv } from "./env";
  * no Stripe price attached. Nothing changes for existing pilot builders.
  *
  * Phase 1 (general availability): "starter" and "growth" are a low flat
- * base fee plus metered overage on QUALIFIED proposals — a lead the builder
- * has actually reviewed and marked "qualified" (see lib/usageStore.ts) —
- * never on raw inbound form-fills. This is the deliberate fix for the
+ * base fee plus metered overage on accepted qualified opportunities — leads
+ * the builder has actually reviewed and marked "qualified" (see lib/usageStore.ts) —
+ * never on raw inbound form-fills or rejected leads. This is the deliberate fix for the
  * traditional lead marketplace "billed for garbage leads" failure mode documented in
  * the pricing strategy.
  *
- * Phase 2 (success fee) is not yet implemented here — it requires the
- * trust infrastructure (validated lender package, closed-deal reporting)
+ * Phase 2 (closed-deal success fee) is not yet implemented here — it requires the
+ * trust infrastructure (accepted-lead attribution, validated lender package, closed-deal reporting)
  * the pricing doc calls out as a precondition.
  */
 
@@ -26,9 +26,9 @@ export type BillingPlan = {
   tagline: string;
   /** Monthly flat base price in USD. Null means not a paid/purchasable plan. */
   basePricePerMonth: number | null;
-  /** Qualified proposals included per month before overage applies. Null = unlimited. */
+  /** Accepted qualified opportunities included per month before overage applies. Null = unlimited. */
   includedQualifiedProposals: number | null;
-  /** USD charged per qualified proposal beyond the included amount. */
+  /** USD charged per accepted qualified opportunity beyond the included amount. */
   overagePricePerProposal: number | null;
   /** Whether builders can self-serve checkout into this plan today. */
   isPubliclyPurchasable: boolean;

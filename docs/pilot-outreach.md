@@ -32,7 +32,7 @@ It gives each builder an address-first intake using their own models and pricing
 
 Builder overview: https://aduflow.ca/for-builders
 
-I’m inviting 3-5 builders into a free guided pilot. Would a 20-minute walkthrough be useful?
+I’m inviting 3-5 builders into a free guided pilot. There is no payment unless you review and accept a qualified opportunity. Would a 20-minute walkthrough be useful?
 
 [Your name]  
 ADUflow | https://aduflow.ca
@@ -52,7 +52,7 @@ ADUflow gives a homeowner an address-first intake using the builder’s models a
 
 Overview: https://aduflow.ca/for-builders
 
-I’m inviting a few BC builders into a free guided pilot. Open to a 20-minute walkthrough using a Surrey example?
+I’m inviting a few BC builders into a free guided pilot. There is no payment unless your team accepts a qualified opportunity. Open to a 20-minute walkthrough using a Surrey example?
 
 [Your name]
 
@@ -98,7 +98,7 @@ ADUflow starts with the address, then combines the homeowner’s model selection
 
 Overview: https://aduflow.ca/for-builders
 
-I’m inviting a few builders into a free guided pilot. Worth a 20-minute walkthrough?
+I’m inviting a few builders into a free guided pilot, with no payment unless you accept a qualified opportunity. Worth a 20-minute walkthrough?
 
 [Your name]
 
@@ -136,7 +136,7 @@ ADUflow gathers those first-pass inputs before manual estimating and packages th
 
 Overview: https://aduflow.ca/for-builders
 
-I’m inviting a small group of builders into a free pilot. Open to a short walkthrough?
+I’m inviting a small group of builders into a free pilot, with no payment unless you accept a qualified opportunity. Open to a short walkthrough?
 
 [Your name]
 
@@ -231,7 +231,7 @@ ADUflow is built for that first qualification step. It collects the address, pro
 
 Overview: https://aduflow.ca/for-builders
 
-I’m inviting a few Alberta builders into a free guided pilot. Worth a 20-minute walkthrough?
+I’m inviting a few Alberta builders into a free guided pilot, with no payment unless you accept a qualified opportunity. Worth a 20-minute walkthrough?
 
 [Your name]
 
@@ -267,6 +267,7 @@ No need to reply if the timing is not right.
 
 - Offer the done-for-you catalog import: the builder may send an existing PDF or price sheet and the ADUflow team will prepare the first CSV/XLSX import during onboarding. See `docs/catalog-import-guide.md`.
 - Explain the two-week parallel run: the builder keeps the existing intake process active while testing one real lead through ADUflow; no cutover is required.
+- Explain the pricing bridge accurately: pilot access is free; raw submissions, duplicates, out-of-area inquiries, and rejected leads are not billed; paid continuation starts only when the builder accepts a qualified opportunity.
 
 - Company and recipient still match the personalization.
 - Landing page and registration both load on desktop and mobile.
