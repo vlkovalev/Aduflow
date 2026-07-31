@@ -2,6 +2,14 @@
 
 Builder outreach reviewed July 21, 2026.
 
+## Sent log
+
+### 2026-07-30 — Alberta follow-on batch
+
+- Pleasant Homes — `info@pleasanthomes.ca` — subject: `A faster first pass for modular-home inquiries` — sent via Gmail. Follow up 2026-08-05 unless they reply or opt out.
+- Kay2 Contracting — `office@Kay2.ca` — subject: `Qualifying garden-suite leads before estimating` — sent via Gmail. Follow up 2026-08-05 unless they reply or opt out.
+- Omni Homes — `info@ohmb.ca` — subject: `A structured first pass for Edmonton garden-suite leads` — sent via Gmail. Follow up 2026-08-05 unless they reply or opt out.
+
 ## Sending rules
 
 - Send prospects to `https://aduflow.ca/for-builders`, not the bare configurator. The public configurator is intentionally read-only until a builder-specific catalog link is present.
